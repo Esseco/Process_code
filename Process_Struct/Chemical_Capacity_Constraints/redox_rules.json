@@ -1,0 +1,1544 @@
+{
+  "schema_version": "0.6",
+  "purpose": "Moderately broad, cathode-framework oxidation-state priors. The defaults exclude several rare molecular/oxoanion endpoints that can inflate generic capacity estimates; special species are documented separately.",
+  "fixed_oxidation_states": {
+    "common": {
+      "Li": 1,
+      "Na": 1,
+      "K": 1,
+      "Rb": 1,
+      "Cs": 1,
+      "Br": -1,
+      "I": -1,
+      "Mg": 2,
+      "Ca": 2,
+      "Sr": 2,
+      "Ba": 2,
+      "Al": 3,
+      "Zn": 2,
+      "Zr": 4,
+      "Hf": 4,
+      "Y": 3,
+      "La": 3,
+      "Gd": 3,
+      "Sc": 3,
+      "P": 5,
+      "Si": 4,
+      "B": 3,
+      "C": 4,
+      "N": 5
+    },
+    "by_environment": {
+      "oxide": {
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "S": -2,
+        "Se": -2,
+        "Te": -2,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 3
+      },
+      "oxyhalide": {
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "S": -2,
+        "Se": -2,
+        "Te": -2,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 3
+      },
+      "halide": {
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "O": -2,
+        "S": -2,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 3
+      },
+      "sulfide": {
+        "S": -2,
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 3
+      },
+      "polyanion": {
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "P": 5,
+        "S": 6,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 5
+      },
+      "mixed_anion": {
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "S": -2,
+        "Se": -2,
+        "Te": -2,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 5
+      }
+    }
+  },
+  "environments": {
+    "oxide": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3,
+          4
+        ],
+        "Co": [
+          2,
+          3,
+          4
+        ],
+        "Ni": [
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          1,
+          2,
+          3
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "W": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ru": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ir": [
+          3,
+          4,
+          5
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
+    "oxyhalide": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3,
+          4
+        ],
+        "Co": [
+          2,
+          3,
+          4
+        ],
+        "Ni": [
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          1,
+          2,
+          3
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "W": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ru": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ir": [
+          3,
+          4,
+          5
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
+    "halide": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3,
+          4
+        ],
+        "Co": [
+          2,
+          3,
+          4
+        ],
+        "Ni": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          1,
+          2,
+          3
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "W": [
+          3,
+          4,
+          5
+        ],
+        "Ru": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Ir": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "In": [
+          1,
+          3
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
+    "sulfide": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3
+        ],
+        "Co": [
+          2,
+          3
+        ],
+        "Ni": [
+          1,
+          2,
+          3
+        ],
+        "Cu": [
+          1,
+          2
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "W": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Ru": [
+          2,
+          3,
+          4
+        ],
+        "Ir": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Ce": [
+          2,
+          3,
+          4
+        ],
+        "Pr": [
+          2,
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
+    "polyanion": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3,
+          4
+        ],
+        "Co": [
+          2,
+          3,
+          4
+        ],
+        "Ni": [
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          1,
+          2,
+          3
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "W": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ru": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ir": [
+          3,
+          4,
+          5
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
+    "mixed_anion": {
+      "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
+      "redox_cation_states": {
+        "Ti": [
+          2,
+          3,
+          4
+        ],
+        "V": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          2,
+          3,
+          4
+        ],
+        "Mn": [
+          2,
+          3,
+          4
+        ],
+        "Fe": [
+          2,
+          3,
+          4
+        ],
+        "Co": [
+          2,
+          3,
+          4
+        ],
+        "Ni": [
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          1,
+          2,
+          3
+        ],
+        "Nb": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "Mo": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "W": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ru": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "Ir": [
+          3,
+          4,
+          5
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          3,
+          4,
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    }
+  },
+  "polyanion_groups": [
+    {
+      "group": "PO4",
+      "formal_charge": -3,
+      "center_element": "P",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "formula": "PO4",
+      "auto_detect": true
+    },
+    {
+      "group": "P2O7",
+      "formal_charge": -4,
+      "center_element": "P",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "formula": "P2O7",
+      "auto_detect": true
+    },
+    {
+      "group": "SO4",
+      "formal_charge": -2,
+      "center_element": "S",
+      "center_oxidation_state": 6,
+      "default_redox_active": false,
+      "formula": "SO4",
+      "auto_detect": true
+    },
+    {
+      "group": "SiO4",
+      "formal_charge": -4,
+      "center_element": "Si",
+      "center_oxidation_state": 4,
+      "default_redox_active": false,
+      "formula": "SiO4",
+      "auto_detect": true
+    },
+    {
+      "group": "BO3",
+      "formal_charge": -3,
+      "center_element": "B",
+      "center_oxidation_state": 3,
+      "default_redox_active": false,
+      "formula": "BO3",
+      "auto_detect": true
+    },
+    {
+      "group": "CO3",
+      "formal_charge": -2,
+      "center_element": "C",
+      "center_oxidation_state": 4,
+      "default_redox_active": false,
+      "formula": "CO3",
+      "auto_detect": true
+    },
+    {
+      "group": "NO3",
+      "formal_charge": -1,
+      "center_element": "N",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "formula": "NO3",
+      "auto_detect": true
+    },
+    {
+      "group": "VO4",
+      "formal_charge": -3,
+      "center_element": "V",
+      "center_oxidation_state": 5,
+      "default_redox_active": "context_dependent",
+      "formula": "VO4",
+      "auto_detect": false
+    },
+    {
+      "group": "MoO4",
+      "formal_charge": -2,
+      "center_element": "Mo",
+      "center_oxidation_state": 6,
+      "default_redox_active": "context_dependent",
+      "formula": "MoO4",
+      "auto_detect": false
+    },
+    {
+      "group": "WO4",
+      "formal_charge": -2,
+      "center_element": "W",
+      "center_oxidation_state": 6,
+      "default_redox_active": "context_dependent",
+      "formula": "WO4",
+      "auto_detect": false
+    },
+    {
+      "group": "PO3F",
+      "formula": "PO3F",
+      "formal_charge": -2,
+      "center_element": "P",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "auto_detect": false
+    },
+    {
+      "group": "PO2F2",
+      "formula": "PO2F2",
+      "formal_charge": -1,
+      "center_element": "P",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "auto_detect": false
+    },
+    {
+      "group": "POF3",
+      "formula": "POF3",
+      "formal_charge": 0,
+      "center_element": "P",
+      "center_oxidation_state": 5,
+      "default_redox_active": false,
+      "auto_detect": false
+    },
+    {
+      "group": "SO3",
+      "formula": "SO3",
+      "formal_charge": -2,
+      "center_element": "S",
+      "center_oxidation_state": 4,
+      "default_redox_active": false,
+      "auto_detect": true
+    },
+    {
+      "group": "S2O3",
+      "formula": "S2O3",
+      "formal_charge": -2,
+      "center_element": "S",
+      "center_oxidation_state": 2,
+      "default_redox_active": false,
+      "auto_detect": true
+    },
+    {
+      "group": "SO3F",
+      "formula": "SO3F",
+      "formal_charge": -1,
+      "center_element": "S",
+      "center_oxidation_state": 6,
+      "default_redox_active": false,
+      "auto_detect": false
+    }
+  ],
+  "anion_redox_scenarios": {
+    "none": {
+      "description": "Conservative default: no anion redox added to capacity."
+    },
+    "oxygen_peroxo": {
+      "element": "O",
+      "electrons_per_atom": 1.0,
+      "description": "Formal O2- to O- ceiling; possible in selected oxygen-redox cathodes, not assumed reversible for an arbitrary oxide."
+    },
+    "sulfide_disulfide": {
+      "element": "S",
+      "electrons_per_atom": 1.0,
+      "description": "Formal S2- to average S-1 in S2(2-) pairing; one electron per sulfur atom is the optimistic charge-compensation span."
+    },
+    "sulfur_conversion": {
+      "element": "S",
+      "electrons_per_atom": 2.0,
+      "description": "Formal S2- to S0 conversion; conversion-cathode limit, not an intercalation-host default."
+    },
+    "chloride_conversion": {
+      "element": "Cl",
+      "electrons_per_atom": 1.0,
+      "description": "Formal Cl- to Cl0/Cl2 conversion; separate conversion chemistry, not a normal chloride-host assumption."
+    }
+  },
+  "substitution_candidates": {
+    "lower_cost_first_pass": [
+      "Fe",
+      "Mn",
+      "Ti",
+      "Cr"
+    ],
+    "secondary_screen": [
+      "V",
+      "Cu",
+      "Mo",
+      "Nb"
+    ],
+    "redox_rich_cost_sensitive": [
+      "Ni",
+      "Co"
+    ],
+    "research_only_or_supply_sensitive": [
+      "Ru",
+      "Ir",
+      "W"
+    ],
+    "notes": "Qualitative screening buckets only; not live commodity-price rankings. Recheck price, supply, toxicity, and synthesis constraints for the deployment region."
+  },
+  "references": [
+    {
+      "key": "goodenough_kim_2010",
+      "doi": "10.1021/cm901452z",
+      "url": "https://doi.org/10.1021/cm901452z"
+    },
+    {
+      "key": "assat_tarascon_2018",
+      "doi": "10.1038/s41560-018-0097-0",
+      "url": "https://doi.org/10.1038/s41560-018-0097-0"
+    },
+    {
+      "key": "li_oxygen_redox_2018",
+      "doi": "10.1002/adma.201705197",
+      "url": "https://doi.org/10.1002/adma.201705197"
+    },
+    {
+      "key": "polyanion_sodium_review_2017",
+      "doi": "10.1016/j.jpowsour.2017.07.002",
+      "url": "https://doi.org/10.1016/j.jpowsour.2017.07.002"
+    },
+    {
+      "key": "li_rich_iron_sulfide_2020",
+      "doi": "10.1021/jacs.0c00909",
+      "url": "https://doi.org/10.1021/jacs.0c00909"
+    },
+    {
+      "key": "oxyfluoride_redox_2020",
+      "doi": "10.1016/j.ensm.2020.07.013",
+      "url": "https://doi.org/10.1016/j.ensm.2020.07.013"
+    },
+    {
+      "key": "metal_chloride_cathodes_2024",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11016933/"
+    },
+    {
+      "key": "indium_halide_valence_2019",
+      "doi": "10.1103/PhysRevMaterials.3.015001",
+      "url": "https://doi.org/10.1103/PhysRevMaterials.3.015001"
+    },
+    {
+      "key": "indium_mixed_valence_chloride_2019",
+      "doi": "10.1073/pnas.1907576116",
+      "url": "https://doi.org/10.1073/pnas.1907576116"
+    }
+  ],
+  "redox_range_policy": {
+    "style": "moderately_broad_cathode_framework_ranges",
+    "interpretation": "Configured states are plausible framework-level formal oxidation states for first-pass cathode screening, not a universal thermodynamic stability map. Special molecular compounds and discrete oxoanions are not automatic framework redox capacity.",
+    "no_redox_elements": "If no configured redox-active framework element is present, report zero redox capacity.",
+    "indium_halide_range": "For halides only, In(I)/In(III) is included as a permissive screening interval based on reported or predicted indium halides; verify stability and reversibility for each specific structure.",
+    "framework_default_exclusions": "Fe(VI) ferrate and Mn(VI/VII) oxoanions are not generic framework endpoints; use explicit species-specific rules for ferrates, manganates, permanganates, or conversion systems."
+  },
+  "special_oxoanion_states": {
+    "Fe": {
+      "oxidation_state": 6,
+      "species": "[FeO4]2-",
+      "examples": [
+        "K2FeO4",
+        "BaFeO4"
+      ],
+      "context": "Discrete tetrahedral ferrate(VI) oxoanion; treat separately from an Fe site in an ordinary intercalation framework.",
+      "enabled_in_default_framework_redox": false
+    },
+    "Mn": {
+      "states": [
+        {
+          "oxidation_state": 6,
+          "species": "[MnO4]2-",
+          "name": "manganate(VI)",
+          "context": "Oxoanion favored in strongly alkaline chemistry."
+        },
+        {
+          "oxidation_state": 7,
+          "species": "[MnO4]-",
+          "name": "permanganate(VII)",
+          "context": "Discrete, strongly oxidizing oxoanion."
+        },
+        {
+          "oxidation_state": 7,
+          "species": "Mn2O7",
+          "name": "manganese(VII) oxide",
+          "context": "Highly unstable molecular oxide."
+        }
+      ],
+      "enabled_in_default_framework_redox": false
+    },
+    "policy": "Special high-valent oxoanion states are documented for explicit species-level treatment and are excluded from generic cathode framework capacity estimates."
+  },
+  "default_excluded_states": {
+    "removed_from_generic_ranges_by_environment": {
+      "oxide": {
+        "Cr": [
+          5,
+          6
+        ],
+        "Co": [
+          5
+        ],
+        "Ni": [
+          1
+        ],
+        "Ru": [
+          8
+        ],
+        "Ir": [
+          2,
+          6
+        ],
+        "Re": [
+          7
+        ],
+        "Rh": [
+          5
+        ],
+        "Os": [
+          8
+        ],
+        "Pt": [
+          6
+        ],
+        "Au": [
+          5
+        ]
+      },
+      "oxyhalide": {
+        "Cr": [
+          5,
+          6
+        ],
+        "Co": [
+          5
+        ],
+        "Ni": [
+          1
+        ],
+        "Ru": [
+          8
+        ],
+        "Ir": [
+          2,
+          6
+        ],
+        "Re": [
+          7
+        ],
+        "Rh": [
+          5
+        ],
+        "Os": [
+          8
+        ],
+        "Pt": [
+          6
+        ],
+        "Au": [
+          5
+        ]
+      },
+      "halide": {
+        "Cr": [
+          5,
+          6
+        ],
+        "Mn": [
+          5
+        ],
+        "Mo": [
+          6
+        ],
+        "W": [
+          6
+        ],
+        "Ru": [
+          6
+        ],
+        "Ir": [
+          6
+        ],
+        "Re": [
+          7
+        ],
+        "Rh": [
+          5
+        ],
+        "Os": [
+          6,
+          8
+        ],
+        "Pt": [
+          6
+        ],
+        "Au": [
+          5
+        ]
+      },
+      "sulfide": {
+        "Mo": [
+          6
+        ],
+        "W": [
+          6
+        ],
+        "Ir": [
+          6
+        ],
+        "Re": [
+          6,
+          7
+        ]
+      },
+      "polyanion": {
+        "Cr": [
+          5,
+          6
+        ],
+        "Co": [
+          5
+        ],
+        "Ni": [
+          1
+        ],
+        "Ru": [
+          8
+        ],
+        "Ir": [
+          2,
+          6
+        ],
+        "Re": [
+          7
+        ],
+        "Rh": [
+          5
+        ],
+        "Os": [
+          8
+        ],
+        "Pt": [
+          6
+        ],
+        "Au": [
+          5
+        ]
+      },
+      "mixed_anion": {
+        "Cr": [
+          5,
+          6
+        ],
+        "Co": [
+          5
+        ],
+        "Ni": [
+          1
+        ],
+        "Ru": [
+          8
+        ],
+        "Ir": [
+          2,
+          6
+        ],
+        "Re": [
+          7
+        ],
+        "Rh": [
+          5
+        ],
+        "Os": [
+          8
+        ],
+        "Pt": [
+          6
+        ],
+        "Au": [
+          5
+        ]
+      }
+    },
+    "interpretation": "These states exist in chemistry but are not enabled as generic intercalation-framework cation endpoints. Some can be restored for a specific structure after confirming its local coordination and reaction.",
+    "examples": {
+      "Cr": "Cr(VI) is most commonly represented by chromate/dichromate oxoanions.",
+      "Ru": "Ru(VIII) in RuO4 is a volatile, strongly oxidizing molecular oxide.",
+      "Re": "Re(VII) commonly occurs in perrhenate/other highly oxidized oxo chemistry.",
+      "Os": "Os(VIII) in OsO4 is a molecular oxide, not a generic cathode-site endpoint.",
+      "Pt": "Pt(VI) in PtF6 is specialized molecular fluoride chemistry.",
+      "Au": "Au(V) occurs in specialized strongly oxidizing fluoride chemistry.",
+      "Co": "Co(V) is uncommon and host-specific; the generic oxide cathode range ends at Co(IV).",
+      "Ni": "Ni(I) is not used as a generic oxide-framework cathode endpoint."
+    }
+  }
+}
