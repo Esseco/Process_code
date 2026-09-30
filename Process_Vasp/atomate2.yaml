@@ -1,0 +1,2 @@
+VASP_CMD: "mpirun -np $SLURM_NPROCS /data/app/vasp/6.5.1-nvhpc/bin/vasp_std"
+VASP_GAMMA_CMD: "mpirun -np $SLURM_NPROCS /data/app/vasp/6.5.1-nvhpc/bin/vasp_gam"

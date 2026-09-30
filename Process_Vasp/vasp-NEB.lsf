@@ -1,0 +1,9 @@
+#!/bin/bash
+export PATH=$PATH:/fs00/software/vasp/5.4.4
+#BSUB -q 7702ib
+#BSUB -n 128
+#BSUB -J Na0
+#BSUB -o out
+#BSUB -e err
+module load ips/2018u4
+mpiexec.hydra vasp_vtst_sol
