@@ -1,14 +1,14 @@
 """Public VASP input and structure helpers."""
 
-from .generation import (
+from .inputs.generation import (
     convert_files_in_directory,
     generate_vasp_input,
     generate_atomate_input,
     get_INCAR_NUPDOWN,
 )
-from .incar import copy_file, copy_vasp_files, set_incar_tags, update_incar
-from .excitation import generate_excited_input
-from .structure import (
+from .inputs.incar import copy_file, copy_vasp_files, set_incar_tags, update_incar
+from .inputs.excitation import generate_excited_input
+from .structures.structure import (
     Na1_to_Nax,
     check_layer_equal,
     deduplicate,

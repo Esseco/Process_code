@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from monty.os.path import zpath
 
 from pymatgen.io.vasp.outputs import Vasprun
 
@@ -50,7 +51,7 @@ def read_vasp_status(init_dir: str | Path) -> dict[str, Any]:
         Completion, convergence, ionic-step, and detected-error information.
     """
     init_dir = Path(init_dir)
-    vasprun_path = init_dir / "vasprun.xml"
+    vasprun_path = Path(zpath(init_dir / "vasprun.xml"))
     current_step = 0
     max_step: int | None = None
     converged = False

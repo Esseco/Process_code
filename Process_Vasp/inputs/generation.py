@@ -9,8 +9,8 @@ from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import Kpoints
 from pymatgen.io.vasp.sets import MPRelaxSet
 
-BASE_PATH = Path(__file__).parent
-GPU_SCRIPT = BASE_PATH / "submit_gpu.sh"
+BASE_PATH = Path(__file__).resolve().parents[1]
+GPU_SCRIPT = BASE_PATH / "templates" / "submit_gpu.sh"
 
 
 def generate_atomate_input(
@@ -21,6 +21,7 @@ def generate_atomate_input(
     kpoints_settings: dict[str, dict] | None = None,
     job_name: str | None = None,
     resume_from: dict[str, str] | None = None,
+    export_plot_data: bool = False,
 ) -> Path:
     """Create a directly submittable atomate2 workflow from a .vasp or .cif.
 
@@ -32,6 +33,8 @@ def generate_atomate_input(
     Repeated executions resume completed stages; retries use new attempt directories.
     ``resume_from`` explicitly adopts validated existing output directories by
     stage (paths are evaluated on the execution host); imports are used once.
+    ``export_plot_data`` writes DOS or band CSV and metadata after the final
+    stage succeeds. It can be enabled later without repeating VASP calculations.
     """
     source = Path(structure)
     if source.suffix.lower() not in {".vasp", ".cif"}:
@@ -65,6 +68,9 @@ def generate_atomate_input(
         for stage, path in config["resume_from"].items()
     ):
         raise ValueError("resume_from must map stage names to nonempty directory strings")
+    if not isinstance(export_plot_data, bool):
+        raise TypeError("export_plot_data must be a bool")
+    config["export_plot_data"] = export_plot_data
     config_text = json.dumps(config, indent=2, ensure_ascii=False)
 
     script = GPU_SCRIPT.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
@@ -78,7 +84,6 @@ def generate_atomate_input(
     target.mkdir(parents=True, exist_ok=True)
     (target / config["structure_file"]).write_bytes(source.read_bytes())
     (target / "workflow.json").write_text(config_text, encoding="utf-8")
-    (target / "atomate_runner.py").write_bytes((BASE_PATH / "atomate_runner.py").read_bytes())
     (target / "workflow.py").write_text(_ATOMATE2_WORKFLOW, encoding="utf-8", newline="\n")
     (target / GPU_SCRIPT.name).write_text(script, encoding="utf-8", newline="\n")
     return target
@@ -86,7 +91,7 @@ def generate_atomate_input(
 
 _ATOMATE2_WORKFLOW = '''"""Resume the generated atomate2 workflow."""
 from pathlib import Path
-from atomate_runner import main
+from Process_Vasp.workflows.atomate_runner import main
 
 if __name__ == "__main__":
     main(Path(__file__).resolve().parent)
@@ -132,7 +137,7 @@ def generate_vasp_input(
     if potcar_set:
         relax_set.potcar.write_file(target_dir / "POTCAR")
 
-    template = (BASE_PATH / "vasp.lsf").read_text(encoding="utf-8")
+    template = (BASE_PATH / "templates" / "vasp.lsf").read_text(encoding="utf-8")
     script = template.replace("#BSUB -J Na0", f"#BSUB -J {lsfname}")
     (target_dir / "vasp.lsf").write_text(script, encoding="utf-8", newline="\n")
     convert_files_in_directory(target_dir)

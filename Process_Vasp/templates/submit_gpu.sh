@@ -23,4 +23,10 @@ ulimit -l unlimited
 
 source /data/app/anaconda3/2024.10-1/bin/activate
 conda activate python
+trap 'echo "Workflow received termination signal; inspect Slurm logs and workflow_status.json." >&2' TERM INT
 python3 workflow.py
+workflow_exit_code=$?
+if [ "$workflow_exit_code" -ne 0 ]; then
+    echo "Workflow exited with code $workflow_exit_code. See failure_report.txt, workflow_status.json, err, and the stage std_err.txt." >&2
+fi
+exit "$workflow_exit_code"
