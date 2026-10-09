@@ -3,6 +3,7 @@
 | 文件 | 用途 | 谁使用 |
 |---|---|---|
 | submit_gpu.sh | Slurm GPU 提交模板 | generate_atomate_input；生成任务中仍叫 submit_gpu.sh |
+| submit_amset.sh | Slurm AMSET CPU 后处理模板 | generate_amset_task；需要安装 AMSET 的环境和可用分区 |
 | vasp.lsf | 常规 VASP 的 LSF 提交模板 | generate_vasp_input |
 | vasp-NEB.lsf | NEB 的历史 LSF 模板 | 人工配置后使用 |
 | 北京超算-vasp-GPU.sh | 北京超算的历史 GPU 脚本 | 人工配置后使用 |

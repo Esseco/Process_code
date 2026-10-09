@@ -11,6 +11,20 @@ from Process_Vasp.atomate_runner import run_workflow
 
 
 class StageDirectoryTests(unittest.TestCase):
+    def test_invalid_legacy_relax_stops_before_recalculation(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:
+            root = Path(folder)
+            Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]]).to(filename=root / "initial.cif")
+            (root / "workflow.json").write_text(json.dumps({
+                "calculation": "dos", "structure_file": "initial.cif",
+                "incar_settings": {}, "kpoints_settings": {},
+            }), encoding="utf-8")
+            (root / "runs" / "job_incomplete").mkdir(parents=True)
+            with patch("Process_Vasp.atomate_runner._job") as make_job:
+                with self.assertRaisesRegex(ValueError, "no completed relax output"):
+                    run_workflow(root)
+            make_job.assert_not_called()
+
     def test_completed_legacy_relax_starts_with_static(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:
             root = Path(folder)
@@ -27,6 +41,12 @@ class StageDirectoryTests(unittest.TestCase):
             (old / "INCAR").write_text("NSW = 99\n")
             (old / "vasprun.xml").write_text("stub")
             (old / "complete").write_text("ok")
+            (root / "workflow_state.json").write_text(json.dumps({
+                "version": 1, "stages": {"relax": {
+                    "status": "failed", "directory": "runs/relax/attempt_001",
+                    "fingerprint": "previous-attempt", "error": "disk quota exceeded",
+                }},
+            }), encoding="utf-8")
             calls = []
             def make_job(stage, current, previous, config):
                 if stage == "static":

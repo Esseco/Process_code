@@ -1,0 +1,10 @@
+{
+  "recipe": "amset_task",
+  "parameters": {
+    "directory": "amset_postprocess",
+    "workflow_root": "..",
+    "doping": [-1e18, 1e18],
+    "temperatures": [300],
+    "nworkers": 2
+  }
+}

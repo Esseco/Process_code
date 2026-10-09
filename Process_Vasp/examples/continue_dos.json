@@ -1,0 +1,10 @@
+{
+  "previous_task": "/data/home/lichaoyue/26-10-LHL_cal/Dos/Full_TM",
+  "calculation": "dos",
+  "incar_settings": {
+    "static": {"GGA": null, "LWAVE": true, "LCHARG": true, "ISMEAR": 0},
+    "dos": {"GGA": null, "NEDOS": 3000, "ISMEAR": 0}
+  },
+  "kpoints_settings": {},
+  "export_plot_data": true
+}

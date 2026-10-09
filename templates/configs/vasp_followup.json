@@ -1,0 +1,10 @@
+{
+  "recipe": "vasp_followup",
+  "parameters": {
+    "directory": "followup_dos",
+    "previous_task": "..",
+    "calculation": "dos",
+    "source_stage": "static",
+    "export_plot_data": true
+  }
+}

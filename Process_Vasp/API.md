@@ -4,6 +4,16 @@
 
 ## `main`
 
+源文件：[examples/amset_crt.py](examples/amset_crt.py)，第 9 行。
+
+```python
+main()
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `main`
+
 源文件：[examples/create_workflow.py](examples/create_workflow.py)，第 14 行。
 
 ```python
@@ -34,6 +44,16 @@ main()
 
 ## `main`
 
+源文件：[examples/followup.py](examples/followup.py)，第 8 行。
+
+```python
+main()
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `main`
+
 源文件：[examples/read_results.py](examples/read_results.py)，第 10 行。
 
 ```python
@@ -41,6 +61,40 @@ main()
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `generate_amset_task`
+
+源文件：[inputs/amset_task.py](inputs/amset_task.py)，第 8 行。
+
+```python
+generate_amset_task(directory, *, workflow_root='..', source_dir=None, source_stage='dos', doping=(-1e+18, 1e+18), temperatures=(300,), relaxation_time=1e-14, interpolation_factor=10, nworkers=2)
+```
+
+Write an uploadable task with bundled helpers, config and Slurm script.
+
+Server workflow_root is relative to generated task location or absolute.
+Units and calculation semantics follow run_amset_postprocess. Generation uses
+only stdlib, requires an absent/empty target and does not access server data.
+Generated task requires AMSET/numpy, not an uploaded Py-Code installation.
+Edit partition/environment in submit_amset.sh for the target cluster. Output
+remains in this task's results/; resubmission reuses completed CRT requests.
+
+## `continue_task`
+
+源文件：[inputs/continue_task.py](inputs/continue_task.py)，第 7 行。
+
+```python
+continue_task(config, directory=None)
+```
+
+Prepare a task from a JSON path or dict; never run or submit calculations.
+
+JSON selects calculation and exactly one of structure_file/previous_task.
+Local structure_file is relative to the JSON; previous_task is a server path,
+relative to the generated task when not absolute. Default target is a sibling
+<config-stem>_task. Requires an absent/empty target. Writes workflow.json,
+workflow.py, submit.sh and optionally initial structure. No random seed.
+Execution uses the installed Process_Vasp project and atomate2/AMSET as needed.
 
 ## `generate_excited_input`
 
@@ -57,6 +111,26 @@ up. Explicit band indices do not change this channel-selection rule.
 Both creates independent up/ and down/ calculations below target_dir and
 returns their reports under those keys. It does not excite both channels
 in one calculation. Both requires ISPIN=2. All previous restrictions apply.
+
+## `generate_followup_task`
+
+源文件：[inputs/followup.py](inputs/followup.py)，第 8 行。
+
+```python
+generate_followup_task(directory, previous_task, calculation, *, source_stage=None, source_dir=None, incar_settings=None, kpoints_settings=None, job_name=None, export_plot_data=False, amset_settings=None)
+```
+
+Generate relax/static/dos/band/amset from a completed task or raw run.
+
+previous_task and source_dir are execution-host paths; relative previous_task
+is relative to the new task, source_dir is relative to previous_task. No
+source files are read during generation. Defaults: static <- relax;
+dos/band <- static; relax <- relax; amset <- dos. Explicit source_stage=relax
+for dos/band schedules static then the requested non-SCF calculation.
+AMSET can use a verified uniform static calculation via source_stage=static.
+Writes an absent/empty task directory, never submits. Existing public
+generate_atomate_input remains unchanged. Existing source results are read
+only; completed new stages are reused on resubmission. No random seed.
 
 ## `generate_atomate_input`
 
@@ -163,6 +237,24 @@ copy_file(init_dir: str | Path, tar_dir: str | Path)
 ```
 
 Backward-compatible copy helper using its original file selection.
+
+## `get_completed_result`
+
+源文件：[results/completed.py](results/completed.py)，第 7 行。
+
+```python
+get_completed_result(task_dir, stage, *, source_dir=None, validate=True, require_uniform=False)
+```
+
+Return a completed relax/static/dos/band directory without modifying it.
+
+Prefer the named completed checkpoint; relative directories use task_dir.
+A raw VASP directory can be passed as task_dir or explicitly source_dir.
+validate checks electronic convergence, ionic convergence for relax, NSW
+semantics and rejects line-mode k points for DOS or require_uniform=True.
+This excludes explicit path mode, not a full grid completeness proof. No wavefunction/charge
+files required for read-only reuse; downstream calculations check theirs.
+Requires pymatgen only when validate=True. No random seed or file writes.
 
 ## `read_dos`
 
@@ -317,9 +409,39 @@ Args:
 Returns:
     Completion, convergence, ionic-step, and detected-error information.
 
+## `deduplicate`
+
+源文件：[structures/structure.py](structures/structure.py)，第 13 行。
+
+```python
+deduplicate(struc_lst: list)
+```
+
+Load the optional structure toolkit only when deduplication is used.
+
+## `deduplicate_dict`
+
+源文件：[structures/structure.py](structures/structure.py)，第 20 行。
+
+```python
+deduplicate_dict(struc_dict: dict)
+```
+
+Deduplicate a structure dictionary with the shared implementation.
+
+## `deduplicate_df`
+
+源文件：[structures/structure.py](structures/structure.py)，第 27 行。
+
+```python
+deduplicate_df(df: pd.DataFrame, n_keep: int, struct_col: str='struct', energy_col: str='energy_mean_per_atom')
+```
+
+Deduplicate a table with the shared implementation.
+
 ## `gen_ESGS_structure`
 
-源文件：[structures/structure.py](structures/structure.py)，第 14 行。
+源文件：[structures/structure.py](structures/structure.py)，第 39 行。
 
 ```python
 gen_ESGS_structure(disordered_structure: Structure, nstr: int)
@@ -336,7 +458,7 @@ gen_ESGS_structure 的 Docstring
 
 ## `generate_neb_endpoints`
 
-源文件：[structures/structure.py](structures/structure.py)，第 37 行。
+源文件：[structures/structure.py](structures/structure.py)，第 62 行。
 
 ```python
 generate_neb_endpoints(fully_intercalated_structure: Structure, deintercalated_structure: Structure, mobile_ion: str, mode: str='random', num_paths_per_ion: int=1, indices: int | Iterable[int] | None=None, random_num: int=3, max_distance: float=5.0, dedu: bool=False, match_tol: float=0.6, overlap_tol: float=0.5, seed: int | None=None)
@@ -350,7 +472,7 @@ ion-vacancy pairs are sampled without replacement.
 
 ## `check_layer_equal`
 
-源文件：[structures/structure.py](structures/structure.py)，第 198 行。
+源文件：[structures/structure.py](structures/structure.py)，第 223 行。
 
 ```python
 check_layer_equal(structure: Structure, element: str='Na', target_layers: int=3, EL_Equal: bool=True)
@@ -371,7 +493,7 @@ check_layer_equal 的 Docstring
 
 ## `build_redox_disordered_structure`
 
-源文件：[structures/structure.py](structures/structure.py)，第 253 行。
+源文件：[structures/structure.py](structures/structure.py)，第 278 行。
 
 ```python
 build_redox_disordered_structure(struct, na_num_now)
@@ -381,7 +503,7 @@ build_redox_disordered_structure(struct, na_num_now)
 
 ## `remove_oxi`
 
-源文件：[structures/structure.py](structures/structure.py)，第 292 行。
+源文件：[structures/structure.py](structures/structure.py)，第 317 行。
 
 ```python
 remove_oxi(struct)
@@ -391,7 +513,7 @@ remove_oxi(struct)
 
 ## `Na1_to_Nax`
 
-源文件：[structures/structure.py](structures/structure.py)，第 304 行。
+源文件：[structures/structure.py](structures/structure.py)，第 329 行。
 
 ```python
 Na1_to_Nax(struct, tar_dir, interval=3, nstr=3, tar_layer=None, equal_num=None, select_num=None, dedu=False, is_Na0=False, phase=None)
@@ -409,9 +531,19 @@ StageDirectoryTests
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
-## `StageDirectoryTests.test_completed_legacy_relax_starts_with_static`
+## `StageDirectoryTests.test_invalid_legacy_relax_stops_before_recalculation`
 
 源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 14 行。
+
+```python
+StageDirectoryTests.test_invalid_legacy_relax_stops_before_recalculation(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `StageDirectoryTests.test_completed_legacy_relax_starts_with_static`
+
+源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 28 行。
 
 ```python
 StageDirectoryTests.test_completed_legacy_relax_starts_with_static(self)
@@ -421,7 +553,7 @@ StageDirectoryTests.test_completed_legacy_relax_starts_with_static(self)
 
 ## `StageDirectoryTests.test_failed_relax_uses_valid_contcar_and_reports_quota_error`
 
-源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 51 行。
+源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 71 行。
 
 ```python
 StageDirectoryTests.test_failed_relax_uses_valid_contcar_and_reports_quota_error(self)
@@ -431,7 +563,7 @@ StageDirectoryTests.test_failed_relax_uses_valid_contcar_and_reports_quota_error
 
 ## `StageDirectoryTests.test_restart_parameters_import_and_kill_window`
 
-源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 90 行。
+源文件：[tests/test_atomate_directories.py](tests/test_atomate_directories.py)，第 110 行。
 
 ```python
 StageDirectoryTests.test_restart_parameters_import_and_kill_window(self)
@@ -659,9 +791,58 @@ BandExportTests.test_band_csv_and_metadata(self)
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
+## `run_amset_crt`
+
+源文件：[workflows/amset_crt.py](workflows/amset_crt.py)，第 46 行。
+
+```python
+run_amset_crt(source_dir, output_dir, *, doping=(-1e+18, 1e+18), temperatures=(300,), relaxation_time=1e-14, interpolation_factor=10, nworkers=1, resume=True)
+```
+
+Calculate sigma/tau from an existing uniform-grid vasprun.xml[.gz].
+
+Doping is cm^-3 (negative electrons, positive holes), temperatures K,
+relaxation_time seconds. Returned tensors have shape (ndoping, nT, 3, 3)
+and sigma/tau units S m^-1 s^-1. Requires an environment with AMSET CLI.
+Writes isolated attempt directories, logs, settings and a JSON checkpoint;
+copies the source XML, never runs VASP. Identical successful requests are
+reused; failures/changed requests create another attempt. No random seed.
+Resume is at completed-calculation level, not inside AMSET interpolation.
+
+## `main`
+
+源文件：[workflows/amset_crt.py](workflows/amset_crt.py)，第 128 行。
+
+```python
+main()
+```
+
+CLI with the same default electron/hole CRT settings as the Python API.
+
+## `run_amset_postprocess`
+
+源文件：[workflows/amset_postprocess.py](workflows/amset_postprocess.py)，第 61 行。
+
+```python
+run_amset_postprocess(workflow_root, output_dir=None, *, source_dir=None, source_stage='dos', doping=(-1e+18, 1e+18), temperatures=(300,), relaxation_time=1e-14, interpolation_factor=10, nworkers=1, resume=True)
+```
+
+Read a completed DOS task and export transport masses and CRT mobility.
+
+workflow_root contains workflow_state.json; source_stage selects dos/static.
+source_dir optionally overrides
+the DOS path (relative to workflow_root). Default output is root/amset_results.
+Units: doping cm^-3 (electrons negative), temperature K, tau s; mass in m_e,
+mobility cm²/(V s), sigma/tau S/(m s). Tensor axes match run_amset_crt.
+Requires AMSET and numpy; no random seed. Copies XML and writes only to the
+independent output subtree; no VASP runs/submission or source modification.
+Reuses completed CRT calculations by content/parameter fingerprint; derived
+properties can be regenerated without recomputing AMSET. Invalid mass tensors
+are null with a diagnostic; CRT success does not imply numerical convergence.
+
 ## `run_workflow`
 
-源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 276 行。
+源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 281 行。
 
 ```python
 run_workflow(root, *, fresh=False)
@@ -671,13 +852,28 @@ Resume valid stages, retry interrupted stages, invalidate changed dependencies.
 
 ## `main`
 
-源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 412 行。
+源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 467 行。
 
 ```python
 main(root)
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `execute_task`
+
+源文件：[workflows/continue_runner.py](workflows/continue_runner.py)，第 69 行。
+
+```python
+execute_task(task_dir)
+```
+
+Execute generated task on cluster. Writes plans/checkpoints; may run VASP.
+
+Original results are read only. AMSET prefers a completed DOS; absent DOS is
+generated from available static/relax results via atomate2 before transport.
+AMSET-only submission scripts require VASP resources/modules to be configured
+if missing precursor calculations need to run. No automatic job submission.
 
 ## `export_plot_data`
 

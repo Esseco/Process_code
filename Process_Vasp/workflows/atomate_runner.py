@@ -34,7 +34,7 @@ def _failure_reason(error, directory):
     output = _tail(directory / "vasp.out") if directory else ""
     combined = "\n".join((str(error), stderr, output)).lower()
     causes = (
-        (("disk quota exceeded", "quota exceeded"), "Disk quota exceeded while VASP was writing output"),
+        (("disk quota exceeded", "quota exceeded"), "Disk quota exceeded while writing calculation files"),
         (("no space left on device",), "Filesystem has no free space"),
         (("out of memory", "oom-kill", "oom_kill"), "Job ran out of memory"),
         (("time limit", "timelimit"), "Scheduler time limit reached"),
@@ -129,8 +129,10 @@ def _legacy_candidate(root, stage, predecessor, config):
     from pymatgen.io.vasp.inputs import Incar, Kpoints
 
     if config.get("kpoints_settings", {}).get(stage):
+        print(f"Legacy {stage} auto-detection needs explicit resume_from when custom KPOINTS are set", flush=True)
         return None
     candidates = []
+    rejected = []
     for directory in (root / "runs").glob("job_*"):
         if not directory.is_dir():
             continue
@@ -139,31 +141,34 @@ def _legacy_candidate(root, stage, predecessor, config):
             nsw = int(incar.get("NSW", 0))
             icharg = int(incar.get("ICHARG", 2))
             if stage == "relax" and nsw <= 0:
-                continue
+                raise ValueError("NSW <= 0; this is not a relaxation")
             if stage == "static" and (nsw != 0 or icharg >= 10):
-                continue
+                raise ValueError("INCAR does not identify a static calculation")
             if stage in ("dos", "band") and (nsw != 0 or icharg < 10):
-                continue
+                raise ValueError("INCAR does not identify a non-SCF calculation")
             if stage in ("dos", "band"):
                 kpoints = Kpoints.from_file(zpath(directory / "KPOINTS"))
                 line_mode = kpoints.style.name.lower() == "line_mode"
                 if line_mode != (stage == "band"):
-                    continue
+                    raise ValueError("KPOINTS mode does not match calculation")
             overrides = config.get("incar_settings", {}).get(stage, {})
             if any(value is not None and not _same_setting(incar.get(key), value)
                    for key, value in overrides.items()):
-                continue
+                raise ValueError("INCAR differs from current stage overrides")
             input_structure = Structure.from_file(zpath(directory / "POSCAR"))
             if not _same_structure(input_structure, predecessor):
-                continue
+                raise ValueError("POSCAR differs from the expected input structure")
             final_structure = _validate(directory, stage)
             if stage != "relax" and not _same_structure(final_structure, predecessor):
-                continue
+                raise ValueError("CONTCAR differs from the predecessor structure")
             xml = Path(zpath(directory / "vasprun.xml"))
             candidates.append((xml.stat().st_mtime_ns, directory, final_structure))
-        except Exception:
+        except Exception as error:
+            rejected.append(f"{directory}: {type(error).__name__}: {error}")
             continue
     if not candidates:
+        for reason in rejected[-5:]:
+            print(f"Cannot reuse legacy {stage}: {reason}", flush=True)
         return None
     _, directory, final_structure = max(candidates, key=lambda item: item[0])
     return directory, final_structure
@@ -285,14 +290,57 @@ def run_workflow(root, *, fresh=False):
         stages = {"relax": ["relax"], "static": ["static"],
                   "dos": ["relax", "static", "dos"],
                   "band": ["relax", "static", "band"]}[calculation]
-        initial = root / config["structure_file"]
-        structure = Structure.from_file(initial)
+        previous = None
+        predecessor = config.get("previous_result")
+        if predecessor:
+            allowed_sources = {"relax": {"relax", "static"}, "static": {"relax", "static"},
+                               "dos": {"relax", "static", "dos"}, "band": {"relax", "static", "band"}}
+            if predecessor.get("stage") not in allowed_sources[calculation]:
+                raise ValueError(f"Invalid source stage for {calculation}")
+            from ..results.completed import get_completed_result
+            from monty.os.path import zpath
+            from pymatgen.io.vasp.outputs import Vasprun
+            source_task = Path(predecessor["task_dir"])
+            source_task = source_task if source_task.is_absolute() else root / source_task
+            previous = get_completed_result(source_task, predecessor["stage"],
+                                            source_dir=predecessor.get("source_dir"))
+            xml = Path(zpath(previous / "vasprun.xml"))
+            structure = Vasprun(xml, parse_dos=False, parse_eigen=False,
+                                parse_projected_eigen=False, parse_potcar_file=False).final_structure
+            if calculation in {"dos", "band"}:
+                stages = ["static", calculation] if predecessor["stage"] == "relax" else [calculation]
+                if predecessor["stage"] == "static" and not Path(zpath(previous / "CHGCAR")).is_file():
+                    raise ValueError("Non-SCF follow-up requires CHGCAR from the completed static calculation")
+            else:
+                stages = [calculation]
+            digest = hashlib.sha256()
+            with xml.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            dependency = hashlib.sha256((digest.hexdigest() + json.dumps(predecessor, sort_keys=True)).encode()).hexdigest()
+            print(f"Start {calculation} from completed {predecessor['stage']}: {previous}", flush=True)
+        else:
+            initial = root / config["structure_file"]
+            structure = Structure.from_file(initial)
+            dependency = hashlib.sha256(initial.read_bytes()).hexdigest()
+        if "requested_stages" in config:
+            requested = config["requested_stages"]
+            permitted = {"relax": ["relax"], "static": ["relax", "static"],
+                         "dos": ["relax", "static", "dos"], "band": ["relax", "static", "band"]}[calculation]
+            if not isinstance(requested, list) or requested not in [permitted[i:] for i in range(len(permitted)+1)]:
+                raise ValueError("requested_stages must be a suffix of the calculation chain")
+            stages = requested
         state_path = root / "workflow_state.json"
         state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {"version": 1, "stages": {}}
         if state.get("version") != 1:
             raise ValueError("Unsupported checkpoint version")
-        previous = None
-        dependency = hashlib.sha256(initial.read_bytes()).hexdigest()
+        if predecessor:
+            state["source"] = {"task_dir": str(source_task.resolve()),
+                               "directory": str(previous), "stage": predecessor["stage"],
+                               "dependency": dependency}
+            _save(state_path, state)
+            if not stages and predecessor["stage"] == calculation:
+                _export_completed(root, calculation, previous, config, state, state_path)
         for stage in stages:
             fingerprint = hashlib.sha256(json.dumps({
                 "runner_version": 1, "dependency": dependency, "stage": stage,
@@ -318,7 +366,7 @@ def run_workflow(root, *, fresh=False):
                         _export_completed(root, stage, directory, config, state, state_path)
                     continue
             imported = config.get("resume_from", {}).get(stage)
-            if imported and not entry and not fresh:
+            if imported and not fresh:
                 directory = Path(imported)
                 if not directory.is_absolute():
                     directory = root / directory
@@ -335,7 +383,7 @@ def run_workflow(root, *, fresh=False):
                 if stage == calculation:
                     _export_completed(root, stage, directory, config, state, state_path)
                 continue
-            if not imported and not entry and not fresh:
+            if not imported and not fresh and not predecessor:
                 legacy = _legacy_candidate(root, stage, structure, config)
                 if legacy:
                     directory, final_structure = legacy
@@ -350,6 +398,13 @@ def run_workflow(root, *, fresh=False):
                     if stage == calculation:
                         _export_completed(root, stage, directory, config, state, state_path)
                     continue
+                if stage == "relax" and any((root / "runs").glob("job_*")):
+                    raise ValueError(
+                        "Legacy job_* directories exist, but no completed relax output passed "
+                        "validation. Check the 'Cannot reuse legacy relax' lines above. "
+                        "Use resume_from for a result stored elsewhere, or --fresh to "
+                        "intentionally recalculate from the initial structure."
+                    )
             restart_source = None
             if stage == "relax" and not fresh and reuse:
                 structure, restart_source = _restart_relax_structure(

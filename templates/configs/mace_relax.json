@@ -1,0 +1,12 @@
+{
+  "recipe": "mace_relax",
+  "parameters": {
+    "structure": "E:/structures/initial.cif",
+    "model_path": "E:/models/model.model",
+    "output_path": "E:/results/relaxed.vasp",
+    "device": "cuda",
+    "fmax": 0.05,
+    "steps": 150,
+    "relax_cell": true
+  }
+}

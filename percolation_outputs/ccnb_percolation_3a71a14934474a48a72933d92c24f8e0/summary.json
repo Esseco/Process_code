@@ -1,0 +1,40 @@
+{
+  "mode": "migrant_removed",
+  "percolation_dimension": 3,
+  "channel_dimensions": null,
+  "connection_values_A": [
+    0.6057147871802886,
+    0.6057147871802886,
+    0.5604592403092958
+  ],
+  "connection_values_by_axis_A": {
+    "a": 0.6057147871802886,
+    "b": 0.6057147871802886,
+    "c": 0.5604592403092958
+  },
+  "connected_axes": {
+    "a": true,
+    "b": true,
+    "c": true
+  },
+  "formula": "NaFeF3",
+  "oxidation_states_guessed": true,
+  "migrant": "Na",
+  "cutoff_radius_A": 0.5,
+  "percolates": true,
+  "output_directory": "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0",
+  "artifacts": [
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\bottleneck_connections.csv",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\channel_sites_overlay.cif",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\interstitial_sites.csv",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\structure.cif",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\structure.net",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\structure.resex",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\structure.vesta",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\structure_origin.net",
+    "E:\\Py-Code\\percolation_outputs\\ccnb_percolation_3a71a14934474a48a72933d92c24f8e0\\summary.json"
+  ],
+  "interstitial_count": 34,
+  "connection_record_count": 96,
+  "unique_bottleneck_marker_count": 48
+}

@@ -1,0 +1,8 @@
+{
+  "recipe": "vasp_excited",
+  "parameters": {
+    "ground_dir": "E:/calc/ground_static",
+    "target_dir": "E:/calc/excited_static",
+    "spin": "auto"
+  }
+}

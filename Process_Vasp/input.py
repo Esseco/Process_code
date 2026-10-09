@@ -8,6 +8,9 @@ from .inputs.generation import (
 )
 from .inputs.incar import copy_file, copy_vasp_files, set_incar_tags, update_incar
 from .inputs.excitation import generate_excited_input
+from .inputs.amset_task import generate_amset_task
+from .inputs.followup import generate_followup_task
+from .inputs.continue_task import continue_task
 from .structures.structure import (
     Na1_to_Nax,
     check_layer_equal,
@@ -28,6 +31,9 @@ __all__ = [
     "generate_vasp_input",
     "generate_atomate_input",
     "generate_excited_input",
+    "generate_amset_task",
+    "generate_followup_task",
+    "continue_task",
     "get_INCAR_NUPDOWN",
     "convert_files_in_directory",
     "Na1_to_Nax",

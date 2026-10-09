@@ -1,0 +1,10 @@
+{
+  "recipe": "vasp_workflow",
+  "parameters": {
+    "directory": "E:/tasks/dos_task",
+    "structure": "E:/structures/initial.cif",
+    "calculation": "dos",
+    "incar_settings": {},
+    "kpoints_settings": {}
+  }
+}

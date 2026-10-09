@@ -1,0 +1,7 @@
+{
+  "recipe": "capacity",
+  "parameters": {
+    "formula": "NaFeO2",
+    "migrating_ion": "Na"
+  }
+}

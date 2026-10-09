@@ -6,6 +6,9 @@ from importlib import import_module
 
 
 _EXPORTS = {
+    "deduplicate": "deduplication",
+    "deduplicate_dict": "deduplication",
+    "deduplicate_df": "deduplication",
     "Octahedron": "van_vleck_calculator",
     "StructureFeatureExtractor": "Get_structfeatures_all",
     "WyckoffSiteGroup": "wyckoff",
@@ -22,6 +25,7 @@ _EXPORTS = {
     "estimate_redox_capacity": "Chemical_Capacity_Constraints",
     "screen_substitutions": "Chemical_Capacity_Constraints",
     "analyze_percolation": "percolation",
+    "estimate_spatial_capacity": "spatial_capacity",
 }
 
 __all__ = list(_EXPORTS)

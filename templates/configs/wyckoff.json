@@ -1,0 +1,6 @@
+{
+  "recipe": "wyckoff",
+  "parameters": {
+    "structure": "E:/structures/initial.cif"
+  }
+}

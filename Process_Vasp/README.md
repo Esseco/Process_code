@@ -6,11 +6,15 @@ VASP 输入生成、计算结果读取和可恢复的 atomate2 工作流。默�
 
 ## 按功能使用
 
+新建或继续计算统一使用 **`continue_task("config.json", directory="new_task")`**。只维护一个 JSON，上传后执行 `sbatch submit.sh`；原任务阶段自动在超算识别。见 [统一入口说明](docs/CONTINUE_TASK.md)、[DOS 配置](examples/continue_dos.json)、[AMSET 配置](examples/continue_amset.json)。以下原接口保留兼容。
+
 | 功能 | 公开入口 | 输入 | 输出 | 独立模板 |
 |---|---|---|---|---|
 | DOS/元素分波/IPR | read_dos / read_ipr | 计算目录 | dict + DataFrame，可写 CSV | [dos_to_csv.py](examples/dos_to_csv.py) |
 | 基态转激发态输入 | generate_excited_input | 基态目录和目标目录 | VASP 输入、excitation.json | [excited_inputs.py](examples/excited_inputs.py) |
 | atomate2 任务生成 | generate_atomate_input | CIF/VASP 结构、分阶段参数 | 可上传的任务文件夹 | [create_workflow.py](examples/create_workflow.py) |
+| AMSET 超算后处理 | generate_amset_task / run_amset_postprocess | 已完成的 DOS 任务 | 输运有效质量、σ/τ、CRT 迁移率，JSON/CSV | [AMSET 说明](docs/AMSET_CRT.md) |
+| 已完成结果复用/后续计算 | get_completed_result / generate_followup_task / run_workflow | 已有任务检查点或实际输出目录 | 已完成目录、后续任务、原任务续跑 | [复用说明](docs/FOLLOWUP_USAGE.md) |
 | 结果/状态读取 | read_vasp_output / read_vasp_status | 计算目录 | 结果或状态 dict | [read_results.py](examples/read_results.py) |
 | Fe/Mn 磁矩诊断 | check_dft_magnetic_moments / check_layered_oxide_moments | OUTCAR 或局域磁矩、明确的层状体系标识 | 只读诊断 dict，μB | [磁矩说明](docs/MAGNETIC_CHECK.md) |
 | 原始逐原子磁矩 | read_dft_magnetic_data | OUTCAR、对应结构 | 所有元素的原子索引/磁矩，μB；不筛选 | [磁矩说明](docs/MAGNETIC_CHECK.md) |
@@ -28,6 +32,8 @@ python -m Process_Vasp.examples.read_results
 模板里的路径是示例，不会自动替换为真实数据。生成工作流只写任务文件，不提交；激发态只准备输入，不运行 VASP。DOS 模板不覆盖已有 CSV。
 
 ## 功能约定
+
+- AMSET CRT 后处理：`run_amset_crt(source_dir, output_dir)` 从已完成的均匀 k 点 DOS 输出计算电子/空穴 σ/τ，不提交 VASP。相同输入和参数的已完成结果跳过，失败或参数变化新建 attempt。需要运行环境包含 AMSET；详见 [使用说明](docs/AMSET_CRT.md) 和 [示例](examples/amset_crt.py)。
 
 - DOS 默认输出总 DOS 和元素 DOS，返回 result["df"]；轨道/IPR 可选。支持压缩输出。见 [DOS 说明](docs/DOS_USAGE.md)。
 - 激发态支持单 Gamma 点整数占据，共线自旋；auto 选择较窄同通道带隙，both 生成两个独立计算。见 [激发态说明](docs/EXCITATION_USAGE.md)。

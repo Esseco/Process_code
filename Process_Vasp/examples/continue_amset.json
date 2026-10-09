@@ -1,0 +1,10 @@
+{
+  "previous_task": "/data/home/lichaoyue/26-10-LHL_cal/Dos/Full_TM",
+  "calculation": "amset",
+  "amset_settings": {
+    "doping": [-1e18, 1e18],
+    "temperatures": [300],
+    "relaxation_time": 1e-14,
+    "nworkers": 2
+  }
+}

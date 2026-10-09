@@ -1,0 +1,9 @@
+{
+  "recipe": "vasp_dos",
+  "parameters": {
+    "init_dir": "E:/calc/ground_static",
+    "output_csv": "E:/results/dos.csv",
+    "include_element": true,
+    "include_orbital": false
+  }
+}

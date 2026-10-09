@@ -4,11 +4,36 @@ import random
 import warnings
 
 import pandas as pd
-from Process_Struct.deduplication import deduplicate, deduplicate_dict, deduplicate_df
 from pymatgen.core import Element, Species, Structure
 from pymatgen.transformations.standard_transformations import (
     OrderDisorderedStructureTransformation,
 )
+
+
+def deduplicate(struc_lst: list) -> list:
+    """Load the optional structure toolkit only when deduplication is used."""
+    from Process_Struct.deduplication import deduplicate as implementation
+
+    return implementation(struc_lst)
+
+
+def deduplicate_dict(struc_dict: dict) -> dict:
+    """Deduplicate a structure dictionary with the shared implementation."""
+    from Process_Struct.deduplication import deduplicate_dict as implementation
+
+    return implementation(struc_dict)
+
+
+def deduplicate_df(
+    df: pd.DataFrame,
+    n_keep: int,
+    struct_col: str = "struct",
+    energy_col: str = "energy_mean_per_atom",
+):
+    """Deduplicate a table with the shared implementation."""
+    from Process_Struct.deduplication import deduplicate_df as implementation
+
+    return implementation(df, n_keep, struct_col, energy_col)
 
 
 def gen_ESGS_structure(disordered_structure: Structure, nstr: int) -> list:
