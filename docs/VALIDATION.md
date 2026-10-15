@@ -1,5 +1,13 @@
 # 验证与已知问题
 
+2026-10-15：完整 MD 示例新增 MSD_POSTPROCESS，默认关闭；全部 MD 阶段成功后复用 export_msd 自动导出指定 NVT 阶段/最后 NVT 的指定元素 MSD。元素、输出路径及覆盖策略可配置，预先拦截无 NVT、错误阶段、已有 CSV、零步及覆盖 MD 日志等情况；preview 不计算。新增 7 项示例集成测试，使用 EMT 真实短程 NVT/NPT；py-mace 65 项全部通过，py1 仅跳过已有缺失 full MTKNPT 的 1 项。未加载 MLIP 权重或调整模型环境。
+
+2026-10-15：Process_MLIP 新增 export_msd，复用 ASE DiffusionCoefficient，默认导出整段固定晶胞 NVT 轨迹的逐帧、按元素 MSD（总量及 xyz 分量，Å²），不拟合 D 或电导率。可从同目录报告恢复真实时间轴，含末尾短间隔；默认保留本项目的连续坐标，外部 wrapped 轨迹使用 ASE find_mic 展开。新增 11 项解析轨迹/真实 EMT NVT 测试，验证 MSD 归一化、人数平均、周期/斜晶胞、时间轴、漂移修正及输出保护。py-mace 的全部 58 项回归测试通过；py1 的 58 项仅跳过已有的 1 项缺失 full MTKNPT 实测，其余通过。未加载模型或调整环境，未对真实材料扩散采样收敛性作验证。示例见 Process_MLIP/examples/msd.py。
+
+2026-10-15：MD 新增 npt_cell_mode=isotropic/full，保留 NHC NVT 与 MTK NPT；开放 tchain=3、pchain=3、tloop=1、ploop=1。既有 py-mace 环境的 47 项测试全部通过，包括 EMT 实际柔性 MTK 晶胞形状变化；py1 运行同一 47 项，其中缺少 full MTKNPT 的 1 项真实积分测试明确跳过，其余通过。验证默认兼容、NVT/各向同性参数、full 模式分派、阶段覆盖、缺失实现加载前报错。未调整模型环境，未运行真实模型 GPU MD 或验证材料相变/热膨胀精度。示例与 Process_MLIP/MD.md 已更新。
+
+2026-10-15：MD 新增可选 measure_steps_per_second，记录每阶段及整次流程 steps/s；只计积分和观察回调/输出，排除加载、预弛豫及最终导出，CUDA 在计时前后同步。py1 的 40 项测试通过，其中时钟替身验证计时计算、CUDA 同步调用顺序、零步/关闭计时及多阶段按总时间汇总；未验证真实 GPU 计时精度，未调整模型环境。
+
 2026-10-15：run_mlip_md 新增可选 pre_relax（默认关闭），复用原 MLIPRelaxer 和同一 calculator，可仅优化原子或同时优化晶胞。py1 的 35 项回归测试通过。新增针对性 EMT 测试覆盖模型单次加载、优化结构传入 MD、初速度策略、非收敛默认停止/显式继续、失败报告和输出保护；含真实短程“晶胞弛豫 → NVT → NPT”。未调整本地模型环境；四模型真实 GPU/加速与材料科学精度未验证。完整示例的 PRE_RELAX 参数区和 Process_MLIP/MD.md 已更新。
 
 2026-10-15：Process_MLIP 新增 model_config / run_mlip_md / run_md，支持 MACE、SevenNet、CHGNet、ORB 的配置式 NVT/NPT 与连续阶段；新增 CuEq、FlashTP 开关。py1 使用 ASE EMT 实际短程积分和替身模型接口验证，不加载四模型权重、不调整本地模型环境。覆盖独立 NVT/NPT、速度继承、单次加载、参数覆盖、压力动能项/单位、初末帧、输出保护、非有限数值和失败报告、四模型分派/加速开关。示例安全导入及 --preview 不导入 torch 或模型库。超算真实 GPU MD、CuEq/FlashTP/ORB 编译和科学精度未验证。详见 Process_MLIP/MD.md。
@@ -45,3 +53,29 @@ Process_Struct/examples/percolation_sites.py 在已有 ccnb 环境对 NaFeF3 单
 2026-10-08：Process_Vasp 新增统一已完成结果解析 get_completed_result、后续任务生成 generate_followup_task、公开 run_workflow 续跑入口；原运行器支持 previous_result 配置，仅执行需要的新阶段，AMSET 也复用统一解析入口。更新静态索引；未运行测试、VASP/AMSET 或集群提交。服务器源结果在执行时验证，生成时不访问超算。
 
 2026-10-09：加入 continue_task + 单 JSON 统一任务生成；服务器解析完成阶段及参数变更，执行 suffix 并保持原接口。AMSET 缺 DOS 时须显式 allow_vasp 和合适提交资源。仅代码/索引更新，未运行测试或真实计算。
+
+### 2026-10-15 MSD transport fitting
+
+- Added independent fit_msd: inclusive ps window, free-intercept NumPy OLS per species/segment, three-dimensional and directional diffusion, Nernst–Einstein conductivity and selected-species sum. Explicit K/Å³/charge-number inputs, SI and conventional units, R²/intercepts/sample diagnostics, optional protected JSON.
+- Both MD and standalone MSD examples expose TRANSPORT_FIT (default off). MD reuses chosen NVT target temperature and volume; checks fit duration/sample count before loading a model. Analysis does not infer convergence, uncertainties or ion cross-correlations.
+- py1: 72 tests, OK, one existing full-MTK skip (ASE class unavailable). Existing py-mace: 72 tests, OK. Added seven tests for analytic slopes/intercepts, irregular sampling, units, charge/multispecies sums, segments, malformed data/output protection, zero/negative slopes, real EMT NVT integration and preflight rejection.
+- No dependency/environment changes or MLIP weights loaded. Real-material long-time diffusion/conductivity and GPU execution remain unverified. Existing ExpCellFilter deprecation warning remains unrelated.
+
+### 2026-10-15 Symmetrix optional MACE backend
+
+- Added enable_symmetrix, symmetrix_use_kokkos and symmetrix_species to MACE factory/presets and standalone relaxation; CuEq/Symmetrix mutually exclusive. Existing model reports preserve the effective configuration.
+- Uses official symmetrix.Symmetrix and extract_mace_data. Supports preconverted JSON without Torch/MACE import, or temporary .model conversion with dtype restoration and cleanup; no source checkpoint edits. Example/docs explain OMat head=None, element selection, build-selected Kokkos device and upstream architecture restrictions.
+- py1: 77 tests, OK (one existing missing full-MTK skip). py-mace: 77 tests, OK. Five added contract tests cover conversion, JSON, invalid combinations, failures, and EMT-substituted pre-relax/NVT/NPT reuse.
+- User confirmed Symmetrix installed on the supercomputer, not this Windows machine. No environment modifications. Real Symmetrix model conversion/inference, OMat E/F/stress consistency, Kokkos/GPU and speedup remain unverified locally.
+
+### 2026-10-15 Independent supercomputer benchmark folders
+
+- Eight task folders each contain a full editable run_md.py (paths/model/optional all pre-relax/NVT/MSD/optional transport), submit.sh and README. Default 5000-step NVT and automatic entire-trajectory MSD export; identical seed/settings, no pre-relax for input consistency.
+- Slurm scripts derived from user-provided 北京超算GPU.sh, retaining v100m3/1 GPU/32 GB/2 tasks/CUDA 12.8; bash source activation, per-job logs, environment mapping mace_cueq / sevennet_flash / python. Submission not performed.
+- Two tests loop over all eight scripts: pure previews plus short real ASE EMT NVT and MSD export with model-loader replacement; check acceleration flags, Symmetrix element selection, reports and submission environments/LF. Full py1 suite: 79 tests, OK, 1 existing MTK skip. No real model/GPU/Slurm validation; local bash executable unavailable for shell syntax execution.
+- Delivered eight task directories and root README/collector to C:/Users/Esseco/Desktop/1/2 with hash verification. Earlier generated flat scripts preserved in legacy_scripts after confirming unchanged hashes. No environment changes.
+
+### 2026-10-15 Minimal benchmark parameters
+
+- Reduced the eight task scripts to essential configuration; FIRE full-cell pre-relaxation, 600 K/5000-step NVT, MACE/Symmetrix float32, trajectory/log intervals both 1. SevenNet/CHGNet retain native precision without unsupported dtype arguments. Other settings use library defaults.
+- Updated desktop copies with hash verification; Slurm scripts unchanged. Targeted tests cover all eight scripts and short EMT FIRE->NVT->MSD runs, including every-step MSD frame count; 2 tests OK. Real model/GPU execution remains unverified.

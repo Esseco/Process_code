@@ -26,7 +26,7 @@ final_atoms = result["final_atoms"]
 独立 NPT：`run_mlip_md(..., ensemble="npt", temperature_K=800, steps=10000)`，
 无需传 stages，也无需先跑 NVT。独立 NVT 同理。
 输入支持文件路径、ASE Atoms、pymatgen Structure。Atoms 会复制，不修改调用方结构或速度。
-预弛豫默认关闭，可按下节开启；函数不自动扩胞或设置 PBC，由调用者根据材料体系准备。
+函数的预弛豫默认关闭，可按下节开启；完整 `examples/mlip_md.py` 示例默认先全弛豫（原子和完整晶胞，`enabled=True, relax_cell=True`），收敛后直接运行一个 NVT 阶段。NVT 固定优化后的晶胞，不自动运行 NPT。函数不自动扩胞或设置 PBC，由调用者根据材料体系准备。
 
 ## 可选预弛豫
 
@@ -128,6 +128,11 @@ ORB 的 compile 是官方 torch.compile 选项，首次编译可能额外耗时�
 | tdamp_fs | 100 | 温控阻尼时间 fs |
 | pressure_bar | 1 | NPT 外压 bar，正值表示压缩 |
 | pdamp_fs | 1000 | NPT 压控阻尼时间 fs |
+| npt_cell_mode | isotropic | NPT 晶胞模式：isotropic / full |
+| tchain | 3 | 温控链长度，正整数，NVT/NPT 均使用 |
+| pchain | 3 | 压控器温控链长度，正整数，仅 NPT 使用 |
+| tloop | 1 | 温控积分子步数，正整数，NVT/NPT 均使用 |
+| ploop | 1 | 压控积分子步数，正整数，仅 NPT 使用 |
 | seed | 42 | 初速度随机数种子 |
 | initialize_velocities | None | 初段无 momenta 时初始化，否则保留 |
 | remove_com | True | 初始化时去除质心平动 |
@@ -135,10 +140,43 @@ ORB 的 compile 是官方 torch.compile 选项，首次编译可能额外耗时�
 | trajectory_interval / log_interval | 10 / 10 | 写出间隔，单位为步 |
 | overwrite | False | 是否覆盖本函数已有输出 |
 | time_offset_fs | 0 | 公共累计时间起点 fs |
+| measure_steps_per_second | False | 开启实际 MD steps/s 统计 |
 
-NVT 使用 NoseHooverChainNVT；NPT 使用 IsotropicMTKNPT，改变体积但不独立改变晶胞形状。
+比较运行速度时可设置 `measure_steps_per_second=True`，完整示例中已开启。
+每阶段及整次流程的返回值/JSON 报告均包含 `steps_per_second`，关闭时或没有积分步数时为 None。
+整次流程按总积分步数除以各段计时之和计算，不直接平均各段速度；
+若任一有积分步数的阶段未开启计时，整次流程的速度为 None，已计时阶段仍各自保留速度。
+计时仅包围 MD 积分运行，包含观察回调、日志及轨迹写出，
+不包含模型加载、预弛豫、初始性质探测和最终结构导出；CUDA 在计时前后同步。
+这不是纯模型推断速度测试，也没有额外的预热步数或剔除积分期间可能发生的编译。
+比较时应使用相同初始结构/速度、精度、硬件及输出频率。
+
+NVT 继续使用 NoseHooverChainNVT，固定晶胞。
+NPT 可选择下列模式，目标外压均为标量 pressure_bar（静水压力）：
+
+| npt_cell_mode | ASE 控制器 | 晶胞自由度 |
+|---|---|---|
+| isotropic（默认） | IsotropicMTKNPT | 等比例缩放体积，保持晶胞形状 |
+| full | MTKNPT | 允许体积、不同晶轴及晶胞形状/角度变化 |
+
+```python
+STAGES = [
+    dict(ensemble="nvt", temperature_K=800, steps=1000),
+    dict(ensemble="npt", npt_cell_mode="full", temperature_K=800, steps=5000,
+         tchain=3, pchain=3, tloop=1, ploop=1),
+]
+```
+
+五项参数均可放在公共参数或各阶段中，仍然遵循阶段覆盖公共参数的规则。
+npt_cell_mode、pchain、ploop 在 NVT 中不参与动力学；NVT 仍保持晶胞不变。
+full 会开放剪切/角度自由度，并非仅改变三个晶轴长度；本接口未提供选定轴/角度约束。
+温控/压控链长度及积分子步数严格要求正整数，不能用 0 关闭控制器。
+默认 3/3/1/1 沿用 ASE 默认值，增加子步数不等于增加输出的物理 MD 步数。
+
 此版本不支持原子约束，遇到约束报错；NPT 必须具有完整 3D PBC、正体积右手晶胞和应力支持。
-需要包含这两个积分器的 ASE 版本（本地 ASE 已提供）。
+所选模式必须由运行环境的 ASE 提供；缺少 MTKNPT 时，选择 full 会在模型加载及计算前报错，
+不会安装依赖或静默退回 isotropic。本机 py1 缺少 full MTKNPT，已有 py-mace 的 ASE 3.27.0 提供该实现。
+模式和链参数会写入有效 parameters，实际积分器类名记录在每阶段的 md_controller 字段。
 NVT calculator 可不支持应力，此时 pressure_bar 列为空。
 日志压力为 `-trace(stress)/3`，包含动能项，并换算成 bar；能量为 eV、体积为 Å³。
 
@@ -192,3 +230,61 @@ python -m unittest discover -s Process_MLIP -p "test_*.py"
 覆盖 NVT/NPT 实际短程积分、压力单位与动能项、初末帧、随机种子、速度继承、
 单次加载、参数覆盖、输出保护、失败报告、四后端分派及加速开关传递。
 预弛豫另覆盖原子/晶胞优化、同一模型复用、MD 继承优化后结构、未收敛处理与初速度策略。
+控制器测试覆盖模式选择、链参数透传、默认向后兼容、参数校验、阶段覆盖与缺失实现报错。
+真实 EMT 柔性晶胞积分测试会在支持 MTKNPT 的 ASE 中执行，不支持时明确跳过；
+本次在已有 py-mace 环境完成了此实测，未加载模型权重或调整环境。
+
+## MSD 后处理
+
+固定晶胞 NVT 的整段 `.traj` 可用 `export_msd` 导出逐帧 MSD CSV，复用 ASE 内置分析。
+见 [MSD.md](MSD.md) 和 [examples/msd.py](examples/msd.py)，无需重新加载模型。
+完整 MD 示例也可通过 `MSD_POSTPROCESS` 开关在运行结束后自动导出所选 NVT 阶段的 MSD。
+元素、阶段序号/最后 NVT、CSV 路径及覆盖策略均可在同一配置区修改。
+
+## MACE 的 Symmetrix 后端（超算可选）
+
+Symmetrix 是独立的 ASE calculator，不是 MACECalculator 的一个 CUDA 开关。
+本项目按 [官方 ASE 接口](https://github.com/wcwitt/symmetrix/blob/main/symmetrix/source/symmetrix/symmetrix_calc.py)
+接入，不安装依赖、不修改权重。配置默认关闭，不能和 CuEq 同时开启。
+
+```python
+from Process_MLIP import model_config, run_mlip_md
+model = model_config(
+    "mace",
+    model_path="/cluster/models/mace-omat-0-medium.model",
+    head=None,                         # OMat 单头；不要沿用 MH1 的 omat_pbe
+    device="cpu",
+    default_dtype="float64",
+    enable_cueq=False,
+    enable_symmetrix=True,
+    symmetrix_use_kokkos=False,
+    symmetrix_species=["Na", "Ni", "Mn", "O"],  # 改成体系真实元素
+)
+result = run_mlip_md(
+    "initial.cif", model=model, output_dir="omat_symmetrix",
+    pre_relax={"enabled": True, "relax_cell": False},
+    stages=[{"ensemble": "nvt", "steps": 10000}],
+    temperature_K=800, measure_steps_per_second=True,
+)
+```
+
+完整 `examples/mlip_md.py` 的 MACE 配置区也提供以上开关。独立
+`create_mace_calculator`、`relax_structure_mace` 同样接受这些参数。
+预弛豫和连续 MD 只创建一次 Symmetrix calculator。
+
+- `symmetrix_use_kokkos=False`：原生 CPU，实现要求 float64、device="cpu"。
+- `True`：使用安装时编译的 Kokkos 目标，可能是 CPU OpenMP，也可能是 CUDA；
+  float32/float64 均由官方接口处理。`device` 不会改变 Kokkos 的编译目标；必须和超算的
+  构建匹配。当前封装仅接受 cpu/cuda，不接受 cuda:序号；GPU 可见性由运行环境设置。
+- `.model` 输入会调用官方 `extract_mace_data`，并生成临时 JSON，初始化后清理；
+  `symmetrix_species=None` 转换所有训练元素，可能非常耗时，建议列出体系实际元素。
+  转换不计入现有 MD steps/s。转换器可能用样条近似，正式生产前应对比标准 MACE 的
+  能量、力和应力，并检查所需精度。
+- 官方转换器对模型层数、球谐阶数和相互作用模块有兼容性限制，错误会直接传播；
+  不静默改回标准 MACE，不保证任意 OMat/MH1 模型都支持。
+- 超算重复运行建议先用官方工具导出 JSON，例如
+  `symmetrix_extract_mace mace-omat-0-medium.model --atomic-numbers 8 11 25 28`，
+  然后把 model_path 改为生成的 JSON，并设置 head=None、symmetrix_species=None。
+  JSON 已固定元素与 head，运行时不能再选；此加载分支无需导入 Torch/MACE。
+- 当前开发机没有安装 Symmetrix；测试使用 ASE EMT 替代验证传参与工作流，实际
+  OMat 推理、Kokkos/GPU 和性能提升需要在已安装 Symmetrix 的超算上验证。

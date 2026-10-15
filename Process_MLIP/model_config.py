@@ -8,7 +8,8 @@ _PRESETS = {
     "mace-mh1": dict(type="mace", model_path=str(Path(__file__).resolve().parents[1]
                                                / "MLIP_model/mace-mh-1.model"),
                      device="cuda", head="omat_pbe", default_dtype="float64",
-                     enable_cueq=False),
+                     enable_cueq=False, enable_symmetrix=False,
+                     symmetrix_use_kokkos=False, symmetrix_species=None),
     "sevennet-omni": dict(type="sevennet", model_path=None, model_name="7net-omni",
                           device="cuda", modal="mpa", enable_flash=False),
     "chgnet": dict(type="chgnet", model_path=None, model_name="0.3.0", device="cuda"),
@@ -40,7 +41,7 @@ def model_config(preset="mace-mh1", **overrides):
     result.update(deepcopy(overrides))
     if isinstance(result["model_path"], Path):
         result["model_path"] = str(result["model_path"])
-    for key in ("enable_cueq", "enable_flash", "compile"):
+    for key in ("enable_cueq", "enable_symmetrix", "symmetrix_use_kokkos", "enable_flash", "compile"):
         if key in result and type(result[key]) is not bool:
             raise TypeError(f"{key} must be bool")
     if not isinstance(result["device"], str) or not result["device"]:
@@ -48,6 +49,8 @@ def model_config(preset="mace-mh1", **overrides):
     if result["model_path"] is not None and not isinstance(result["model_path"], str):
         raise TypeError("model_path must be a path string or None")
     if result["type"] == "mace":
+        if result["enable_symmetrix"] and result["enable_cueq"]:
+            raise ValueError("CuEq and Symmetrix are mutually exclusive")
         if not result["model_path"]:
             raise ValueError("MACE requires a local model_path")
         if result["default_dtype"] not in ("float32", "float64"):

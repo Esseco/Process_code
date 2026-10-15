@@ -13,6 +13,10 @@ def relax_structure_mace(
     device="cuda",
     head=None,
     default_dtype="float64",
+    enable_cueq=False,
+    enable_symmetrix=False,
+    symmetrix_use_kokkos=False,
+    symmetrix_species=None,
     fmax=0.05,
     steps=150,
     relax_cell=True,
@@ -30,7 +34,11 @@ def relax_structure_mace(
     if not isinstance(steps, int) or isinstance(steps, bool) or steps < 0:
         raise ValueError("steps must be a nonnegative integer")
     calculator = create_mace_calculator(model_path, device=device, head=head,
-                                         default_dtype=default_dtype)
+                                         default_dtype=default_dtype,
+                                         enable_cueq=enable_cueq,
+                                         enable_symmetrix=enable_symmetrix,
+                                         symmetrix_use_kokkos=symmetrix_use_kokkos,
+                                         symmetrix_species=symmetrix_species)
     # MACE exposes the actual selected head, including its own default.
     selected_head = getattr(calculator, "head", head)
     if selected_head is None:

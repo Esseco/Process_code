@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 
 from .calculators import create_mlip_calculator
-from .md import (_check_outputs, _copy_structure, _validate_atoms,
+from .md import (_check_outputs, _copy_structure, _get_dynamics_class, _validate_atoms,
                  _validate_options, _write_json, run_md)
 from .model_config import _resolve_model_config
 from .pre_relax import _RELAX_FILES, _run_pre_relax, _validate_pre_relax
@@ -31,6 +31,10 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
     Validates all stages/output collisions before loading the model. Writes
     run_report.json and numbered stage directories; returns final_atoms,
     stage_results, elapsed simulation time and report paths.
+    measure_steps_per_second=True records per-stage throughput and total MD
+    throughput weighted by measured durations, excluding pre-relaxation.
+    npt_cell_mode (isotropic/full) and tchain/pchain/tloop/ploop may be set
+    globally or per stage; controller availability is checked before loading.
     """
     config = _resolve_model_config(model)
     relaxation = _validate_pre_relax(pre_relax)
@@ -68,6 +72,7 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
         # Later stages will receive momenta from the preceding stage.
         _validate_atoms(atoms, dict(parameters, initialize_velocities=True)
                         if index else parameters)
+        _get_dynamics_class(parameters)
         destination = root / f"{index + 1:02d}_{name or parameters['ensemble']}"
         _check_outputs(destination, common["overwrite"])
         prepared.append(dict(output_dir=str(destination), parameters=parameters))
@@ -112,6 +117,11 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
             _write_json(summary_path, summary)
         summary.update(status="completed", total_steps=sum(r["steps_completed"] for r in results),
                        end_time_fs=offset, elapsed_time_fs=offset - common["time_offset_fs"])
+        timed = [r for r in results if r["steps_completed"] > 0]
+        summary["steps_per_second"] = (
+            sum(r["steps_completed"] for r in timed)
+            / sum(r["steps_completed"] / r["steps_per_second"] for r in timed)
+            if timed and all(r["steps_per_second"] is not None for r in timed) else None)
         _write_json(summary_path, summary)
     except (Exception, KeyboardInterrupt) as exc:
         summary.update(status="failed", error=f"{type(exc).__name__}: {exc}")
@@ -120,4 +130,5 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
     return dict(final_atoms=atoms, stage_results=results, pre_relax_result=relax_result,
                 status="completed",
                 total_steps=summary["total_steps"], elapsed_time_fs=summary["elapsed_time_fs"],
+                steps_per_second=summary["steps_per_second"],
                 end_time_fs=offset, report_file=str(summary_path), output_dir=str(root))

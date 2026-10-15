@@ -74,10 +74,10 @@ PROJECTS = {
         "基于 ASE calculator 的结构弛豫与四模型 NVT/NPT 分子动力学",
         "工具包",
         "ASE Atoms / 结构文件、calculator 或模型预设及 MD 阶段参数",
-        "弛豫/MD 最终结构、能量、轨迹、CSV 日志与 JSON 报告",
+        "弛豫/MD 最终结构、能量、轨迹、CSV 日志、MSD CSV 与 JSON 报告",
         "ASE；模型 calculator 的依赖由调用者提供",
         "模型和设备显式传入；不能将优化器结束自动等同于达到收敛阈值。",
-        ["MLIPRelaxer", "model_config", "run_mlip_md", "run_md", "create_mlip_calculator"],
+        ["MLIPRelaxer", "model_config", "run_mlip_md", "run_md", "create_mlip_calculator", "export_msd", "fit_msd"],
     ),
     "Process_AL_MC": (
         "层状氧化物 MC 排序与 MACE 弛豫",

@@ -18,7 +18,9 @@ def _e3nn_import_context():
 
 
 def create_mace_calculator(model_path, *, device="cuda", head=None,
-                           default_dtype="float64", enable_cueq=False):
+                           default_dtype="float64", enable_cueq=False,
+                           enable_symmetrix=False, symmetrix_use_kokkos=False,
+                           symmetrix_species=None):
     """Load a local MACE checkpoint. MH-1 filenames default to omat_pbe.
 
     Only load trusted checkpoints: MACE deserializes Python model objects.
@@ -26,21 +28,70 @@ def create_mace_calculator(model_path, *, device="cuda", head=None,
     """
     if type(enable_cueq) is not bool:
         raise TypeError("enable_cueq must be bool")
+    if type(enable_symmetrix) is not bool or type(symmetrix_use_kokkos) is not bool:
+        raise TypeError("Symmetrix switches must be bool")
+    if enable_cueq and enable_symmetrix:
+        raise ValueError("CuEq and Symmetrix are mutually exclusive")
     model = Path(model_path)
     if not model.is_file():
         raise FileNotFoundError(f"MACE model not found: {model}")
+    selected_head = head
+    if selected_head is None and re.search(r"mh[-_]?1(?!\d)", model.stem.lower()):
+        selected_head = "omat_pbe"
+    if enable_symmetrix:
+        return _create_symmetrix_calculator(model, device, selected_head, default_dtype,
+                                             symmetrix_use_kokkos, symmetrix_species)
     with _e3nn_import_context():
         from mace.calculators import MACECalculator
     if enable_cueq and "enable_cueq" not in inspect.signature(MACECalculator).parameters:
         raise TypeError("Installed MACECalculator does not expose enable_cueq; use a supported MACE version")
-    selected_head = head
-    if selected_head is None and re.search(r"mh[-_]?1(?!\d)", model.stem.lower()):
-        selected_head = "omat_pbe"
     kwargs = dict(model_paths=str(model), device=device, default_dtype=default_dtype,
                   enable_cueq=enable_cueq)
     if selected_head is not None:
         kwargs["head"] = selected_head
     return MACECalculator(**kwargs)
+
+
+def _create_symmetrix_calculator(model, device, head, dtype, use_kokkos, species):
+    """Official Symmetrix adapter; temporary conversion leaves weights untouched.
+
+    Kokkos target is chosen at library build time, not by torch device. Only
+    cpu/cuda accepted; indexed GPU selection is intentionally unsupported.
+    Preconverted JSON carries its own head/species and needs no torch import.
+    """
+    if device not in ("cpu", "cuda"):
+        raise ValueError("Symmetrix device must be cpu or cuda; select GPUs through the runtime environment")
+    if device == "cuda" and not use_kokkos:
+        raise ValueError("Symmetrix CUDA requires symmetrix_use_kokkos=True and a CUDA build")
+    if dtype not in ("float32", "float64") or (dtype == "float32" and not use_kokkos):
+        raise ValueError("Symmetrix requires float64 without Kokkos; Kokkos supports float32/float64")
+    if species is not None:
+        from ase.data import atomic_numbers
+        if (not isinstance(species, (list, tuple)) or not species
+                or any(not isinstance(s, str) or s not in atomic_numbers or s == "X" for s in species)):
+            raise ValueError("symmetrix_species must be None or a nonempty list of element symbols")
+    from symmetrix import Symmetrix
+    if model.suffix.lower() == ".json":
+        if head is not None or species is not None:
+            raise ValueError("Preconverted Symmetrix JSON fixes head/species; set head=None and symmetrix_species=None")
+        return Symmetrix(model_file=str(model), dtype=dtype, use_kokkos=use_kokkos)
+    # Explicit conversion avoids upstream's open NamedTemporaryFile Windows
+    # incompatibility, and flushes/closes JSON before the C++ evaluator reads it.
+    import json
+    from tempfile import TemporaryDirectory
+    with _e3nn_import_context():
+        from symmetrix.extract_mace_data import extract_mace_data
+    import torch
+    original_dtype = torch.get_default_dtype()
+    try:
+        data = extract_mace_data(str(model), species=species, head=head)
+    finally:
+        # Upstream multihead conversion can change torch's global default.
+        torch.set_default_dtype(original_dtype)
+    with TemporaryDirectory(prefix="mlip_symmetrix_") as temporary:
+        converted = Path(temporary) / "model.json"
+        converted.write_text(json.dumps(data), encoding="utf-8")
+        return Symmetrix(model_file=str(converted), dtype=dtype, use_kokkos=use_kokkos)
 
 
 def create_sevennet_calculator(model="7net-omni", *, device="cpu", modal="mpa",

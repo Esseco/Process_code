@@ -5,6 +5,7 @@ import json
 from numbers import Integral, Real
 from pathlib import Path
 import platform
+from time import perf_counter
 
 import numpy as np
 from ase import Atoms, units
@@ -17,7 +18,9 @@ _DEFAULTS = dict(ensemble="nvt", temperature_K=300.0, steps=1000,
                  timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0,
                  pdamp_fs=1000.0, initialize_velocities=None, seed=42,
                  remove_com=True, zero_rotation=False, trajectory_interval=10,
-                 log_interval=10, overwrite=False, time_offset_fs=0.0)
+                 log_interval=10, overwrite=False, time_offset_fs=0.0,
+                 measure_steps_per_second=False, npt_cell_mode="isotropic",
+                 tchain=3, pchain=3, tloop=1, ploop=1)
 _FILES = ("md.traj", "md.csv", "final.traj", "report.json")
 
 
@@ -29,6 +32,9 @@ def _validate_options(options):
     if not isinstance(result["ensemble"], str) or result["ensemble"].lower() not in ("nvt", "npt"):
         raise ValueError("ensemble must be nvt or npt")
     result["ensemble"] = result["ensemble"].lower()
+    if not isinstance(result["npt_cell_mode"], str) or result["npt_cell_mode"].lower() not in ("isotropic", "full"):
+        raise ValueError("npt_cell_mode must be isotropic or full")
+    result["npt_cell_mode"] = result["npt_cell_mode"].lower()
     for key in ("temperature_K", "timestep_fs", "tdamp_fs", "pdamp_fs",
                 "pressure_bar", "time_offset_fs"):
         value = result[key]
@@ -39,18 +45,34 @@ def _validate_options(options):
         if key == "time_offset_fs" and value < 0:
             raise ValueError("time_offset_fs must be nonnegative")
         result[key] = float(value)
-    for key in ("steps", "seed", "trajectory_interval", "log_interval"):
+    for key in ("steps", "seed", "trajectory_interval", "log_interval",
+                "tchain", "pchain", "tloop", "ploop"):
         value = result[key]
-        minimum = 1 if key.endswith("interval") else 0
+        minimum = 0 if key in ("steps", "seed") else 1
         if isinstance(value, bool) or not isinstance(value, Integral) or value < minimum:
             raise ValueError(f"{key} must be an integer >= {minimum}")
         result[key] = int(value)
-    for key in ("remove_com", "zero_rotation", "overwrite"):
+    for key in ("remove_com", "zero_rotation", "overwrite", "measure_steps_per_second"):
         if type(result[key]) is not bool:
             raise TypeError(f"{key} must be bool")
     if result["initialize_velocities"] is not None and type(result["initialize_velocities"]) is not bool:
         raise TypeError("initialize_velocities must be None, True or False")
     return result
+
+
+def _get_dynamics_class(options):
+    """Select the requested official ASE integrator without model imports."""
+    from ase.md import nose_hoover_chain
+    if options["ensemble"] == "nvt":
+        name = "NoseHooverChainNVT"
+    else:
+        name = "IsotropicMTKNPT" if options["npt_cell_mode"] == "isotropic" else "MTKNPT"
+    controller = getattr(nose_hoover_chain, name, None)
+    if controller is None:
+        raise ImportError(f"Requested controller {name} is unavailable in ASE {version('ase')}; "
+                          "use an ASE environment providing this controller. "
+                          "No fallback controller is selected.")
+    return controller
 
 
 def _copy_structure(structure):
@@ -152,23 +174,40 @@ def _write_json(path, data):
                                     allow_nan=False), encoding="utf-8")
 
 
+def _synchronize_for_timing(calculator, metadata):
+    device = getattr(calculator, "device", None)
+    if device is None and isinstance(metadata, dict):
+        device = metadata.get("device")
+    if device is not None and str(device).startswith("cuda"):
+        import torch
+        torch.cuda.synchronize(device)
+
+
 def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=300.0,
            steps=1000, timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0,
            pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True,
            zero_rotation=False, trajectory_interval=10, log_interval=10,
-           overwrite=False, time_offset_fs=0.0, model_metadata=None):
-    """Run one NHC NVT or isotropic MTK NPT stage with an ASE calculator.
+           overwrite=False, time_offset_fs=0.0, model_metadata=None,
+           measure_steps_per_second=False, npt_cell_mode="isotropic",
+           tchain=3, pchain=3, tloop=1, ploop=1):
+    """Run one NHC NVT or MTK NPT stage with an ASE calculator.
 
     Positions/cell use Å; energies eV, temperature K, time/damping fs, pressure
     bar (positive compression). Input atoms are copied. initialize_velocities
     None initializes only when momenta are absent; False preserves velocities;
     True samples Maxwell-Boltzmann momenta using seed. COM removal/rotation
     options apply only to initialization. Constraints are not supported.
+    npt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.
+    tchain/tloop control the thermostat; pchain/ploop apply only to NPT.
+    Chain lengths and integration substeps must be positive integers.
 
     Writes md.traj, md.csv, final.traj (with momenta), report.json. Existing
     owned files require overwrite=True; unrelated files are never removed.
     No exact thermostat/barostat restart is provided. Returns final_atoms,
     output paths, final thermodynamic state and actual completed step count.
+    measure_steps_per_second times dyn.run (including observers/output), with
+    CUDA synchronization. Loading, pre-relaxation, property probes and final
+    export are excluded. steps_per_second is None when off or steps is zero.
     """
     options = _validate_options({key: value for key, value in locals().copy().items()
                                  if key in _DEFAULTS})
@@ -177,7 +216,7 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
     root = _check_outputs(output_dir, overwrite)
     metadata = {} if model_metadata is None else model_metadata
     json.dumps(metadata, allow_nan=False)  # fail before producing outputs
-    from ase.md.nose_hoover_chain import NoseHooverChainNVT, IsotropicMTKNPT
+    dynamics_class = _get_dynamics_class(options)
     from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary, ZeroRotation
     initialized = initialize_velocities is True or (
         initialize_velocities is None and not atoms.has("momenta"))
@@ -193,12 +232,11 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
     initial_state = _snapshot(atoms, ensemble.lower() == "npt")
     arguments = dict(atoms=atoms, timestep=timestep_fs * units.fs,
                      temperature_K=temperature_K, tdamp=tdamp_fs * units.fs,
-                     logfile=None)
-    if ensemble.lower() == "npt":
-        dyn = IsotropicMTKNPT(**arguments, pressure_au=pressure_bar * units.bar,
-                              pdamp=pdamp_fs * units.fs)
-    else:
-        dyn = NoseHooverChainNVT(**arguments)
+                     tchain=options["tchain"], tloop=options["tloop"], logfile=None)
+    if options["ensemble"] == "npt":
+        arguments.update(pressure_au=pressure_bar * units.bar, pdamp=pdamp_fs * units.fs,
+                         pchain=options["pchain"], ploop=options["ploop"])
+    dyn = dynamics_class(**arguments)
     root.mkdir(parents=True, exist_ok=True)
     paths = dict(trajectory_file=str(root / "md.traj"), log_file=str(root / "md.csv"),
                  final_structure=str(root / "final.traj"), report_file=str(root / "report.json"))
@@ -208,7 +246,8 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
             (root / name).unlink()
     report = dict(status="running", parameters=options, model=metadata,
                   calculator=f"{type(calculator).__module__}.{type(calculator).__name__}",
-                  versions=_versions(calculator), steps_completed=0,
+                  md_controller=type(dyn).__name__,
+                  versions=_versions(calculator), steps_completed=0, steps_per_second=None,
                   velocity_initialization="sampled" if initialized else "preserved",
                   initial_state=initial_state, **paths)
     _write_json(paths["report_file"], report)
@@ -231,7 +270,15 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
                 report["final_state"] = state
 
             dyn.attach(observe, interval=1)
+            if measure_steps_per_second:
+                _synchronize_for_timing(calculator, metadata)
+                start = perf_counter()
             dyn.run(steps)
+            if measure_steps_per_second:
+                _synchronize_for_timing(calculator, metadata)
+                duration = perf_counter() - start
+                if dyn.nsteps > 0 and np.isfinite(duration) and duration > 0:
+                    report["steps_per_second"] = float(dyn.nsteps / duration)
         write(paths["final_structure"], atoms, format="traj")
         report.update(status="completed", steps_completed=int(dyn.nsteps),
                       end_time_fs=float(time_offset_fs + dyn.nsteps * timestep_fs))

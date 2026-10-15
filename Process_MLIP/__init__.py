@@ -15,3 +15,7 @@ __all__ += ["model_config", "create_chgnet_calculator", "create_orb_calculator",
             "create_mlip_calculator", "run_md"]
 from .md_workflow import run_mlip_md
 __all__.append("run_mlip_md")
+from .msd import export_msd
+__all__.append("export_msd")
+from .transport import fit_msd
+__all__.append("fit_msd")
