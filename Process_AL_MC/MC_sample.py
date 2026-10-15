@@ -11,6 +11,7 @@ from ase.optimize import LBFGS
 from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 from scipy.optimize import linear_sum_assignment
+from .occupation_history import ReferenceOccupations, pack_occupation, site_layout
 
 
 class LayeredOxide_MCOrderingClass:
@@ -62,6 +63,10 @@ class LayeredOxide_MCOrderingClass:
         "full_na_structure",
         "max_duplicate_trials",
         "save_relax_traj",
+        "occupation_history_scope",
+        "occupation_history_seed",
+        "occupation_reference_file",
+        "min_improvement",
     }
 
     def __init__(
@@ -93,6 +98,10 @@ class LayeredOxide_MCOrderingClass:
         initialize="random",
         full_na_structure=None,
         save_relax_traj=False,
+        occupation_history_scope=None,
+        occupation_history_seed=None,
+        occupation_reference_file=None,
+        min_improvement=None,
     ):
         self.structure = (
             self._load_structure(structure)
@@ -119,6 +128,13 @@ class LayeredOxide_MCOrderingClass:
 
         self.patience = patience
         self.energy_tol = energy_tol
+        if min_improvement is not None:
+            self.energy_tol = float(min_improvement)
+        self.min_improvement = min_improvement
+        self.occupation_history_scope = occupation_history_scope
+        self.occupation_history_seed = occupation_history_seed
+        self.occupation_reference_file = occupation_reference_file
+        self._history = None
         self.last_improve_step = 0
 
         self.tm_original_element = tm_original_element
@@ -255,6 +271,16 @@ class LayeredOxide_MCOrderingClass:
 
         random.seed(self.seed)
         np.random.seed(self.seed)
+        if getattr(self, "_history", None) is not None:
+            self._history.close()
+            self._history = None
+        if self.min_improvement is not None:
+            self.energy_tol = float(self.min_improvement)
+        if isinstance(self.max_duplicate_trials, bool) or not isinstance(self.max_duplicate_trials, int) or self.max_duplicate_trials <= 0:
+            raise ValueError("max_duplicate_trials must be a positive integer")
+        self.actual_mc_steps = 0
+        self.stop_reason = None
+        self.duplicate_rejections = 0
         self.visited = set()
         self.trace = []
         self.pool = []
@@ -581,6 +607,17 @@ class LayeredOxide_MCOrderingClass:
 
         self.na_occupation = occ
 
+        if self.occupation_history_scope or self.occupation_reference_file:
+            if not self.occupation_history_scope:
+                from .occupation_history import decode_snapshot
+                self.occupation_history_scope = decode_snapshot(Path(self.occupation_reference_file).read_bytes())[0]["scope"]
+            count, basis = site_layout(full)
+            self._history = ReferenceOccupations(
+                self.occupation_history_scope, count, basis,
+                seed=self.occupation_history_seed, reference_file=self.occupation_reference_file,
+            )
+            self.visited = self._history
+
         s = self._structure_from_na_occ(occ)
 
         self._save_vasp(s, self.out_dir / "initial_unrelaxed.vasp")
@@ -596,7 +633,7 @@ class LayeredOxide_MCOrderingClass:
         self.best_energy = eval_data["energy_mean_per_atom"]
         self.last_improve_step = 0
 
-        self.visited.add(self.current_key)
+        self._record_occupation(self.current_key)
 
         self._update_pool(
             structure=relaxed,
@@ -645,7 +682,12 @@ class LayeredOxide_MCOrderingClass:
         return tuple(structure[i].specie.symbol for i in self.tm_indices)
 
     def _na_key(self, occ):
-        return tuple(occ)
+        return pack_occupation(occ)
+
+    def _record_occupation(self, key):
+        self.visited.add(key)
+        if self._history is not None:
+            self._history.write_delta(self.out_dir / "mc_occupations.bin")
 
     def _structure_from_na_occ(self, occ):
         s = self.na_template.copy()
@@ -986,6 +1028,7 @@ class LayeredOxide_MCOrderingClass:
             if key not in self.visited:
                 s = self._structure_from_na_occ(occ)
                 return s, key, occ
+            self.duplicate_rejections += 1
 
         return None, None, None
 
@@ -1137,6 +1180,9 @@ class LayeredOxide_MCOrderingClass:
                 "visited_count": len(self.visited),
                 "pool_size": len(self.pool),
                 "last_improve_step": self.last_improve_step,
+                "actual_mc_steps": getattr(self, "actual_mc_steps", 0),
+                "stop_reason": getattr(self, "stop_reason", None),
+                "duplicate_rejections": getattr(self, "duplicate_rejections", 0),
             },
             self.out_dir / "status.json",
         )
@@ -1245,7 +1291,9 @@ class LayeredOxide_MCOrderingClass:
 
         self.prepare()
 
-        for step in range(1, self.max_steps + 1):
+        step = 0
+        self.stop_reason = "max_steps"
+        while step < self.max_steps:
             trial_s, trial_key, extra = self._trial()
 
             if trial_s is None:
@@ -1269,13 +1317,15 @@ class LayeredOxide_MCOrderingClass:
                         "visited_count": int(len(self.visited)),
                     }
                 )
-                continue
-
-            self.visited.add(trial_key)
+                self.stop_reason = "duplicate_trial_limit"
+                break
 
             trial_relaxed, trial_eval, trial_relax_traj = self._relax_and_evaluate(
                 trial_s
             )
+            step += 1
+            self.actual_mc_steps = step
+            self._record_occupation(trial_key)
 
             accepted, prob, dE = self._accept(trial_eval)
  
@@ -1371,6 +1421,7 @@ class LayeredOxide_MCOrderingClass:
                 )
 
             if self._should_stop(step):
+                self.stop_reason = "patience"
                 self.trace.append(
                     {
                         "step": int(step),

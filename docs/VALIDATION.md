@@ -1,5 +1,11 @@
 # 验证与已知问题
 
+2026-10-15：run_mlip_md 新增可选 pre_relax（默认关闭），复用原 MLIPRelaxer 和同一 calculator，可仅优化原子或同时优化晶胞。py1 的 35 项回归测试通过。新增针对性 EMT 测试覆盖模型单次加载、优化结构传入 MD、初速度策略、非收敛默认停止/显式继续、失败报告和输出保护；含真实短程“晶胞弛豫 → NVT → NPT”。未调整本地模型环境；四模型真实 GPU/加速与材料科学精度未验证。完整示例的 PRE_RELAX 参数区和 Process_MLIP/MD.md 已更新。
+
+2026-10-15：Process_MLIP 新增 model_config / run_mlip_md / run_md，支持 MACE、SevenNet、CHGNet、ORB 的配置式 NVT/NPT 与连续阶段；新增 CuEq、FlashTP 开关。py1 使用 ASE EMT 实际短程积分和替身模型接口验证，不加载四模型权重、不调整本地模型环境。覆盖独立 NVT/NPT、速度继承、单次加载、参数覆盖、压力动能项/单位、初末帧、输出保护、非有限数值和失败报告、四模型分派/加速开关。示例安全导入及 --preview 不导入 torch 或模型库。超算真实 GPU MD、CuEq/FlashTP/ORB 编译和科学精度未验证。详见 Process_MLIP/MD.md。
+
+2026-10-15：Process_MLIP 新增 calculator 工厂及 SevenNet-Omni 单结构入口，修复旧 e3nn 导入与 PyTorch weights_only 默认值冲突，补装 py-mace 缺失的 orjson。py1 的 6 项单元测试通过。真实 Si 两原子晶胞：MH-1/omat_pbe 在 py-mace、Omni/mpa 在已有 py1 均完成 CPU 能量/力/应力计算和晶胞弛豫（均 2 步收敛，fmax=0.05 eV/Å）。py-mace 的 e3nn 0.4.4 不兼容 SevenNet，需分环境运行。官方 Omni 权重保存在 MLIP_model；未验证 CUDA、其他 head/modal 或用户材料精度。详情见 Process_MLIP/MODEL_COMPATIBILITY.md。
+
 空间容量候选定义已按用户要求修正为先由 CCNB 截止半径筛选贯通通道，再从 `structure.net` 中 1D/2D/3D 分量选取位点；孤立间隙和 0D 分量不计入，无贯通通道返回 0。保留单次贪心和 2 Å 周期间距；本次仅改代码与静态索引，未运行计算验证。
 
 位点容量随后按用户粗筛需求改为按自由半径排序的一次贪心筛选，取消多起点和完整距离矩阵，保持周期最小间距条件。未运行计算或性能测试，无法给出实测提速倍数；位点数可能低于原多起点结果。

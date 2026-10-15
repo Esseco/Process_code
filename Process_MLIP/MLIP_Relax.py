@@ -63,8 +63,9 @@ class MLIPRelaxer:
         else:
             system = self.atoms
 
-        opt = optimizer_class(system, trajectory=traj_file, logfile=log_file)
-        converged = bool(opt.run(fmax=self.fmax, steps=self.steps))
+        with optimizer_class(system, trajectory=traj_file, logfile=log_file) as opt:
+            converged = bool(opt.run(fmax=self.fmax, steps=self.steps))
+            steps_used = int(opt.get_number_of_steps())
 
         energy = self.atoms.get_potential_energy()
         natoms = len(self.atoms)
@@ -78,7 +79,7 @@ class MLIPRelaxer:
 
         results = {
             "optimizer_converged": converged,
-            "relax_steps_used": int(opt.get_number_of_steps()),
+            "relax_steps_used": steps_used,
             "force_max_ev_per_angstrom": float(np.linalg.norm(forces, axis=1).max()),
             "energy_unit": "eV",
             "final_struct": self.atoms,        

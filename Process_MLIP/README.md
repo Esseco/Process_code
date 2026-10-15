@@ -4,12 +4,17 @@
 
 通用 ASE calculator 弛豫工具。默认 py1；具体模型由调用者选择已有专用环境，不在导入时加载模型。
 
+现支持可配置的 MLIP 分子动力学：MACE / SevenNet / CHGNet / ORB，独立或连续 NVT/NPT。
+使用 [完整 MD 示例](examples/mlip_md.py) 集中修改模型、加速与阶段参数；接口和超算说明见 [MD.md](MD.md)。
+可选 `pre_relax` 在 MD 前只优化原子或同时优化晶胞，默认关闭；预弛豫与 MD 共用同一模型。
+
 ## 独立模板
 
 | 功能 | 输入 → 输出 | 模板 |
 |---|---|---|
 | 通用 calculator 弛豫 | ASE Atoms + calculator → 弛豫结构、能量、收敛与步数、轨迹 | [ase_relax.py](examples/ase_relax.py) |
 | MACE 单结构弛豫 | 结构文件 + 模型 → 最终结构及报告 | [mace_relax.py](examples/mace_relax.py) |
+| SevenNet-Omni 单结构弛豫 | 结构文件 + checkpoint + modal → 最终结构及报告 | [sevennet_relax.py](examples/sevennet_relax.py) |
 
 通用模板需实现 make_calculator；MACE 模板使用 Process_MLIP.mace_relax 的公共实现。填写顶部路径后从根目录运行：
 
@@ -46,3 +51,10 @@ py1：`python -m unittest Process_MLIP.test_relax`。EMT 小样本验证未收�
 ## MACE 合并已完成
 
 单结构 MACE 实现现在只保存在 Process_MLIP/mace_relax.py，Process_AL_MC/relax.py 仅兼容导出同一函数。函数签名、默认值、模型 head 选择、晶胞滤波器和报告保持不变；MC 类的委员会弛豫仍独立。
+
+## MH-1 与 SevenNet-Omni
+
+接口、环境、真实模型验证及调用示例见 [MODEL_COMPATIBILITY.md](MODEL_COMPATIBILITY.md)。
+本机 MH-1 使用 `py-mace`，Omni 使用已有 `py1`；两环境的 e3nn 版本不同，勿混用。
+两者当前均为 CPU PyTorch，调用时显式设置 `device="cpu"`。
+`create_mace_calculator` / `create_sevennet_calculator` 也可接入原 `MLIPRelaxer`。

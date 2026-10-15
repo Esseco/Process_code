@@ -1,5 +1,6 @@
 """Verify migration using ASE EMT as a fake MACE calculator; no trained model."""
 import sys
+from contextlib import nullcontext
 import unittest
 from types import ModuleType
 from unittest.mock import patch
@@ -24,7 +25,8 @@ class MaceCompatibilityTests(unittest.TestCase):
 
         module.MACECalculator = calculator
         atoms = Atoms("Cu2", positions=[[0, 0, 0], [2.8, 0, 0]])
-        with patch.dict(sys.modules, {"mace.calculators": module}), patch("pathlib.Path.is_file", return_value=True):
+        with patch.dict(sys.modules, {"mace.calculators": module}), patch("pathlib.Path.is_file", return_value=True), \
+                patch("Process_MLIP.calculators._e3nn_import_context", side_effect=nullcontext):
             result = legacy(atoms, "mh-1.model", device="cpu", steps=0, relax_cell=False)
         self.assertEqual(captured[0]["head"], "omat_pbe")
         self.assertEqual(captured[0]["default_dtype"], "float64")
