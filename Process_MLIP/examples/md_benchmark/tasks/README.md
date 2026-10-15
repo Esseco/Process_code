@@ -2,15 +2,15 @@
 
 每个编号文件夹包含约 40 行的 run_md.py 和 submit.sh。运行脚本顶部直接修改：
 - PROJECT_ROOT：超算上的 Py-Code 根目录（包含 Process_MLIP）。
-- STRUCTURE：默认读取八个文件夹同级的 initial.cif，保持各任务相同输入。
+- STRUCTURES：依次读取八个文件夹同级的 LCO.vasp、NVP.vasp，每个模型都运行这两个结构。
 - MODEL_PATH：自行填写相应模型路径，加速组和基线组使用相同权重。
 - PRE_RELAX：默认 FIRE all 弛豫（原子+完整晶胞），未收敛则停止。
 - MD：默认 600 K、1 fs、5000 步 NVT、seed=42，轨迹和日志每步输出；记录 steps/s。
 - MSD：默认开启，species=None 输出全部元素，也可改为 "Na" / "Li" / 列表。
 
-进入对应文件夹执行 sbatch submit.sh 即可。结果写在该文件夹 results/：
+进入对应文件夹执行 sbatch submit.sh 即可，一个任务顺序运行两个结构，不并发争抢 GPU。结果分别写在该文件夹 results/LCO/ 和 results/NVP/：
 00_relax/ 保存弛豫轨迹和结构；01_nvt/ 保存 MD 轨迹、日志、最终结构；msd.csv 为 MSD。
-模型只初始化一次，弛豫与 MD 共用。steps/s 不包含弛豫、加载和 MSD 后处理。
+每个结构内部模型只初始化一次，弛豫与 MD 共用；处理下一个结构时重新创建 calculator。steps/s 不包含弛豫、加载和 MSD 后处理。
 不同模型独立弛豫后晶胞/位置可能不同；如需完全相同几何的速度对比，可统一设置 PRE_RELAX=False。
 
 | 文件夹 | 环境 |

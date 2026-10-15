@@ -79,3 +79,9 @@ Process_Struct/examples/percolation_sites.py 在已有 ccnb 环境对 NaFeF3 单
 
 - Reduced the eight task scripts to essential configuration; FIRE full-cell pre-relaxation, 600 K/5000-step NVT, MACE/Symmetrix float32, trajectory/log intervals both 1. SevenNet/CHGNet retain native precision without unsupported dtype arguments. Other settings use library defaults.
 - Updated desktop copies with hash verification; Slurm scripts unchanged. Targeted tests cover all eight scripts and short EMT FIRE->NVT->MSD runs, including every-step MSD frame count; 2 tests OK. Real model/GPU execution remains unverified.
+
+
+### 2026-10-15 Two-structure benchmark tasks
+
+- Eight desktop tasks sequentially process LCO.vasp and NVP.vasp, each FIRE full relaxation -> 600 K/5000-step NVT -> MSD, every-step output. Results isolated under results/LCO and results/NVP. Model paths preserved by AST comparison; PROJECT_ROOT completed from the supplied model directory. Submission scripts unchanged.
+- Full py1 suite: 79 tests, OK (one existing MTK skip), including short real EMT FIRE/NVT/MSD for 8 models times 2 structures. Desktop script syntax and structure readability verified. Production model/GPU/scheduler execution remains unverified.
