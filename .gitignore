@@ -32,3 +32,4 @@ env/
 channel*
 .agents/
 /Example/
+/test/
