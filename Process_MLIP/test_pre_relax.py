@@ -10,6 +10,8 @@ from ase import Atoms
 from ase.build import bulk
 from ase.calculators.emt import EMT
 from ase.io import read
+from ase.filters import FrechetCellFilter
+from ase.optimize import FIRE
 
 from Process_MLIP import run_md, run_mlip_md
 from Process_MLIP.test_md import NoStress
@@ -156,6 +158,55 @@ class PreRelaxTests(unittest.TestCase):
         report = json.loads((self.root / "md" / "00_relax" / "report.json").read_text())
         self.assertEqual(report["status"], "failed")
         self.assertFalse((self.root / "md" / "01_nvt").exists())
+
+    def test_frechet_step_limit_and_effective_scaling_report(self):
+        self.atoms = bulk("Cu", "fcc", a=4.0, cubic=True)
+        with patch("ase.filters.FrechetCellFilter", wraps=FrechetCellFilter) as cell_filter, \
+                patch("Process_MLIP.MLIP_Relax.FIRE", wraps=FIRE) as optimizer:
+            result = self.run_workflow(pre_relax=dict(relax_cell=True, steps=2,
+                                                     require_convergence=False))
+        cell_filter.assert_called_once()
+        self.assertIsNone(cell_filter.call_args.kwargs["exp_cell_factor"])
+        self.assertEqual(optimizer.call_args.kwargs["maxstep"], 0.05)
+        report = result["pre_relax_result"]
+        self.assertEqual(report["cell_filter"], "FrechetCellFilter")
+        self.assertEqual(report["exp_cell_factor"], len(self.atoms))
+        self.assertEqual(report["parameters"]["optimizer"], "FIRE")
+
+    def test_custom_step_and_cell_scaling(self):
+        self.atoms = bulk("Cu", "fcc", a=3.9, cubic=True)
+        for optimizer in ("BFGS", "FIRE", "LBFGS"):
+            with self.subTest(optimizer=optimizer):
+                result = self.run_workflow(optimizer, pre_relax=dict(
+                    relax_cell=True, optimizer=optimizer, maxstep=0.02,
+                    exp_cell_factor=12, steps=2, require_convergence=False))
+                report = result["pre_relax_result"]
+                self.assertEqual(report["maxstep"], 0.02)
+                self.assertEqual(report["exp_cell_factor"], 12)
+
+    def test_invalid_step_settings_fail_before_model_loading(self):
+        for key in ("maxstep", "exp_cell_factor"):
+            for value in (True, 0, -1, float("nan"), float("inf"), "0.05"):
+                with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                    self.run_workflow(pre_relax={key:value})
+        with self.assertRaises(ValueError):
+            self.run_workflow(pre_relax=dict(maxstep=None))
+        self.loader.assert_not_called()
+
+    def test_supercell_full_relaxation_remains_finite_and_reduces_energy(self):
+        self.atoms = bulk("Cu", "fcc", a=3.9, cubic=True).repeat((3,3,3))
+        initial_volume = self.atoms.get_volume()
+        result = self.run_workflow(pre_relax=dict(relax_cell=True, steps=20,
+                                                require_convergence=False))
+        report = result["pre_relax_result"]
+        self.assertLess(report["final_state"]["potential_energy_eV"],
+                        report["initial_state"]["potential_energy_eV"])
+        frames = read(report["trajectory_file"], index=":")
+        for frame in frames:
+            self.assertTrue(np.all(np.isfinite(frame.positions)))
+            self.assertTrue(0.8 * initial_volume < frame.get_volume() < 1.2 * initial_volume)
+        # Cell scaling makes the first update mild for an extensive supercell.
+        self.assertLess(abs(frames[1].get_volume()/initial_volume-1), 0.01)
 
 
 if __name__ == "__main__":

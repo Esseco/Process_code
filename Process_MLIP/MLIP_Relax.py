@@ -1,7 +1,7 @@
 from ase.optimize import BFGS, FIRE, LBFGS
-from ase.filters import ExpCellFilter
 from ase.io import write
 import numpy as np
+from numbers import Real
 
 
 class MLIPRelaxer:
@@ -9,6 +9,9 @@ class MLIPRelaxer:
 
     Modifies the supplied Atoms and retains its constraints. Energies are eV,
     fmax is eV/Å. Cell relaxation also tests filter stress degrees of freedom.
+    maxstep=None uses the ASE optimizer default; positive values limit optimizer
+    steps (Å for atom variables). FrechetCellFilter scales cell variables by
+    exp_cell_factor, defaulting to atom count; no direct strain bound is imposed.
     """
 
     def __init__(
@@ -19,6 +22,9 @@ class MLIPRelaxer:
         steps=200,
         optimizer="BFGS",
         relax_cell=False,
+        *,
+        maxstep=None,
+        exp_cell_factor=None,
     ):
 
         if len(atoms) == 0:
@@ -27,12 +33,18 @@ class MLIPRelaxer:
             raise ValueError("fmax must be finite and positive")
         if not isinstance(steps, int) or isinstance(steps, bool) or steps < 0:
             raise ValueError("steps must be a nonnegative integer")
+        for key, value in (("maxstep", maxstep), ("exp_cell_factor", exp_cell_factor)):
+            if value is not None and (isinstance(value, bool) or not isinstance(value, Real)
+                                      or not np.isfinite(value) or value <= 0):
+                raise ValueError(f"{key} must be None or finite and positive")
         self.atoms = atoms
         self.calculator = calculator
         self.fmax = fmax
         self.steps = steps
         self.optimizer = optimizer
         self.relax_cell = relax_cell
+        self.maxstep = maxstep
+        self.exp_cell_factor = exp_cell_factor
 
         self.atoms.calc = self.calculator
 
@@ -59,11 +71,16 @@ class MLIPRelaxer:
         optimizer_class = self._get_optimizer()
 
         if self.relax_cell:
-            system = ExpCellFilter(self.atoms)
+            try:
+                from ase.filters import FrechetCellFilter
+            except ImportError as exc:
+                raise ImportError("Cell relaxation requires ASE >= 3.23 with FrechetCellFilter") from exc
+            system = FrechetCellFilter(self.atoms, exp_cell_factor=self.exp_cell_factor)
         else:
             system = self.atoms
 
-        with optimizer_class(system, trajectory=traj_file, logfile=log_file) as opt:
+        options = {} if self.maxstep is None else dict(maxstep=float(self.maxstep))
+        with optimizer_class(system, trajectory=traj_file, logfile=log_file, **options) as opt:
             converged = bool(opt.run(fmax=self.fmax, steps=self.steps))
             steps_used = int(opt.get_number_of_steps())
 
@@ -82,6 +99,9 @@ class MLIPRelaxer:
             "relax_steps_used": steps_used,
             "force_max_ev_per_angstrom": float(np.linalg.norm(forces, axis=1).max()),
             "energy_unit": "eV",
+            "cell_filter": "FrechetCellFilter" if self.relax_cell else None,
+            "maxstep": self.maxstep,
+            "exp_cell_factor": (float(system.exp_cell_factor) if self.relax_cell else None),
             "final_struct": self.atoms,        
             "energy": energy,                
             "natoms": natoms,                

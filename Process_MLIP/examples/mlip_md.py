@@ -13,120 +13,108 @@ from pathlib import Path
 from Process_MLIP import export_msd, fit_msd, model_config, run_mlip_md
 
 
-# ==================== Edit these parameters ====================
-INPUT = Path("initial.cif")            # full pre-relaxation is enabled below
-OUTPUT = Path("md_results")           # change for a new independent experiment
+# 路径与模型
+INPUT = Path("initial.cif")            # 输入结构
+OUTPUT = Path("md_results")           # 结果目录
 MODEL_PRESET = "mace-mh1"              # mace-mh1 / sevennet-omni / chgnet / orb-v3
-DEVICE = "cuda"                       # or cuda:0 / cpu
+DEVICE = "cuda"                       # cuda / cuda:0 / cpu
 
-# Each preset already has defaults. Only put overrides here.
-# None for SevenNet/CHGNet/ORB means official pretrained loading; on offline
-# cluster nodes supply a prepared local checkpoint instead.
+# 只填写需覆盖的模型参数。
+# model_path=None: 官方预训练；离线时填写本地路径。
+
 MODEL_OVERRIDES = {
     "mace-mh1": {
-        # Defaults to <repository>/MLIP_model/mace-mh-1.model; override if needed:
+        # 本地权重示例：
         # "model_path": "/absolute/path/to/mace-mh-1.model",
-        "head": "omat_pbe",           # change to matpes_r2scan if appropriate
-        "default_dtype": "float64",   # float32 is also selectable
-        "enable_cueq": False,         # True enables CuEq; requires cluster support
-        "enable_symmetrix": False,    # alternative backend; cannot combine with CuEq
-        "symmetrix_use_kokkos": False, # False: CPU float64; True: build-defined Kokkos target
-        "symmetrix_species": None,    # e.g. ["Na", "Ni", "Mn", "O"] to reduce conversion cost
-        # OMat CPU example: DEVICE="cpu", enable_symmetrix=True,
-        # model_path="MLIP_model/mace/mace-omat-0-medium.model", head=None.
-        # Preconverted Symmetrix .json: head=None and symmetrix_species=None.
+        "head": "omat_pbe",           # 任务头，如 matpes_r2scan
+        "default_dtype": "float64",   # float32 / float64
+        "enable_cueq": False,         # CuEq 加速
+        "enable_symmetrix": False,    # Symmetrix，与 CuEq 互斥
+        "symmetrix_use_kokkos": False, # Kokkos；目标由安装构建决定
+        "symmetrix_species": None,    # 裁剪元素，如 ["Na", "O"]
+        # OMat: head=None；CPU: device="cpu"。
+
+        # Symmetrix JSON: head=None，symmetrix_species=None。
     },
     "sevennet-omni": {
-        "model_path": None,           # or /absolute/path/checkpoint_sevennet_omni.pth
-        "modal": "mpa",               # e.g. omat24 / matpes_r2scan
-        "enable_flash": False,        # True enables FlashTP
+        "model_path": None,           # 本地 checkpoint 或 None
+        "modal": "mpa",               # 任务，如 omat24 / matpes_r2scan
+        "enable_flash": False,        # FlashTP 加速
     },
     "chgnet": {
-        "model_path": None,           # or /absolute/path/your_chgnet.pth.tar
-        "model_name": "0.3.0",        # pretrained version; ignored with model_path
+        "model_path": None,           # 本地 checkpoint 或 None
+        "model_name": "0.3.0",        # 预训练版本；本地权重优先
     },
     "orb-v3": {
-        "model_path": None,           # or weights matching model_name below
+        "model_path": None,           # 本地权重须匹配 model_name
         "model_name": "orb-v3-conservative-inf-omat",
         "precision": "float32-highest",
-        "compile": False,             # optional official torch.compile
+        "compile": False,             # torch.compile
     },
 }
 
-# Optional static pre-relaxation, using the SAME calculator as all MD stages.
-# enabled=False: no relaxation; relax_cell=False: atom positions only;
-# relax_cell=True: optimize atom positions and cell together (requires stress/3D PBC).
+# 预弛豫，与 MD 复用模型。
+
+
 PRE_RELAX = {
-    "enabled": True,
-    "relax_cell": True,               # all: optimize atoms and full cell
-    "optimizer": "BFGS",              # BFGS / FIRE / LBFGS
-    "fmax": 0.05,                     # force threshold eV/angstrom (cell filter also uses stress)
-    "steps": 200,
-    "require_convergence": True,      # stop before MD if relaxation has not converged
+    "enabled": True,                # 是否预弛豫
+    "relax_cell": True,               # False: 仅原子；True: 原子+晶胞
+    "optimizer": "FIRE",              # BFGS / FIRE / LBFGS（大写）
+    "fmax": 0.05,                     # 收敛阈值，eV/Å
+    "steps": 200,                    # 最大步数，非负整数
+    "maxstep": 0.05,                 # 优化步幅上限，Å
+    "exp_cell_factor": None,         # None: 晶胞变量按原子数缩放
+    "require_convergence": True,      # 未收敛则停止 MD
 }
 
-# Common defaults, overridden by each STAGES entry where specified.
+# MD 公共参数；阶段参数优先。
 MD_PARAMETERS = {
-    "temperature_K": 800,
-    "timestep_fs": 1.0,
-    "tdamp_fs": 100.0,
-    "pressure_bar": 1.0,              # positive compression; used only for NPT
-    "pdamp_fs": 1000.0,               # used for both MTK NPT modes
-    "npt_cell_mode": "isotropic",    # isotropic: fixed shape; full: flexible cell
-    "tchain": 3,                      # thermostat chain length (NVT and NPT)
-    "pchain": 3,                      # barostat thermostat chain length (NPT)
-    "tloop": 1,                       # thermostat integration substeps
-    "ploop": 1,                       # barostat integration substeps (NPT)
-    "seed": 42,
-    "initialize_velocities": None,    # sample only if initial momenta absent
-    "remove_com": True,               # only during velocity initialization
-    "zero_rotation": False,           # leave False for periodic crystals
-    "trajectory_interval": 10,
-    "log_interval": 10,
-    "measure_steps_per_second": True, # optional MD throughput; excludes loading/pre-relax
-    "overwrite": False,               # default refuses to overwrite owned files
+    "temperature_K": 800,            # 温度，K
+    "timestep_fs": 1.0,              # 时间步长，fs
+    "tdamp_fs": 100.0,               # 温控阻尼，fs
+    "pressure_bar": 1.0,              # NPT 压力，bar，正值为压缩
+    "pdamp_fs": 1000.0,               # NPT 压控阻尼，fs
+    "npt_cell_mode": "isotropic",    # isotropic: 等比；full: 全晶胞
+    "tchain": 3,                      # 温控链长度
+    "pchain": 3,                      # NPT 压控链长度
+    "tloop": 1,                       # 温控积分子步数
+    "ploop": 1,                       # NPT 压控积分子步数
+    "seed": 42,                      # 随机种子
+    "initialize_velocities": None,    # None: 缺少动量时初始化
+    "remove_com": True,               # 初始化时移除质心运动
+    "zero_rotation": False,           # 周期晶体保持 False
+    "trajectory_interval": 10,       # 轨迹输出间隔，步
+    "log_interval": 10,              # 日志输出间隔，步
+    "measure_steps_per_second": True, # 记录 steps/s，不含加载和弛豫
+    "overwrite": False,               # 是否覆盖已有结果
 }
 
-# One entry = independent NVT or NPT. Multiple entries = continuous stages.
-# Default workflow: full static relaxation -> fixed-cell NVT.
-# NVT inherits the optimized cell. Add NPT explicitly when needed.
+# 阶段按顺序运行；ensemble 可选 nvt / npt。
 STAGES = [
     {"name": "production", "ensemble": "nvt", "steps": 5000},
 ]
-# Example of another stage with a different temperature/time step:
-# STAGES.append(dict(name="hot", ensemble="nvt", temperature_K=1200,
-#                    timestep_fs=0.5, steps=10000))
-# For full cell flexibility, set npt_cell_mode="full" in the NPT stage;
-# requires an ASE environment providing MTKNPT. No fallback/upgrade is automatic.
-# STAGES.append(dict(name="pressure", ensemble="npt", steps=5000,
-#                    npt_cell_mode="full", tchain=3, pchain=3, tloop=1, ploop=1))
-# For ionic-diffusion MSD, append a fixed-cell NVT production stage, then use
-# Process_MLIP.examples.msd on its md.traj (change paths/species in that example):
-# STAGES.append(dict(name="diffusion", ensemble="nvt", steps=10000))
-# Later stages preserve momenta even if target temperature changes. To explicitly
-# resample instead, set initialize_velocities=True, seed=43 in that stage.
 
-# Optional automatic MSD export AFTER all MD stages finish successfully.
-# Select only an NVT stage; different temperatures/stages are not combined.
+# MD 完成后导出指定 NVT 阶段的 MSD。
+
 MSD_POSTPROCESS = {
     "enabled": False,
-    "stage": "last_nvt",             # last NVT, or a stage number starting from 1
-    "species": "Na",                 # "Li", ["Na", "Li"], or None for all elements
-    "output_csv": None,              # None -> selected stage/msd.csv
-    # Relative paths are under OUTPUT, e.g. "analysis/msd_na.csv";
-    # an absolute path is used as-is.
+    "stage": "last_nvt",             # 最后 NVT 或阶段序号（从 1 起）
+    "species": "Na",                 # 元素、元素列表；None 为全部
+    "output_csv": None,              # None: 阶段目录/msd.csv
+    # 相对路径以 OUTPUT 为根目录。
+
     "overwrite": False,
 }
 
 
-# Requires MSD_POSTPROCESS enabled; choose a diffusive production NVT stage.
-# Window in ps, inclusive; at least 3 saved samples. Set for YOUR run length.
+# 拟合需开启 MSD，并选择扩散线性区。
+# 时间单位 ps，含两端，至少 3 个采样点。
 TRANSPORT_FIT = {
     "enabled": False,
     "fit_start_ps": 2.0,
     "fit_end_ps": 8.0,
-    "ion_charge": 1,                  # charge in e; or {"Na": 1, "Li": 1}
-    "output_json": None,              # None -> beside MSD CSV: transport.json
+    "ion_charge": 1,                  # 电荷数，或 {"Na": 1, "Li": 1}
+    "output_json": None,              # None: MSD 同目录/transport.json
     "overwrite": False,
 }
 
@@ -211,7 +199,7 @@ def main(argv=None):
         interval = stage.get("trajectory_interval", MD_PARAMETERS.get("trajectory_interval", 10))
         if end > steps * dt / 1000:
             raise ValueError("Transport fit window exceeds the selected NVT duration")
-        # Count regular saved frames in the window plus the mandatory short last frame.
+        # 计入强制保存的末帧。
         first = max(0, math.ceil(start * 1000 / dt / interval - 1e-12))
         last = min(steps // interval, math.floor(end * 1000 / dt / interval + 1e-12))
         samples = max(0, last - first + 1)
@@ -230,7 +218,7 @@ def main(argv=None):
             fit_destination = Path(OUTPUT) / fit_destination
         if fit_destination.suffix.lower() != ".json":
             raise ValueError("Transport output_json must have .json extension")
-        # Keep analysis output away from all simulation reports and inputs.
+        # 禁止覆盖输入和计算报告。
         forbidden = {Path(INPUT).resolve(), msd_target[1].resolve(),
                      (Path(OUTPUT) / "run_report.json").resolve()}
         for i, stage in enumerate(STAGES):

@@ -1,4 +1,4 @@
-"""Configure a model once and execute a validated sequence of MD stages."""
+"""同一模型完成可选预弛豫及单阶段/连续阶段 MD。"""
 from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
@@ -13,28 +13,26 @@ from .pre_relax import _RELAX_FILES, _run_pre_relax, _validate_pre_relax
 
 def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=None,
                 *, pre_relax=None, **md_parameters):
-    """Load one model and run independent NVT/NPT or consecutive MD stages.
+    """预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。
 
-    model is a model_config dict or preset name. stages is a nonempty list
-    of parameter dicts; None means one stage with md_parameters. Precedence:
-    stage > common md_parameters > run_md defaults. Optional stage name must
-    contain only ASCII letters, numbers, underscores or hyphens.
+    structure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。
+    stages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。
+    衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。
 
-    Stage transitions inherit positions/cell/momenta by default. Only an
-    explicit stage initialize_velocities=True resamples later-stage momenta.
-    Auxiliary thermostat/barostat variables reset: this is not exact restart.
-    pre_relax=None/False disables preparation; True or a dict enables optional
-    atoms-only or cell+atoms optimization with this same calculator. Dict keys:
-    enabled, relax_cell, optimizer, fmax (eV/Å), steps, require_convergence.
-    Unconverged preparation stops by default. Existing momenta are preserved;
-    MD velocity initialization runs only after preparation.
-    Validates all stages/output collisions before loading the model. Writes
-    run_report.json and numbered stage directories; returns final_atoms,
-    stage_results, elapsed simulation time and report paths.
-    measure_steps_per_second=True records per-stage throughput and total MD
-    throughput weighted by measured durations, excluding pre-relaxation.
-    npt_cell_mode (isotropic/full) and tchain/pchain/tloop/ploop may be set
-    globally or per stage; controller availability is checked before loading.
+    pre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：
+      enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。
+      optimizer="FIRE"（BFGS / FIRE / LBFGS，须大写）。
+      fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。
+      maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。
+    MD 默认：NVT、300 K、1000 步、1 fs；tdamp_fs=100，NPT pdamp_fs=1000。
+    NPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。
+    trajectory_interval/log_interval=10（步）；seed=42；overwrite=False。
+    measure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。
+
+    参考：pre_relax={"relax_cell": True, "optimizer": "FIRE", "steps": 200}，
+    配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。
+    返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；
+    elapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。
     """
     config = _resolve_model_config(model)
     relaxation = _validate_pre_relax(pre_relax)
@@ -69,7 +67,7 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
             parameters["initialize_velocities"] = False
         parameters["time_offset_fs"] = offset
         parameters = _validate_options(parameters)
-        # Later stages will receive momenta from the preceding stage.
+        # 后续阶段继承上一阶段动量。
         _validate_atoms(atoms, dict(parameters, initialize_velocities=True)
                         if index else parameters)
         _get_dynamics_class(parameters)

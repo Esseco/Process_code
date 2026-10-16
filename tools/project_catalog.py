@@ -77,7 +77,7 @@ PROJECTS = {
         "弛豫/MD 最终结构、能量、轨迹、CSV 日志、MSD CSV 与 JSON 报告",
         "ASE；模型 calculator 的依赖由调用者提供",
         "模型和设备显式传入；不能将优化器结束自动等同于达到收敛阈值。",
-        ["MLIPRelaxer", "model_config", "run_mlip_md", "run_md", "create_mlip_calculator", "export_msd", "fit_msd"],
+        ["MLIPRelaxer", "model_config", "run_mlip_md", "run_md", "create_mlip_calculator", "export_msd", "fit_msd", "export_traj_frames"],
     ),
     "Process_AL_MC": (
         "层状氧化物 MC 排序与 MACE 弛豫",

@@ -37,9 +37,11 @@ True 使用默认原子位置弛豫；dict 可集中配置：
 PRE_RELAX = {
     "enabled": True,               # False 时跳过；省略 enabled 的 dict 默认开启
     "relax_cell": False,           # False 只优化原子；True 同时优化原子和晶胞
-    "optimizer": "BFGS",           # BFGS / FIRE / LBFGS
+    "optimizer": "FIRE",           # FIRE / BFGS / LBFGS
     "fmax": 0.05,                  # eV/Å
     "steps": 200,
+    "maxstep": 0.05,               # 优化步幅上限，Å
+    "exp_cell_factor": None,       # None: 按原子数缩放晶胞变量
     "require_convergence": True,
 }
 result = run_mlip_md("initial.cif", model=model_config("mace-mh1"),
@@ -52,10 +54,14 @@ result = run_mlip_md("initial.cif", model=model_config("mace-mh1"),
 静态弛豫不计入 MD 的模拟步数或 time_fs。
 
 只弛豫原子时保持晶胞不变，不要求 calculator 支持应力。
-同时弛豫晶胞时使用原 MLIPRelaxer 的 ExpCellFilter（可改变晶胞形状及体积），
+同时弛豫晶胞时使用 FrechetCellFilter（可改变晶胞形状及体积，需 ASE >= 3.23），
 要求完整 3D PBC、正体积右手晶胞和应力支持；目标是零外加静态压力，
 与 MD 的 pressure_bar 独立。fmax 是 ASE 优化器阈值，晶胞滤波器还包括应力自由度，
 不能仅根据最大原子力判定晶胞弛豫收敛。
+预弛豫默认 FIRE、maxstep=0.05 Å；exp_cell_factor=None 使用原子数缩放晶胞变量。
+maxstep 对不同优化器的范数约束略有不同，不等于晶胞应变百分比上限。
+这两项改善更新尺度，不能保证任意模型/初始结构收敛，也不直接修复 CUDA 显存或依赖问题。
+报告包含实际 cell_filter、maxstep 和 exp_cell_factor；失败排查请保留 relax.traj。
 
 require_convergence=True 时，步数耗尽仍不收敛会保留弛豫输出并停止整个流程，
 不启动 MD。设置 False 可明确允许继续，报告仍保留 optimizer_converged=False。

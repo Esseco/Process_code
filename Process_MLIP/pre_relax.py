@@ -14,8 +14,16 @@ _RELAX_FILES = ("relax.traj", "relax.log", "final.traj", "report.json")
 
 
 def _validate_pre_relax(config):
-    options = dict(enabled=False, relax_cell=False, optimizer="BFGS", fmax=0.05,
-                   steps=200, require_convergence=True)
+    options = dict(
+        enabled=False,             # 是否预弛豫
+        relax_cell=False,          # False: 仅原子；True: 原子+晶胞
+        optimizer="FIRE",          # BFGS / FIRE / LBFGS（大写）
+        fmax=0.05,                 # 收敛阈值，eV/Å
+        steps=200,                 # 最大步数，非负整数
+        maxstep=0.05,               # 优化步幅上限，Å（晶胞变量按比例缩放）
+        exp_cell_factor=None,      # 晶胞缩放因子；None 使用原子数
+        require_convergence=True,  # 未收敛则停止 MD
+    )
     if config is None:
         return options
     if type(config) is bool:
@@ -41,6 +49,13 @@ def _validate_pre_relax(config):
     if isinstance(value, bool) or not isinstance(value, Integral) or value < 0:
         raise ValueError("pre_relax steps must be a nonnegative integer")
     options["steps"] = int(value)
+    for key in ("maxstep", "exp_cell_factor"):
+        value = options[key]
+        if value is None and key == "exp_cell_factor":
+            continue
+        if isinstance(value, bool) or not isinstance(value, Real) or not np.isfinite(value) or value <= 0:
+            raise ValueError(f"pre_relax {key} must be finite and positive")
+        options[key] = float(value)
     return options
 
 
@@ -72,7 +87,8 @@ def _run_pre_relax(atoms, calculator, output_dir, parameters, *, overwrite=False
     try:
         result = MLIPRelaxer(atoms, calculator, fmax=parameters["fmax"],
                              steps=parameters["steps"], optimizer=parameters["optimizer"],
-                             relax_cell=parameters["relax_cell"]).relax(
+                             relax_cell=parameters["relax_cell"], maxstep=parameters["maxstep"],
+                             exp_cell_factor=parameters["exp_cell_factor"]).relax(
                                  traj_file=paths["trajectory_file"], log_file=paths["log_file"])
         final_state = _snapshot(atoms, require_stress=parameters["relax_cell"])
         write(paths["final_structure"], atoms, format="traj")
@@ -81,6 +97,8 @@ def _run_pre_relax(atoms, calculator, output_dir, parameters, *, overwrite=False
                       relax_steps_used=result["relax_steps_used"], energy=float(result["energy"]),
                       energy_per_atom=float(result["energy_per_atom"]), energy_unit="eV",
                       force_max_ev_per_angstrom=result["force_max_ev_per_angstrom"],
+                      cell_filter=result["cell_filter"], maxstep=result["maxstep"],
+                      exp_cell_factor=result["exp_cell_factor"],
                       final_state=final_state)
         _write_json(paths["report_file"], report)
     except (Exception, KeyboardInterrupt) as exc:

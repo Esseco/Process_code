@@ -19,3 +19,5 @@ from .msd import export_msd
 __all__.append("export_msd")
 from .transport import fit_msd
 __all__.append("fit_msd")
+from .trajectory import export_traj_frames
+__all__.append("export_traj_frames")

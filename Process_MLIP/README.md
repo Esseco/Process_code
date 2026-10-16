@@ -12,6 +12,23 @@ NVT 轨迹可直接用 `export_msd` 导出整段 MSD CSV，复用 ASE 内置分�
 完整 MD 示例提供 `MSD_POSTPROCESS` 开关，运行结束后可自动导出指定元素、指定 NVT 阶段的 MSD。
 `fit_msd` 独立读取 MSD CSV 拟合扩散系数和估算 Nernst–Einstein 离子导率；两个示例均提供 `TRANSPORT_FIT` 开关与拟合区间、电荷配置，详见 [MSD.md](MSD.md)。
 
+## 从轨迹提取结构
+
+```python
+from Process_MLIP import export_traj_frames
+
+export_traj_frames("md.traj", "frames", frames=[0, 100, -1])
+# 间隔抽帧：frames=slice(0, None, 100)；全部：frames=None；默认：末帧。
+```
+
+索引从 0 开始，对应 MSD CSV 的 `frame_index`，不是时间或 MD 步号；-1 为末帧。
+默认输出 `frame_000000.vasp` 等文件，返回实际帧索引、文件路径和源轨迹总帧数。
+支持 `format="vasp" / "cif" / "xyz" / "extxyz" / "traj"`；VASP/CIF 需完整晶胞。
+不加载模型、不改变结构、不修改源轨迹，重复运行默认拒绝覆盖（可设 `overwrite=True`）。
+VASP 保存几何结构；需保留动量等 ASE 数据时用 `traj`。弛豫、NVT、NPT 轨迹均可抽帧，
+按各帧自身晶胞输出，不推断物理时间、不执行周期展开。无需随机种子，默认 py1 环境。
+独立示例：[extract_frames.py](examples/extract_frames.py)。
+
 ## 独立模板
 
 | 功能 | 输入 → 输出 | 模板 |
@@ -42,7 +59,8 @@ result = MLIPRelaxer(atoms.copy(), calculator, fmax=0.05,
 
 ## 参数与限制
 
-MLIPRelaxer 修改传入 Atoms，并设置 calculator；模板先复制。已有原子约束保留。固定晶胞时使用原子力判断，relax_cell=True 使用 ExpCellFilter，收敛还涉及应力自由度，force_max 不能单独判定晶胞收敛。模型必须支持所需元素、能量/力以及晶胞弛豫所需应力。
+MLIPRelaxer 修改传入 Atoms，并设置 calculator；模板先复制。已有原子约束保留。固定晶胞时使用原子力判断，relax_cell=True 使用 FrechetCellFilter，收敛还涉及应力自由度，force_max 不能单独判定晶胞收敛。模型必须支持所需元素、能量/力以及晶胞弛豫所需应力。
+MD 预弛豫默认 FIRE、`maxstep=0.05` Å；`exp_cell_factor=None` 按原子数缩放晶胞变量。两参数可在 `pre_relax` 中覆盖；旧脚本省略时自动采用新默认值。单独调用 MLIPRelaxer 的 `maxstep=None` 保持 ASE 优化器默认步幅。
 
 底层 relax 默认会写轨迹/日志，直接调用会遵循 ASE 原写入规则；模板用独立目录。Atoms 不能直接写为普通 JSON，需显式转换或写结构文件。现有 MACE 接口与通用接口返回形式不同，暂不强行统一。
 

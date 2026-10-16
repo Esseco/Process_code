@@ -2770,7 +2770,8 @@
       "run_md",
       "create_mlip_calculator",
       "export_msd",
-      "fit_msd"
+      "fit_msd",
+      "export_traj_frames"
     ],
     "symbols": [
       {
@@ -2918,6 +2919,17 @@
         ]
       },
       {
+        "file": "Process_MLIP/examples/extract_frames.py",
+        "name": "main",
+        "line": 11,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "pathlib"
+        ]
+      },
+      {
         "file": "Process_MLIP/examples/mace_relax.py",
         "name": "main",
         "line": 11,
@@ -2947,16 +2959,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/01_mace_mh1/run_md.py",
         "name": "main",
-        "line": 91,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -2964,16 +2972,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/02_mace_omat/run_md.py",
         "name": "main",
-        "line": 91,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -2981,16 +2985,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/03_mace_omat_sym/run_md.py",
         "name": "main",
-        "line": 91,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -2998,16 +2998,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/04_sevennet_omni/run_md.py",
         "name": "main",
-        "line": 86,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -3015,16 +3011,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/05_sevennet_omni_flash/run_md.py",
         "name": "main",
-        "line": 86,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -3032,16 +3024,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/06_sevennet_nano6/run_md.py",
         "name": "main",
-        "line": 86,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -3049,16 +3037,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/07_sevennet_nano6_flash/run_md.py",
         "name": "main",
-        "line": 86,
-        "signature": "main(argv=None)",
+        "line": 21,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -3066,16 +3050,12 @@
       {
         "file": "Process_MLIP/examples/md_benchmark/tasks/08_chgnet/run_md.py",
         "name": "main",
-        "line": 86,
-        "signature": "main(argv=None)",
+        "line": 22,
+        "signature": "main()",
         "doc": "",
         "imports": [
           "Process_MLIP",
-          "argparse",
           "ase",
-          "hashlib",
-          "json",
-          "os",
           "pathlib",
           "sys"
         ]
@@ -3083,7 +3063,7 @@
       {
         "file": "Process_MLIP/examples/mlip_md.py",
         "name": "main",
-        "line": 180,
+        "line": 168,
         "signature": "main(argv=None)",
         "doc": "Preview configuration or run MD after editing the parameters above.",
         "imports": [
@@ -3156,7 +3136,7 @@
         "name": "run_mlip_md",
         "line": 14,
         "signature": "run_mlip_md(structure, model='mace-mh1', output_dir='md_results', stages=None, *, pre_relax=None, **md_parameters)",
-        "doc": "Load one model and run independent NVT/NPT or consecutive MD stages.\n\nmodel is a model_config dict or preset name. stages is a nonempty list\nof parameter dicts; None means one stage with md_parameters. Precedence:\nstage > common md_parameters > run_md defaults. Optional stage name must\ncontain only ASCII letters, numbers, underscores or hyphens.\n\nStage transitions inherit positions/cell/momenta by default. Only an\nexplicit stage initialize_velocities=True resamples later-stage momenta.\nAuxiliary thermostat/barostat variables reset: this is not exact restart.\npre_relax=None/False disables preparation; True or a dict enables optional\natoms-only or cell+atoms optimization with this same calculator. Dict keys:\nenabled, relax_cell, optimizer, fmax (eV/Å), steps, require_convergence.\nUnconverged preparation stops by default. Existing momenta are preserved;\nMD velocity initialization runs only after preparation.\nValidates all stages/output collisions before loading the model. Writes\nrun_report.json and numbered stage directories; returns final_atoms,\nstage_results, elapsed simulation time and report paths.\nmeasure_steps_per_second=True records per-stage throughput and total MD\nthroughput weighted by measured durations, excluding pre-relaxation.\nnpt_cell_mode (isotropic/full) and tchain/pchain/tloop/ploop may be set\nglobally or per stage; controller availability is checked before loading.",
+        "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。\n  optimizer=\"FIRE\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步、1 fs；tdamp_fs=100，NPT pdamp_fs=1000。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"FIRE\", \"steps\": 200}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
         "imports": [
           "collections",
           "copy",
@@ -3169,31 +3149,34 @@
         "name": "MLIPRelaxer",
         "line": 7,
         "signature": "MLIPRelaxer",
-        "doc": "Relax ASE Atoms with an explicitly supplied calculator.\n\nModifies the supplied Atoms and retains its constraints. Energies are eV,\nfmax is eV/Å. Cell relaxation also tests filter stress degrees of freedom.",
+        "doc": "Relax ASE Atoms with an explicitly supplied calculator.\n\nModifies the supplied Atoms and retains its constraints. Energies are eV,\nfmax is eV/Å. Cell relaxation also tests filter stress degrees of freedom.\nmaxstep=None uses the ASE optimizer default; positive values limit optimizer\nsteps (Å for atom variables). FrechetCellFilter scales cell variables by\nexp_cell_factor, defaulting to atom count; no direct strain bound is imposed.",
         "imports": [
           "ase",
+          "numbers",
           "numpy"
         ]
       },
       {
         "file": "Process_MLIP/MLIP_Relax.py",
         "name": "MLIPRelaxer.__init__",
-        "line": 14,
-        "signature": "MLIPRelaxer.__init__(self, atoms, calculator, fmax=0.05, steps=200, optimizer='BFGS', relax_cell=False)",
+        "line": 17,
+        "signature": "MLIPRelaxer.__init__(self, atoms, calculator, fmax=0.05, steps=200, optimizer='BFGS', relax_cell=False, *, maxstep=None, exp_cell_factor=None)",
         "doc": "",
         "imports": [
           "ase",
+          "numbers",
           "numpy"
         ]
       },
       {
         "file": "Process_MLIP/MLIP_Relax.py",
         "name": "MLIPRelaxer.relax",
-        "line": 52,
+        "line": 64,
         "signature": "MLIPRelaxer.relax(self, traj_file='relax.traj', log_file='relax.log', final_structure=None)",
         "doc": "",
         "imports": [
           "ase",
+          "numbers",
           "numpy"
         ]
       },
@@ -3253,9 +3236,9 @@
       },
       {
         "file": "Process_MLIP/test_benchmark_tasks.py",
-        "name": "BenchmarkTaskTests.test_all_eight_preview_and_submission_configs",
+        "name": "BenchmarkTaskTests.test_all_eight_default_and_submission_configs",
         "line": 18,
-        "signature": "BenchmarkTaskTests.test_all_eight_preview_and_submission_configs(self)",
+        "signature": "BenchmarkTaskTests.test_all_eight_default_and_submission_configs(self)",
         "doc": "",
         "imports": [
           "ase",
@@ -3271,7 +3254,7 @@
       {
         "file": "Process_MLIP/test_benchmark_tasks.py",
         "name": "BenchmarkTaskTests.test_all_eight_real_nvt_msd_pipelines_with_emt",
-        "line": 37,
+        "line": 42,
         "signature": "BenchmarkTaskTests.test_all_eight_real_nvt_msd_pipelines_with_emt(self)",
         "doc": "",
         "imports": [
@@ -4592,7 +4575,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests",
-        "line": 18,
+        "line": 20,
         "signature": "PreRelaxTests",
         "doc": "",
         "imports": [
@@ -4608,7 +4591,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.setUp",
-        "line": 19,
+        "line": 21,
         "signature": "PreRelaxTests.setUp(self)",
         "doc": "",
         "imports": [
@@ -4624,7 +4607,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.run_workflow",
-        "line": 29,
+        "line": 31,
         "signature": "PreRelaxTests.run_workflow(self, name='md', **kwargs)",
         "doc": "",
         "imports": [
@@ -4640,7 +4623,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_disabled_by_default",
-        "line": 32,
+        "line": 34,
         "signature": "PreRelaxTests.test_disabled_by_default(self)",
         "doc": "",
         "imports": [
@@ -4656,7 +4639,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_explicit_enabled_flag_in_configuration",
-        "line": 38,
+        "line": 40,
         "signature": "PreRelaxTests.test_explicit_enabled_flag_in_configuration(self)",
         "doc": "",
         "imports": [
@@ -4672,7 +4655,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_alternative_optimizers",
-        "line": 44,
+        "line": 46,
         "signature": "PreRelaxTests.test_alternative_optimizers(self)",
         "doc": "",
         "imports": [
@@ -4688,7 +4671,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_atoms_only_relaxation_reuses_model_and_feeds_md",
-        "line": 50,
+        "line": 52,
         "signature": "PreRelaxTests.test_atoms_only_relaxation_reuses_model_and_feeds_md(self)",
         "doc": "",
         "imports": [
@@ -4704,7 +4687,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_cell_relaxation_and_md_cell_inheritance",
-        "line": 73,
+        "line": 75,
         "signature": "PreRelaxTests.test_cell_relaxation_and_md_cell_inheritance(self)",
         "doc": "",
         "imports": [
@@ -4720,7 +4703,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_explicit_overwrite_preserves_unrelated_files",
-        "line": 90,
+        "line": 92,
         "signature": "PreRelaxTests.test_explicit_overwrite_preserves_unrelated_files(self)",
         "doc": "",
         "imports": [
@@ -4736,7 +4719,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_nonconvergence_stops_by_default_or_explicitly_continues",
-        "line": 98,
+        "line": 100,
         "signature": "PreRelaxTests.test_nonconvergence_stops_by_default_or_explicitly_continues(self)",
         "doc": "",
         "imports": [
@@ -4752,7 +4735,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_bad_configuration_and_collisions_fail_before_loading",
-        "line": 111,
+        "line": 113,
         "signature": "PreRelaxTests.test_bad_configuration_and_collisions_fail_before_loading(self)",
         "doc": "",
         "imports": [
@@ -4768,7 +4751,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_cell_requires_pbc_and_stress_but_atoms_only_does_not",
-        "line": 128,
+        "line": 130,
         "signature": "PreRelaxTests.test_cell_requires_pbc_and_stress_but_atoms_only_does_not(self)",
         "doc": "",
         "imports": [
@@ -4784,7 +4767,7 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_existing_momenta_preserved_and_new_velocities_initialized_after_relaxation",
-        "line": 140,
+        "line": 142,
         "signature": "PreRelaxTests.test_existing_momenta_preserved_and_new_velocities_initialized_after_relaxation(self)",
         "doc": "",
         "imports": [
@@ -4800,8 +4783,72 @@
       {
         "file": "Process_MLIP/test_pre_relax.py",
         "name": "PreRelaxTests.test_optimizer_failure_stops_md_and_records_failure",
-        "line": 152,
+        "line": 154,
         "signature": "PreRelaxTests.test_optimizer_failure_stops_md_and_records_failure(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "json",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_pre_relax.py",
+        "name": "PreRelaxTests.test_frechet_step_limit_and_effective_scaling_report",
+        "line": 162,
+        "signature": "PreRelaxTests.test_frechet_step_limit_and_effective_scaling_report(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "json",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_pre_relax.py",
+        "name": "PreRelaxTests.test_custom_step_and_cell_scaling",
+        "line": 176,
+        "signature": "PreRelaxTests.test_custom_step_and_cell_scaling(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "json",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_pre_relax.py",
+        "name": "PreRelaxTests.test_invalid_step_settings_fail_before_model_loading",
+        "line": 187,
+        "signature": "PreRelaxTests.test_invalid_step_settings_fail_before_model_loading(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "json",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_pre_relax.py",
+        "name": "PreRelaxTests.test_supercell_full_relaxation_remains_finite_and_reduces_energy",
+        "line": 196,
+        "signature": "PreRelaxTests.test_supercell_full_relaxation_remains_finite_and_reduces_energy(self)",
         "doc": "",
         "imports": [
           "Process_MLIP",
@@ -4972,6 +5019,126 @@
           "sys",
           "tempfile",
           "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests",
+        "line": 13,
+        "signature": "TrajectoryExportTests",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.setUp",
+        "line": 14,
+        "signature": "TrajectoryExportTests.setUp(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_vasp_indices_geometry_and_atom_order",
+        "line": 28,
+        "signature": "TrajectoryExportTests.test_vasp_indices_geometry_and_atom_order(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_default_last_all_slice_and_traj_momenta",
+        "line": 37,
+        "signature": "TrajectoryExportTests.test_default_last_all_slice_and_traj_momenta(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_other_formats",
+        "line": 47,
+        "signature": "TrajectoryExportTests.test_other_formats(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_invalid_selection_writes_nothing",
+        "line": 53,
+        "signature": "TrajectoryExportTests.test_invalid_selection_writes_nothing(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_output_protection_and_overwrite",
+        "line": 62,
+        "signature": "TrajectoryExportTests.test_output_protection_and_overwrite(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_trajectory.py",
+        "name": "TrajectoryExportTests.test_no_cell_and_empty_trajectory",
+        "line": 76,
+        "signature": "TrajectoryExportTests.test_no_cell_and_empty_trajectory(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "numpy",
+          "pathlib",
+          "tempfile",
           "unittest"
         ]
       },
@@ -5153,6 +5320,18 @@
           "pathlib",
           "tempfile",
           "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/trajectory.py",
+        "name": "export_traj_frames",
+        "line": 8,
+        "signature": "export_traj_frames(trajectory, output_dir=None, frames=-1, *, format='vasp', overwrite=False)",
+        "doc": "按保存帧索引导出结构，返回 frame_indices、structure_files 和 frame_count。\n\nframes: 整数/整数列表/slice；0 为首帧，-1 为末帧，None 为全部。\noutput_dir=None: 输出到输入轨迹所在目录。\nformat: vasp（默认）/ cif / xyz / extxyz / traj；文件名 frame_000000.格式。\n索引对应 MSD 的 frame_index，不一定是 MD 步号。负索引转为实际索引。\n原子顺序保持不变；不弛豫、不加载模型、不修改源轨迹，默认不覆盖文件。\nVASP 使用分数坐标；需完整晶胞。保留 ASE 动量等信息请用 traj。",
+        "imports": [
+          "ase",
+          "numbers",
+          "pathlib"
         ]
       },
       {
