@@ -24,7 +24,8 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
       optimizer="FIRE"（BFGS / FIRE / LBFGS，须大写）。
       fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。
       maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。
-    MD 默认：NVT、300 K、1000 步、1 fs；tdamp_fs=100，NPT pdamp_fs=1000。
+    MD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。
+    tdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。
     NPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。
     trajectory_interval/log_interval=10（步）；seed=42；overwrite=False。
     measure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。
@@ -63,6 +64,8 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
         if "time_offset_fs" in stage or "overwrite" in stage:
             raise ValueError("time_offset_fs and overwrite must be common parameters")
         parameters = dict(common, **stage)
+        if "timestep_fs" not in stage and md_parameters.get("timestep_fs") is None:
+            parameters["timestep_fs"] = None  # 按阶段系综选默认步长。
         if index > 0 and "initialize_velocities" not in stage:
             parameters["initialize_velocities"] = False
         parameters["time_offset_fs"] = offset

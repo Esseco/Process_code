@@ -70,7 +70,7 @@ PRE_RELAX = {
 # MD 公共参数；阶段参数优先。
 MD_PARAMETERS = {
     "temperature_K": 800,            # 温度，K
-    "timestep_fs": 1.0,              # 时间步长，fs
+    "timestep_fs": None,             # None: NVT=2 fs、NPT=1 fs；可填数值
     "tdamp_fs": 100.0,               # 温控阻尼，fs
     "pressure_bar": 1.0,              # NPT 压力，bar，正值为压缩
     "pdamp_fs": 1000.0,               # NPT 压控阻尼，fs
@@ -195,7 +195,9 @@ def main(argv=None):
             raise ValueError("Require finite 0 <= fit_start_ps < fit_end_ps")
         stage = STAGES[msd_target[0]]
         steps = stage.get("steps", MD_PARAMETERS.get("steps", 1000))
-        dt = stage.get("timestep_fs", MD_PARAMETERS.get("timestep_fs", 1.0))
+        dt = stage.get("timestep_fs", MD_PARAMETERS.get("timestep_fs"))
+        if dt is None:
+            dt = 2.0  # MSD 目标已限定为 NVT。
         interval = stage.get("trajectory_interval", MD_PARAMETERS.get("trajectory_interval", 10))
         if end > steps * dt / 1000:
             raise ValueError("Transport fit window exceeds the selected NVT duration")

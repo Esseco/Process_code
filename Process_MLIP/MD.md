@@ -130,7 +130,7 @@ ORB 的 compile 是官方 torch.compile 选项，首次编译可能额外耗时�
 | ensemble | nvt | nvt 或 npt，大小写均可 |
 | temperature_K | 300 | 目标温度 K，必须 >0 |
 | steps | 1000 | 本阶段积分步数，0 表示只求值/保存初态 |
-| timestep_fs | 1 | 步长 fs |
+| timestep_fs | None | 自动：NVT 2 fs、NPT 1 fs；显式数值可覆盖 |
 | tdamp_fs | 100 | 温控阻尼时间 fs |
 | pressure_bar | 1 | NPT 外压 bar，正值表示压缩 |
 | pdamp_fs | 1000 | NPT 压控阻尼时间 fs |

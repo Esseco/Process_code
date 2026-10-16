@@ -5,7 +5,7 @@
 - STRUCTURES：依次读取八个文件夹同级的 LCO.vasp、NVP.vasp，每个模型都运行这两个结构。
 - MODEL_PATH：自行填写相应模型路径，加速组和基线组使用相同权重。
 - PRE_RELAX：默认 FIRE all 弛豫（原子+完整晶胞），未收敛则停止。
-- MD：默认 600 K、1 fs、5000 步 NVT、seed=42，轨迹和日志每步输出；记录 steps/s。
+- MD：默认 600 K、2 fs、5000 步 NVT（10 ps）、seed=42，轨迹和日志每步输出；记录 steps/s。
 - MSD：默认开启，species=None 输出全部元素，也可改为 "Na" / "Li" / 列表。
 
 进入对应文件夹执行 sbatch submit.sh 即可，一个任务顺序运行两个结构，不并发争抢 GPU。结果分别写在该文件夹 results/LCO/ 和 results/NVP/：

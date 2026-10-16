@@ -241,10 +241,10 @@ only the final structure is written there.
 
 ## `run_md`
 
-源文件：[md.py](md.py)，第 186 行。
+源文件：[md.py](md.py)，第 188 行。
 
 ```python
-run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)
+run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)
 ```
 
 Run one NHC NVT or MTK NPT stage with an ASE calculator.
@@ -257,6 +257,7 @@ options apply only to initialization. Constraints are not supported.
 npt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.
 tchain/tloop control the thermostat; pchain/ploop apply only to NPT.
 Chain lengths and integration substeps must be positive integers.
+timestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.
 
 Writes md.traj, md.csv, final.traj (with momenta), report.json. Existing
 owned files require overwrite=True; unrelated files are never removed.
@@ -285,7 +286,8 @@ pre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：
   optimizer="FIRE"（BFGS / FIRE / LBFGS，须大写）。
   fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。
   maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。
-MD 默认：NVT、300 K、1000 步、1 fs；tdamp_fs=100，NPT pdamp_fs=1000。
+MD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。
+tdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。
 NPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。
 trajectory_interval/log_interval=10（步）；seed=42；overwrite=False。
 measure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。
@@ -841,6 +843,66 @@ MDSpeedTests.test_gpu_synchronization_brackets_timer(self)
 
 ```python
 MDSpeedTests.test_workflow_combines_rates_by_total_time(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 17 行。
+
+```python
+TimestepTests
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests.setUp`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 18 行。
+
+```python
+TimestepTests.setUp(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests.test_defaults_and_explicit_values`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 24 行。
+
+```python
+TimestepTests.test_defaults_and_explicit_values(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests.test_run_md_and_msd_time_grid`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 33 行。
+
+```python
+TimestepTests.test_run_md_and_msd_time_grid(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests.test_stage_defaults_and_common_stage_overrides`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 46 行。
+
+```python
+TimestepTests.test_stage_defaults_and_common_stage_overrides(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `TimestepTests.test_example_transport_preflight_with_auto_timestep`
+
+源文件：[test_md_timestep.py](test_md_timestep.py)，第 60 行。
+
+```python
+TimestepTests.test_example_transport_preflight_with_auto_timestep(self)
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。

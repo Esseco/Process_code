@@ -15,7 +15,7 @@ from ase.io.trajectory import Trajectory
 
 
 _DEFAULTS = dict(ensemble="nvt", temperature_K=300.0, steps=1000,
-                 timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0,
+                 timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0,
                  pdamp_fs=1000.0, initialize_velocities=None, seed=42,
                  remove_com=True, zero_rotation=False, trajectory_interval=10,
                  log_interval=10, overwrite=False, time_offset_fs=0.0,
@@ -32,6 +32,8 @@ def _validate_options(options):
     if not isinstance(result["ensemble"], str) or result["ensemble"].lower() not in ("nvt", "npt"):
         raise ValueError("ensemble must be nvt or npt")
     result["ensemble"] = result["ensemble"].lower()
+    if result["timestep_fs"] is None:
+        result["timestep_fs"] = 2.0 if result["ensemble"] == "nvt" else 1.0
     if not isinstance(result["npt_cell_mode"], str) or result["npt_cell_mode"].lower() not in ("isotropic", "full"):
         raise ValueError("npt_cell_mode must be isotropic or full")
     result["npt_cell_mode"] = result["npt_cell_mode"].lower()
@@ -184,7 +186,7 @@ def _synchronize_for_timing(calculator, metadata):
 
 
 def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=300.0,
-           steps=1000, timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0,
+           steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0,
            pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True,
            zero_rotation=False, trajectory_interval=10, log_interval=10,
            overwrite=False, time_offset_fs=0.0, model_metadata=None,
@@ -200,6 +202,7 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
     npt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.
     tchain/tloop control the thermostat; pchain/ploop apply only to NPT.
     Chain lengths and integration substeps must be positive integers.
+    timestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.
 
     Writes md.traj, md.csv, final.traj (with momenta), report.json. Existing
     owned files require overwrite=True; unrelated files are never removed.
@@ -211,6 +214,7 @@ def run_md(structure, calculator, output_dir, *, ensemble="nvt", temperature_K=3
     """
     options = _validate_options({key: value for key, value in locals().copy().items()
                                  if key in _DEFAULTS})
+    timestep_fs = options["timestep_fs"]
     atoms = _copy_structure(structure)
     _validate_atoms(atoms, options)
     root = _check_outputs(output_dir, overwrite)

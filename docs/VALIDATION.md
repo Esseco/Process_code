@@ -93,6 +93,11 @@ Process_Struct/examples/percolation_sites.py 在已有 ccnb 环境对 NaFeF3 单
 - Six added tests cover geometry/order and varying cells, negative/sliced/all selection, momenta roundtrip, formats, invalid selection, collisions, absent cell and empty input. Full py1 suite: 85 tests, OK (one existing full-MTK skip). Fresh import confirmed no MLIP/Torch import. Updated static API catalog. No production model/GPU run needed for frame extraction.
 
 
+### 2026-10-16 Ensemble-dependent MD timestep
+
+- timestep_fs=None now resolves to NVT 2 fs or NPT 1 fs per stage. Explicit common/stage values override; explicit stage None restores its ensemble default. Resolved values drive integration, CSV/report times, cumulative stage offsets and MSD inference. Other damping/default parameters unchanged.
+- Added four tests covering direct runs, invalid values, multi-stage overrides/offsets, exact MSD time grid and automatic timestep in example transport preflight. Full py1 suite: 93 tests OK (1 existing full-MTK skip); existing py-mace: 93 tests OK. Updated example, docs and catalog. No environment changes; 2 fs is the requested configurable default, not material-specific accuracy validation.
+
 ### 2026-10-16 Full-cell relaxation stability
 
 - Replaced deprecated ExpCellFilter in MLIPRelaxer with FrechetCellFilter, default extensive cell scaling (atom count); no silent fallback. Added keyword-only maxstep/exp_cell_factor to MLIPRelaxer and validated pre_relax options. MD preparation now defaults to FIRE with maxstep=0.05 Å; direct MLIPRelaxer keeps its optimizer/default ASE step behavior when maxstep=None. Effective filter and scaling recorded in preparation reports.

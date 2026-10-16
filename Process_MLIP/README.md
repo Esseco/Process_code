@@ -8,6 +8,7 @@
 使用 [完整 MD 示例](examples/mlip_md.py) 集中修改模型、加速与阶段参数；接口和超算说明见 [MD.md](MD.md)。
 可选 `pre_relax` 在 MD 前只优化原子或同时优化晶胞；函数默认关闭，完整 MD 示例默认全弛豫（原子和晶胞）后直接运行 NVT，预弛豫与 MD 共用同一模型。
 NPT 可选 `npt_cell_mode="isotropic"`（默认）或 `"full"`，温控/压控链和积分子步数可按阶段配置。
+`timestep_fs=None` 时按阶段自动选步长：NVT 2 fs、NPT 1 fs；显式数值优先。
 NVT 轨迹可直接用 `export_msd` 导出整段 MSD CSV，复用 ASE 内置分析；见 [MSD.md](MSD.md) 和 [后处理示例](examples/msd.py)。
 完整 MD 示例提供 `MSD_POSTPROCESS` 开关，运行结束后可自动导出指定元素、指定 NVT 阶段的 MSD。
 `fit_msd` 独立读取 MSD CSV 拟合扩散系数和估算 Nernst–Einstein 离子导率；两个示例均提供 `TRANSPORT_FIT` 开关与拟合区间、电荷配置，详见 [MSD.md](MSD.md)。

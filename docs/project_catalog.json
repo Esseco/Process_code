@@ -3114,9 +3114,9 @@
       {
         "file": "Process_MLIP/md.py",
         "name": "run_md",
-        "line": 186,
-        "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=1.0, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)",
-        "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
+        "line": 188,
+        "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)",
+        "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\ntimestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
         "imports": [
           "ase",
           "csv",
@@ -3136,7 +3136,7 @@
         "name": "run_mlip_md",
         "line": 14,
         "signature": "run_mlip_md(structure, model='mace-mh1', output_dir='md_results', stages=None, *, pre_relax=None, **md_parameters)",
-        "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。\n  optimizer=\"FIRE\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步、1 fs；tdamp_fs=100，NPT pdamp_fs=1000。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"FIRE\", \"steps\": 200}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
+        "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。\n  optimizer=\"FIRE\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。\ntdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"FIRE\", \"steps\": 200}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
         "imports": [
           "collections",
           "copy",
@@ -3974,6 +3974,108 @@
           "sys",
           "tempfile",
           "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests",
+        "line": 17,
+        "signature": "TimestepTests",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests.setUp",
+        "line": 18,
+        "signature": "TimestepTests.setUp(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests.test_defaults_and_explicit_values",
+        "line": 24,
+        "signature": "TimestepTests.test_defaults_and_explicit_values(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests.test_run_md_and_msd_time_grid",
+        "line": 33,
+        "signature": "TimestepTests.test_run_md_and_msd_time_grid(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests.test_stage_defaults_and_common_stage_overrides",
+        "line": 46,
+        "signature": "TimestepTests.test_stage_defaults_and_common_stage_overrides(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_MLIP/test_md_timestep.py",
+        "name": "TimestepTests.test_example_transport_preflight_with_auto_timestep",
+        "line": 60,
+        "signature": "TimestepTests.test_example_transport_preflight_with_auto_timestep(self)",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "contextlib",
+          "csv",
+          "io",
+          "pathlib",
+          "tempfile",
           "unittest"
         ]
       },
