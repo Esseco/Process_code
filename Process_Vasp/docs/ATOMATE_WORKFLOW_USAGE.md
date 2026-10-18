@@ -6,7 +6,7 @@
 
 再次 `sbatch submit_gpu.sh`，自动校验并跳过已完成阶段，从第一个缺失、未收敛或参数失效的阶段开始。workflow_state.json 原子保存阶段状态；即使任务被 kill 来不及标记完成，也会重新检查已有输出。OS 文件锁阻止两个提交同时操作一个任务目录（共享文件系统须支持文件锁）。
 
-升级旧版生成的任务时，运行器也会检查同一任务目录中 `runs/job_*` 的旧结果，即使曾经留下失败的新版检查点。候选必须有可解析且收敛的 `vasprun.xml`、对应阶段的 INCAR、匹配前一步的 POSCAR，以及完整输出；静态还需 WAVECAR 和 CHGCAR。验证通过的旧 relax 会直接接入，因此下一步从 static 开始，接着运行 DOS 或 band。找不到合格结果时会打印候选被拒绝的原因，再重新计算该阶段；升级前应保留服务器上的整个 `runs/` 目录。若旧任务的参数或结构不符合当前配置，不能自动当作完成结果。
+升级旧版生成的任务时，运行器也会检查同一任务目录中 `runs/job_*` 的旧结果，即使曾经留下失败的新版检查点。候选必须有可解析且收敛的 `vasprun.xml`、对应阶段的 INCAR、匹配前一步的 POSCAR，以及完整输出；普通静态结果不要求 WAVECAR 或 CHGCAR。验证通过的旧 relax 会直接接入，因此下一步从 static 开始，接着运行 DOS 或 band。找不到合格结果时会打印候选被拒绝的原因，再重新计算该阶段；升级前应保留服务器上的整个 `runs/` 目录。若旧任务的参数或结构不符合当前配置，不能自动当作完成结果。
 
 目录示例：
 
@@ -23,7 +23,9 @@ workflow_state.json
 
 失败时写出 `workflow_status.json` 和 `failure_report.txt`，注明阶段、尝试目录、可识别的停止原因、建议处理动作及 VASP 标准错误末尾，并在 Slurm 错误输出中打印。成功后 `workflow_status.json` 更新为 completed，旧的 `failure_report.txt` 保留作历史记录。若磁盘配额已满，报告文件自身可能无法写入，此时以 Slurm `err` 和阶段目录的 `std_err.txt` 为准。强制终止（如 SIGKILL）可能来不及写报告；再次提交会校验已有输出，不凭旧状态盲目跳过。
 
-状态通过完整 vasprun.xml（或压缩文件）及收敛信息验证，要求 OUTCAR、CONTCAR；static 还要求 CHGCAR 和 WAVECAR。relax 检查电子和离子收敛，其他阶段检查电子收敛。每次恢复会重新验证，损坏结果不会按已完成跳过。
+状态通过完整 vasprun.xml（或压缩文件）及收敛信息验证，要求 OUTCAR、CONTCAR。普通静态能量/力计算不要求 CHGCAR 或 WAVECAR，允许 LWAVE=False。relax 检查电子和离子收敛，其他阶段检查电子收敛。每次恢复会重新验证，损坏结果不会按已完成跳过。旧失败检查点的输出若重新验收通过，会复用同一 attempt，不启动 VASP；旧错误保存在 validation_recovery，当前 error/reason 清除。
+
+DOS/能带在创建对应非自洽计算前检查前序非空 CHGCAR，不因缺少电荷文件把已完成的普通静态阶段改判失败。激发态等明确使用波函数的功能仍在自己的入口检查 WAVECAR；普通相图 DFT 不应为此生成或回传大文件。
 
 ## 修改参数
 

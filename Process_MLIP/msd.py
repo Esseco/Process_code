@@ -1,14 +1,13 @@
-"""NVT trajectory-to-CSV adapter around ASE's DiffusionCoefficient."""
+"""Fixed-cell trajectory to multi-time-origin MSD using pymatgen."""
 import csv
 import json
+import warnings
 from numbers import Integral, Real
 from pathlib import Path
 
 import numpy as np
-from ase import units
 from ase.geometry import find_mic
 from ase.io.trajectory import Trajectory
-from ase.md.analysis import DiffusionCoefficient
 
 
 def _trajectory_times(path, count, frame_interval_fs):
@@ -45,28 +44,53 @@ def _trajectory_times(path, count, frame_interval_fs):
         raise ValueError(message) from exc
 
 
+def _load_diffusion_analyzer():
+    try:
+        from pymatgen.analysis.diffusion.analyzer import DiffusionAnalyzer
+    except ImportError as exc:
+        raise ImportError("MSD requires pymatgen-analysis-diffusion in the analysis environment; "
+                          "there is no ASE MSD fallback") from exc
+    return DiffusionAnalyzer
+
+
+def _msd_lags(frame_count, interval_fs, atom_count, min_obs):
+    """Match DiffusionAnalyzer's max-mode lag grid; its internal fit needs 3 points."""
+    if not 0 < interval_fs <= 1000:
+        raise ValueError("pymatgen MSD requires saved-frame spacing <= 1000 fs")
+    first = int(1000 / interval_fs)
+    stop = min(atom_count * frame_count // min_obs, frame_count)
+    lags = np.arange(first, stop, max(int((stop - first) / 200), 1))
+    if len(lags) < 3:
+        raise ValueError("Not enough data for pymatgen multi-origin MSD: need at least "
+                         "three lag points near/above 1 ps; use a longer trajectory, "
+                         "fewer segments, or a smaller min_obs (default 30)")
+    return lags
+
+
 def export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None,
                skip_frames=0, number_of_segments=1, unwrap=False,
-               drift_reference=None, overwrite=False):
-    """Export true MSD (Å²) from a fixed-cell ASE .traj using ASE analysis.
+               drift_reference=None, overwrite=False, min_obs=30):
+    """Export pymatgen max-mode MSD (Å²), averaged over atoms and time origins.
 
-    species: element string/list, or None for all elements. Times are inferred
-    from adjacent completed MD report.json unless frame_interval_fs is given.
-    skip_frames removes equilibration frames. ASE divides retained frames into
-    non-overlapping segments, each referenced to its own first frame; this is
-    not an overlapping all-time-origin MSD. No diffusion coefficient is exported.
+    species: element/list/None (all). skip_frames removes equilibration;
+    number_of_segments splits equally, each analyzed independently. min_obs=30
+    controls pymatgen's maximum lag; native sampling starts near 1 ps.
+    CSV columns are unchanged; time_fs/time_ps are lag times, frame_index is
+    segment start + lag in frames (not a unique displacement endpoint).
 
-    Our MD trajectories are unwrapped, so unwrap defaults False. For wrapped
-    input, True reconstructs nearest-image increments via ASE find_mic; saved
-    frames must be frequent enough to avoid ambiguous periodic crossings.
-    drift_reference='framework' subtracts the mass-weighted COM displacement of
-    atoms outside selected species. Default None makes no drift correction.
+    Times come from adjacent report.json or frame_interval_fs. A short final
+    saved interval is excluded with a warning; other unequal spacing is rejected.
+    unwrap=True uses ASE MIC for wrapped input; default preserves continuous
+    MD positions. drift_reference='framework' subtracts the mass-weighted COM
+    displacement of unselected atoms; None applies no drift correction.
 
-    Writes only output_csv (default no overwrite), returns path and provenance.
-    Source trajectory and report are never modified. No model is loaded.
+    Requires pymatgen-analysis-diffusion only when called; no models are loaded.
+    Writes only output_csv, refuses overwrite by default. Internal pymatgen
+    diffusion/conductivity fits are discarded; use fit_msd explicitly.
     """
     for key, value, minimum in (("skip_frames", skip_frames, 0),
-                                 ("number_of_segments", number_of_segments, 1)):
+                                 ("number_of_segments", number_of_segments, 1),
+                                 ("min_obs", min_obs, 1)):
         if isinstance(value, bool) or not isinstance(value, Integral) or value < minimum:
             raise ValueError(f"{key} must be an integer >= {minimum}")
     for key, value in (("unwrap", unwrap), ("overwrite", overwrite)):
@@ -86,13 +110,30 @@ def export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None,
     if not source.is_file():
         raise FileNotFoundError(source)
     processed = []
+    dropped = []
     with Trajectory(str(source), "r") as frames:
         count = len(frames)
-        retained = count - skip_frames
+        times, time_source = _trajectory_times(source, count, frame_interval_fs)
+        stop = count
+        retained_times = times[skip_frames:]
+        if len(retained_times) >= 3:
+            differences = np.diff(retained_times)
+            if not np.allclose(differences, differences[0], rtol=1e-9, atol=1e-8):
+                if (time_source == "report.json"
+                        and np.allclose(differences[:-1], differences[0], rtol=1e-9, atol=1e-8)
+                        and 0 < differences[-1] < differences[0]):
+                    stop -= 1
+                    dropped = [count - 1]
+                    warnings.warn("Excluded the final short-interval frame from multi-origin MSD; "
+                                  "pymatgen requires equally spaced frames", UserWarning, stacklevel=2)
+                else:
+                    raise ValueError("pymatgen MSD requires equally spaced frames")
+        retained = stop - skip_frames
         if retained < 2 * number_of_segments or retained % number_of_segments:
             raise ValueError("Retained frames must divide equally into segments, at least two per segment")
-        times, time_source = _trajectory_times(source, count, frame_interval_fs)
         first = frames[skip_frames]
+        if not np.isfinite(first.get_volume()) or first.get_volume() <= 0:
+            raise ValueError("pymatgen MSD requires a nonzero 3D cell")
         symbols = np.asarray(first.get_chemical_symbols())
         if species is None:
             requested = set(symbols)
@@ -108,8 +149,13 @@ def export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None,
         reference = np.flatnonzero(~np.isin(symbols, list(requested)))
         if drift_reference == "framework" and not len(reference):
             raise ValueError("framework drift correction requires atoms outside selected species")
+        interval_fs = float(times[skip_frames + 1] - times[skip_frames])
+        elements = sorted(requested)
+        lags = {element: _msd_lags(retained // number_of_segments, interval_fs,
+                                  int(np.sum(symbols == element)), int(min_obs))
+                for element in elements}
         previous = continuous = origin_com = None
-        for index in range(skip_frames, count):
+        for index in range(skip_frames, stop):
             frame = frames[index]
             if not np.array_equal(frame.numbers, first.numbers):
                 raise ValueError("Atom identities and order must remain unchanged")
@@ -134,39 +180,56 @@ def export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None,
                 if origin_com is None:
                     origin_com = center
                 drift = center - origin_com
-            reduced = frame[selected]
-            reduced.set_positions(continuous[selected] - drift)
-            processed.append(reduced)
-    # Selecting whole species before invoking ASE also ensures that its
-    # normalization counts correspond exactly to the analyzed atom population.
-    analyzer = DiffusionCoefficient(processed, timestep=float(times[1] - times[0]) * units.fs)
-    analyzer.calculate(number_of_segments=int(number_of_segments))
-    # ASE stores sum(displacement²)/(2*N) for its Einstein slope fitting.
-    # Export conventional MSD, not that half-MSD. We do not use ASE's fitted
-    # coefficients or uniform time grid: CSV uses exact times, including a final
-    # short saved interval from run_md's mandatory last frame.
-    msd = 2 * np.asarray(analyzer.xyz_segment_ensemble_average)
-    if not np.all(np.isfinite(msd)):
-        raise RuntimeError("ASE analysis returned non-finite MSD")
+            processed.append(continuous[selected] - drift)
+    analyzer_class = _load_diffusion_analyzer()
+    from pymatgen.core import Structure
+
+    positions = np.asarray(processed)
+    selected_symbols = symbols[selected]
+    length = retained // number_of_segments
+    results = []
+    for segment in range(number_of_segments):
+        start = segment * length
+        for element in elements:
+            mask = selected_symbols == element
+            population = int(mask.sum())
+            points = positions[start:start + length, mask]
+            displacement = (points - points[0]).transpose(1, 0, 2)
+            # pymatgen always removes non-target drift. A fixed reference site
+            # keeps that zero: any requested COM correction was already applied.
+            reference_element = "He" if element != "He" else "Ne"
+            structure = Structure(first.cell.array, [element] * population + [reference_element],
+                                  np.zeros((population + 1, 3)), coords_are_cartesian=True)
+            displacement = np.concatenate([displacement, np.zeros((1, length, 3))])
+            analyzer = analyzer_class(structure, displacement, element, temperature=300,
+                                      time_step=interval_fs, step_skip=1,
+                                      smoothed="max", min_obs=int(min_obs))
+            # Temperature only affects unused automatic conductivity, not MSD.
+            xyz = np.asarray(analyzer.msd_components)
+            lag_times = lags[element] * interval_fs
+            if (xyz.shape != (len(lag_times), 3) or not np.all(np.isfinite(xyz))
+                    or not np.allclose(analyzer.dt, lag_times)):
+                raise RuntimeError("Unexpected pymatgen MSD values or lag grid")
+            results.append((segment, element, population, xyz))
     columns = ["segment", "frame_index", "time_fs", "time_ps", "species", "atom_count",
                "msd_x_A2", "msd_y_A2", "msd_z_A2", "msd_total_A2"]
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("w" if overwrite else "x", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
         writer.writeheader()
-        for segment in range(number_of_segments):
-            start = skip_frames + segment * analyzer.len_segments
-            for element_index, element in enumerate(analyzer.types_of_atoms):
-                for offset in range(analyzer.len_segments):
-                    lag = float(times[start + offset] - times[start])
-                    xyz = msd[segment, element_index, :, offset]
-                    writer.writerow(dict(segment=segment + 1, frame_index=start + offset,
-                                         time_fs=lag, time_ps=lag / 1000, species=element,
-                                         atom_count=analyzer.no_of_atoms[element_index],
-                                         msd_x_A2=float(xyz[0]), msd_y_A2=float(xyz[1]),
-                                         msd_z_A2=float(xyz[2]), msd_total_A2=float(xyz.sum())))
+        for segment, element, population, components in results:
+            start = skip_frames + segment * length
+            for offset, xyz in zip(lags[element], components):
+                lag = float(offset * interval_fs)
+                writer.writerow(dict(segment=segment + 1, frame_index=int(start + offset),
+                                     time_fs=lag, time_ps=lag / 1000, species=element,
+                                     atom_count=population,
+                                     msd_x_A2=float(xyz[0]), msd_y_A2=float(xyz[1]),
+                                     msd_z_A2=float(xyz[2]), msd_total_A2=float(xyz.sum())))
     return dict(csv_file=str(destination), trajectory_file=str(source), time_source=time_source,
                 frame_count=int(retained), skip_frames=int(skip_frames),
-                number_of_segments=int(number_of_segments), species=analyzer.types_of_atoms,
-                method="ase.md.analysis.DiffusionCoefficient", unwrap=unwrap,
+                number_of_segments=int(number_of_segments), species=elements,
+                method="pymatgen.analysis.diffusion.analyzer.DiffusionAnalyzer",
+                smoothed="max", min_obs=int(min_obs), dropped_frame_indices=dropped,
+                unwrap=unwrap,
                 drift_reference=drift_reference, msd_unit="angstrom^2")

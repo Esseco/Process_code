@@ -11,7 +11,8 @@ def export_traj_frames(trajectory, output_dir=None, frames=-1, *, format="vasp",
     frames: 整数/整数列表/slice；0 为首帧，-1 为末帧，None 为全部。
     output_dir=None: 输出到输入轨迹所在目录。
     format: vasp（默认）/ cif / xyz / extxyz / traj；文件名 frame_000000.格式。
-    索引对应 MSD 的 frame_index，不一定是 MD 步号。负索引转为实际索引。
+    索引不是 MD 步号；多起点 MSD 的 frame_index 仅作 lag 参考，不代表唯一终点。
+    负索引转为实际索引。
     原子顺序保持不变；不弛豫、不加载模型、不修改源轨迹，默认不覆盖文件。
     VASP 使用分数坐标；需完整晶胞。保留 ASE 动量等信息请用 traj。
     """

@@ -230,7 +230,7 @@ preview 不读取结构、不加载模型；完整运行只加载选中的一个
 必要测试使用 py1、ASE EMT 与模型接口替身，不加载四模型权重：
 
 ```text
-python -m unittest discover -s Process_MLIP -p "test_*.py"
+python -m unittest discover -s Process_MLIP/tests -t . -p "test_*.py"
 ```
 
 覆盖 NVT/NPT 实际短程积分、压力单位与动能项、初末帧、随机种子、速度继承、
@@ -242,10 +242,11 @@ python -m unittest discover -s Process_MLIP -p "test_*.py"
 
 ## MSD 后处理
 
-固定晶胞 NVT 的整段 `.traj` 可用 `export_msd` 导出逐帧 MSD CSV，复用 ASE 内置分析。
+固定晶胞 NVT 的 `.traj` 可用 `export_msd` 导出多时间起点平均 MSD CSV，后端仅使用 `pymatgen-analysis-diffusion`。
+原调用和列名不变，time 为 lag，按原生 max 模式选取约 1 ps 起的时间间隔；短轨迹可能不足以分析。
 见 [MSD.md](MSD.md) 和 [examples/msd.py](examples/msd.py)，无需重新加载模型。
 完整 MD 示例也可通过 `MSD_POSTPROCESS` 开关在运行结束后自动导出所选 NVT 阶段的 MSD。
-元素、阶段序号/最后 NVT、CSV 路径及覆盖策略均可在同一配置区修改。
+元素、阶段序号/最后 NVT、CSV 路径、跳帧、min_obs、框架漂移及覆盖策略均可在同一配置区修改。
 
 ## MACE 的 Symmetrix 后端（超算可选）
 

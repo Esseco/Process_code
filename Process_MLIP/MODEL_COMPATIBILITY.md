@@ -80,7 +80,7 @@ steps=0 仅求值，不保证收敛。达到步数上限后应读取 optimizer_c
 
 ## 验证证据与边界
 
-`python -m unittest Process_MLIP.test_relax Process_MLIP.test_mace_compatibility Process_MLIP.test_model_adapters`
+`python -m unittest Process_MLIP.tests.test_relax Process_MLIP.tests.test_calculators`
 在 py1 的 6 项测试通过；EMT 替代模型覆盖旧导出、head 默认/覆盖、modal 透传、
 晶胞优化、输入复制与无效参数。它们不代表科学准确性。
 

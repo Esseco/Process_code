@@ -1,13 +1,15 @@
-# 合并候选
+# 项目边界
 
-- Process_AL_MC/relax.py 的单结构 MACE 适配器适合迁入 Process_MLIP；迁移前比较模型 head、设备、应力、收敛报告与轨迹策略，原路径保留兼容导出。本轮模板先复用，不复制实现。
+- Process_AL_MC/relax.py 的单结构 MACE 入口已兼容导出本项目实现；旧路径保留。
 - Process_AL_MC 的 MC 排序、采样池、委员会和检查点仍属于采样项目，不并入弛豫工具。
 - Process_Chgnet 的模型弛豫可成为独立 calculator 适配器；训练数据转换仍保留原项目。旧导入需先修复。
 - Process_face 负责生成原子约束，本项目负责在弛豫中保留并执行约束，不重复实现固定层算法。
 - 不为统一接口改变模型能量基准、默认 head、dtype 或晶胞优化方法。不同返回结构需经过兼容性设计后再整合。
 
-本轮保留公开接口，仅增加输入校验、收敛报告和模板。
+保留公开接口、模型基准和各入口的默认参数。内部共享优化实现与校验，不强行统一不同返回结构。
 
 ## MACE 合并已完成
 
-单结构 MACE 实现现在只保存在 Process_MLIP/mace_relax.py，Process_AL_MC/relax.py 仅兼容导出同一函数。函数签名、默认值、模型 head 选择、晶胞滤波器和报告保持不变；MC 类的委员会弛豫仍独立。
+MACE/SevenNet 的模型包装分别保留在 mace_relax.py / sevennet_relax.py，
+单结构结果适配集中在 _relaxation.py，ASE 优化由 MLIPRelaxer 统一执行。
+Process_AL_MC/relax.py 仍兼容导出同一 MACE 函数；MC 类的委员会弛豫保持独立。

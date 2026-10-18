@@ -107,13 +107,19 @@ def _restart_relax_structure(entry, fingerprint, root, initial_structure):
 
 
 def _same_structure(left, right):
-    """Compare ordered sites; a legacy stage must start from our predecessor."""
+    """Compare ordered geometry, ignoring output properties and periodic wrapping."""
     import numpy as np
 
-    return (len(left) == len(right)
-            and [site.species for site in left] == [site.species for site in right]
-            and np.allclose(left.lattice.matrix, right.lattice.matrix, atol=1e-4, rtol=0)
-            and np.allclose(left.frac_coords, right.frac_coords, atol=1e-4, rtol=0))
+    if (len(left) != len(right)
+            or [site.species for site in left] != [site.species for site in right]
+            or left.lattice.pbc != right.lattice.pbc
+            or not np.allclose(left.lattice.matrix, right.lattice.matrix, atol=1e-4, rtol=0)):
+        return False
+    delta = left.frac_coords - right.frac_coords
+    for axis, periodic in enumerate(left.lattice.pbc):
+        if periodic:
+            delta[:, axis] -= np.rint(delta[:, axis])
+    return bool(np.allclose(delta, 0, atol=1e-4, rtol=0))
 
 
 def _same_setting(actual, expected):
@@ -223,15 +229,16 @@ def _validate(directory, stage):
         path = Path(zpath(directory / filename))
         if not path.is_file() or path.stat().st_size == 0:
             raise ValueError(f"Missing or empty output: {path}")
-    if stage == "static":
-        for filename in ("CHGCAR", "WAVECAR"):
-            path = Path(zpath(directory / filename))
-            if not path.is_file() or path.stat().st_size == 0:
-                raise ValueError(f"Static output needs {filename} for subsequent calculations")
     return run.final_structure
 
 
 def _job(stage, structure, previous, config):
+    if stage in ("dos", "band"):
+        from monty.os.path import zpath
+
+        charge = Path(zpath(Path(previous) / "CHGCAR")) if previous is not None else None
+        if charge is None or not charge.is_file() or charge.stat().st_size == 0:
+            raise ValueError("Non-SCF follow-up requires a nonempty CHGCAR from its predecessor")
     from atomate2.vasp.jobs.core import RelaxMaker, StaticMaker, NonSCFMaker
     from atomate2.vasp.sets.core import RelaxSetGenerator, StaticSetGenerator, NonSCFSetGenerator
 
@@ -357,6 +364,11 @@ def run_workflow(root, *, fresh=False):
                     print(f"Retry {stage}: existing result is invalid ({error})", flush=True)
                 else:
                     # A complete output may survive a kill before checkpoint saving.
+                    if entry.get("status") == "failed":
+                        entry["validation_recovery"] = {key: entry[key] for key in
+                            ("status", "error", "reason") if key in entry}
+                        entry.pop("error", None)
+                        entry.pop("reason", None)
                     entry["status"] = "completed"
                     _save(state_path, state)
                     print(f"Skip completed {stage}: {directory}", flush=True)
@@ -372,7 +384,7 @@ def run_workflow(root, *, fresh=False):
                     directory = root / directory
                 directory = directory.resolve()
                 final_structure = _validate(directory, stage)
-                if stage != "relax" and final_structure != structure:
+                if stage != "relax" and not _same_structure(final_structure, structure):
                     raise ValueError(f"Imported {stage} structure does not match its predecessor")
                 state["stages"][stage] = {"status": "completed", "directory": str(directory),
                                            "fingerprint": fingerprint, "imported": True}
@@ -436,7 +448,7 @@ def run_workflow(root, *, fresh=False):
                 if response.stop_children or response.stop_jobflow:
                     raise RuntimeError(f"{stage} requested workflow stop")
                 final_structure = _validate(directory, stage)
-                if stage != "relax" and final_structure != structure:
+                if stage != "relax" and not _same_structure(final_structure, structure):
                     raise ValueError(f"{stage} unexpectedly changed the structure")
             except BaseException as error:
                 reason, _ = _failure_reason(error, directory)

@@ -791,6 +791,96 @@ BandExportTests.test_band_csv_and_metadata(self)
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
+## `outputs`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 13 行。
+
+```python
+outputs(root, *, converged=True)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_static_without_unused_wave_or_charge_passes`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 23 行。
+
+```python
+test_static_without_unused_wave_or_charge_passes(tmp_path)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_static_scientific_failures_still_rejected`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 31 行。
+
+```python
+test_static_scientific_failures_still_rejected(tmp_path, defect)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_properties_check_charge_before_new_job`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 40 行。
+
+```python
+test_properties_check_charge_before_new_job(tmp_path, stage)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_failed_checkpoint_with_valid_static_reused_without_any_execution`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 48 行。
+
+```python
+test_failed_checkpoint_with_valid_static_reused_without_any_execution(tmp_path)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_actual_project_plain_static_contract`
+
+源文件：[tests/test_static_artifact_acceptance.py](tests/test_static_artifact_acceptance.py)，第 75 行。
+
+```python
+test_actual_project_plain_static_contract(tmp_path, project)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_geometry_ignores_site_metadata_and_periodic_wrapping`
+
+源文件：[tests/test_static_geometry_identity.py](tests/test_static_geometry_identity.py)，第 10 行。
+
+```python
+test_geometry_ignores_site_metadata_and_periodic_wrapping()
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_geometry_rejects_actual_change`
+
+源文件：[tests/test_static_geometry_identity.py](tests/test_static_geometry_identity.py)，第 20 行。
+
+```python
+test_geometry_rejects_actual_change(change)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `test_existing_static_with_output_properties_reused_without_execution`
+
+源文件：[tests/test_static_geometry_identity.py](tests/test_static_geometry_identity.py)，第 30 行。
+
+```python
+test_existing_static_with_output_properties_reused_without_execution(tmp_path)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
 ## `run_amset_crt`
 
 源文件：[workflows/amset_crt.py](workflows/amset_crt.py)，第 46 行。
@@ -842,7 +932,7 @@ are null with a diagnostic; CRT success does not imply numerical convergence.
 
 ## `run_workflow`
 
-源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 281 行。
+源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 288 行。
 
 ```python
 run_workflow(root, *, fresh=False)
@@ -852,7 +942,7 @@ Resume valid stages, retry interrupted stages, invalidate changed dependencies.
 
 ## `main`
 
-源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 467 行。
+源文件：[workflows/atomate_runner.py](workflows/atomate_runner.py)，第 479 行。
 
 ```python
 main(root)

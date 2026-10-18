@@ -977,6 +977,168 @@
         ]
       },
       {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "outputs",
+        "line": 13,
+        "signature": "outputs(root, *, converged=True)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "test_static_without_unused_wave_or_charge_passes",
+        "line": 23,
+        "signature": "test_static_without_unused_wave_or_charge_passes(tmp_path)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "test_static_scientific_failures_still_rejected",
+        "line": 31,
+        "signature": "test_static_scientific_failures_still_rejected(tmp_path, defect)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "test_properties_check_charge_before_new_job",
+        "line": 40,
+        "signature": "test_properties_check_charge_before_new_job(tmp_path, stage)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "test_failed_checkpoint_with_valid_static_reused_without_any_execution",
+        "line": 48,
+        "signature": "test_failed_checkpoint_with_valid_static_reused_without_any_execution(tmp_path)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_artifact_acceptance.py",
+        "name": "test_actual_project_plain_static_contract",
+        "line": 75,
+        "signature": "test_actual_project_plain_static_contract(tmp_path, project)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "atomate2",
+          "hashlib",
+          "json",
+          "pathlib",
+          "phase_agent",
+          "pymatgen",
+          "pytest",
+          "types",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_geometry_identity.py",
+        "name": "test_geometry_ignores_site_metadata_and_periodic_wrapping",
+        "line": 10,
+        "signature": "test_geometry_ignores_site_metadata_and_periodic_wrapping()",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "copy",
+          "hashlib",
+          "json",
+          "pymatgen",
+          "pytest",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_geometry_identity.py",
+        "name": "test_geometry_rejects_actual_change",
+        "line": 20,
+        "signature": "test_geometry_rejects_actual_change(change)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "copy",
+          "hashlib",
+          "json",
+          "pymatgen",
+          "pytest",
+          "unittest"
+        ]
+      },
+      {
+        "file": "Process_Vasp/tests/test_static_geometry_identity.py",
+        "name": "test_existing_static_with_output_properties_reused_without_execution",
+        "line": 30,
+        "signature": "test_existing_static_with_output_properties_reused_without_execution(tmp_path)",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "copy",
+          "hashlib",
+          "json",
+          "pymatgen",
+          "pytest",
+          "unittest"
+        ]
+      },
+      {
         "file": "Process_Vasp/workflows/amset_crt.py",
         "name": "run_amset_crt",
         "line": 46,
@@ -1025,7 +1187,7 @@
       {
         "file": "Process_Vasp/workflows/atomate_runner.py",
         "name": "run_workflow",
-        "line": 281,
+        "line": 288,
         "signature": "run_workflow(root, *, fresh=False)",
         "doc": "Resume valid stages, retry interrupted stages, invalidate changed dependencies.",
         "imports": [
@@ -1050,7 +1212,7 @@
       {
         "file": "Process_Vasp/workflows/atomate_runner.py",
         "name": "main",
-        "line": 467,
+        "line": 479,
         "signature": "main(root)",
         "doc": "",
         "imports": [
@@ -2919,6 +3081,19 @@
         ]
       },
       {
+        "file": "Process_MLIP/examples/batch_postprocess_md.py",
+        "name": "main",
+        "line": 21,
+        "signature": "main()",
+        "doc": "每个 NVT 阶段一行；失败也记录，避免一个任务中断整批。",
+        "imports": [
+          "Process_MLIP",
+          "json",
+          "pandas",
+          "pathlib"
+        ]
+      },
+      {
         "file": "Process_MLIP/examples/extract_frames.py",
         "name": "main",
         "line": 11,
@@ -3063,12 +3238,13 @@
       {
         "file": "Process_MLIP/examples/mlip_md.py",
         "name": "main",
-        "line": 168,
+        "line": 193,
         "signature": "main(argv=None)",
         "doc": "Preview configuration or run MD after editing the parameters above.",
         "imports": [
           "Process_MLIP",
           "argparse",
+          "ase",
           "json",
           "math",
           "numbers",
@@ -3078,11 +3254,23 @@
       {
         "file": "Process_MLIP/examples/msd.py",
         "name": "main",
-        "line": 37,
+        "line": 40,
         "signature": "main()",
-        "doc": "Export the entire trajectory, with frame zero as the MSD origin.",
+        "doc": "Export native max-mode lag sampling; fit only an explicitly chosen range.",
         "imports": [
           "Process_MLIP",
+          "pathlib"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/postprocess_md.py",
+        "name": "main",
+        "line": 21,
+        "signature": "main()",
+        "doc": "复用项目后处理函数；只写 msd.csv 和 transport.json。",
+        "imports": [
+          "Process_MLIP",
+          "ase",
           "pathlib"
         ]
       },
@@ -3098,35 +3286,106 @@
         ]
       },
       {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_500K_30ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_700K_10ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_700K_30ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_700K_50ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_700K_70ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/examples/sym_md_scan/sym_900K_30ps/run_md.py",
+        "name": "main",
+        "line": 25,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_MLIP",
+          "ase",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
         "file": "Process_MLIP/mace_relax.py",
         "name": "relax_structure_mace",
         "line": 8,
         "signature": "relax_structure_mace(structure, model_path, *, output_path=None, device='cuda', head=None, default_dtype='float64', enable_cueq=False, enable_symmetrix=False, symmetrix_use_kokkos=False, symmetrix_species=None, fmax=0.05, steps=150, relax_cell=True)",
         "doc": "Relax one structure and return final energy, forces, and optimizer facts.\n\n``structure`` may be a path, ASE ``Atoms``, or pymatgen ``Structure``.\nNo trajectory or per-step files are written. If ``output_path`` is given,\nonly the final structure is written there.",
         "imports": [
-          "ase",
-          "numpy",
           "pathlib",
-          "pymatgen",
           "re"
         ]
       },
       {
         "file": "Process_MLIP/md.py",
         "name": "run_md",
-        "line": 188,
+        "line": 28,
         "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)",
         "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\ntimestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
         "imports": [
           "ase",
           "csv",
-          "importlib",
           "json",
-          "numbers",
           "numpy",
           "pathlib",
-          "platform",
-          "pymatgen",
           "time",
           "torch"
         ]
@@ -3134,7 +3393,7 @@
       {
         "file": "Process_MLIP/md_workflow.py",
         "name": "run_mlip_md",
-        "line": 14,
+        "line": 15,
         "signature": "run_mlip_md(structure, model='mace-mh1', output_dir='md_results', stages=None, *, pre_relax=None, **md_parameters)",
         "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。\n  optimizer=\"FIRE\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。\ntdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"FIRE\", \"steps\": 200}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
         "imports": [
@@ -3195,2241 +3454,34 @@
       {
         "file": "Process_MLIP/msd.py",
         "name": "export_msd",
-        "line": 48,
-        "signature": "export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None, skip_frames=0, number_of_segments=1, unwrap=False, drift_reference=None, overwrite=False)",
-        "doc": "Export true MSD (Å²) from a fixed-cell ASE .traj using ASE analysis.\n\nspecies: element string/list, or None for all elements. Times are inferred\nfrom adjacent completed MD report.json unless frame_interval_fs is given.\nskip_frames removes equilibration frames. ASE divides retained frames into\nnon-overlapping segments, each referenced to its own first frame; this is\nnot an overlapping all-time-origin MSD. No diffusion coefficient is exported.\n\nOur MD trajectories are unwrapped, so unwrap defaults False. For wrapped\ninput, True reconstructs nearest-image increments via ASE find_mic; saved\nframes must be frequent enough to avoid ambiguous periodic crossings.\ndrift_reference='framework' subtracts the mass-weighted COM displacement of\natoms outside selected species. Default None makes no drift correction.\n\nWrites only output_csv (default no overwrite), returns path and provenance.\nSource trajectory and report are never modified. No model is loaded.",
+        "line": 70,
+        "signature": "export_msd(trajectory, output_csv, *, species=None, frame_interval_fs=None, skip_frames=0, number_of_segments=1, unwrap=False, drift_reference=None, overwrite=False, min_obs=30)",
+        "doc": "Export pymatgen max-mode MSD (Å²), averaged over atoms and time origins.\n\nspecies: element/list/None (all). skip_frames removes equilibration;\nnumber_of_segments splits equally, each analyzed independently. min_obs=30\ncontrols pymatgen's maximum lag; native sampling starts near 1 ps.\nCSV columns are unchanged; time_fs/time_ps are lag times, frame_index is\nsegment start + lag in frames (not a unique displacement endpoint).\n\nTimes come from adjacent report.json or frame_interval_fs. A short final\nsaved interval is excluded with a warning; other unequal spacing is rejected.\nunwrap=True uses ASE MIC for wrapped input; default preserves continuous\nMD positions. drift_reference='framework' subtracts the mass-weighted COM\ndisplacement of unselected atoms; None applies no drift correction.\n\nRequires pymatgen-analysis-diffusion only when called; no models are loaded.\nWrites only output_csv, refuses overwrite by default. Internal pymatgen\ndiffusion/conductivity fits are discarded; use fit_msd explicitly.",
         "imports": [
           "ase",
           "csv",
           "json",
           "numbers",
           "numpy",
-          "pathlib"
+          "pathlib",
+          "pymatgen",
+          "warnings"
         ]
       },
       {
         "file": "Process_MLIP/sevennet_relax.py",
         "name": "relax_structure_sevennet",
-        "line": 8,
+        "line": 6,
         "signature": "relax_structure_sevennet(structure, model='7net-omni', *, output_path=None, device='cpu', modal='mpa', fmax=0.05, steps=150, relax_cell=True)",
         "doc": "Return energy (eV), forces (eV/Å), convergence and selected modal.\n\nInputs are a structure path, ASE Atoms or pymatgen Structure. Atoms are\ncopied. Only output_path is written (VASP format, overwrites if present).\nNo random sampling, trajectory or log. Named models may download weights;\nsupply a trusted local checkpoint for offline repeatable calculations.",
-        "imports": [
-          "numpy"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_benchmark_tasks.py",
-        "name": "BenchmarkTaskTests",
-        "line": 17,
-        "signature": "BenchmarkTaskTests",
-        "doc": "",
-        "imports": [
-          "ase",
-          "contextlib",
-          "io",
-          "json",
-          "pathlib",
-          "runpy",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_benchmark_tasks.py",
-        "name": "BenchmarkTaskTests.test_all_eight_default_and_submission_configs",
-        "line": 18,
-        "signature": "BenchmarkTaskTests.test_all_eight_default_and_submission_configs(self)",
-        "doc": "",
-        "imports": [
-          "ase",
-          "contextlib",
-          "io",
-          "json",
-          "pathlib",
-          "runpy",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_benchmark_tasks.py",
-        "name": "BenchmarkTaskTests.test_all_eight_real_nvt_msd_pipelines_with_emt",
-        "line": 42,
-        "signature": "BenchmarkTaskTests.test_all_eight_real_nvt_msd_pipelines_with_emt(self)",
-        "doc": "",
-        "imports": [
-          "ase",
-          "contextlib",
-          "io",
-          "json",
-          "pathlib",
-          "runpy",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_mace_compatibility.py",
-        "name": "MaceCompatibilityTests",
-        "line": 13,
-        "signature": "MaceCompatibilityTests",
-        "doc": "",
-        "imports": [
-          "Process_AL_MC",
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_mace_compatibility.py",
-        "name": "MaceCompatibilityTests.test_old_and_new_entry_points",
-        "line": 14,
-        "signature": "MaceCompatibilityTests.test_old_and_new_entry_points(self)",
-        "doc": "",
-        "imports": [
-          "Process_AL_MC",
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "NoStress",
-        "line": 19,
-        "signature": "NoStress",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "NoStress.calculate",
-        "line": 22,
-        "signature": "NoStress.calculate(self, atoms=None, properties=None, system_changes=all_changes)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests",
-        "line": 27,
-        "signature": "MDTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.setUp",
-        "line": 28,
-        "signature": "MDTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.run_stage",
-        "line": 34,
-        "signature": "MDTests.run_stage(self, name='md', **kwargs)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_nvt_outputs_seed_and_input_copy",
-        "line": 40,
-        "signature": "MDTests.test_nvt_outputs_seed_and_input_copy(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_independent_npt_and_chained_velocity_preservation",
-        "line": 65,
-        "signature": "MDTests.test_independent_npt_and_chained_velocity_preservation(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_zero_steps_and_file_input_preserve_velocities",
-        "line": 80,
-        "signature": "MDTests.test_zero_steps_and_file_input_preserve_velocities(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_invalid_options_do_not_write",
-        "line": 88,
-        "signature": "MDTests.test_invalid_options_do_not_write(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_constraints_and_nonperiodic_npt_rejected",
-        "line": 100,
-        "signature": "MDTests.test_constraints_and_nonperiodic_npt_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_missing_stress_nvt_allowed_npt_rejected",
-        "line": 109,
-        "signature": "MDTests.test_missing_stress_nvt_allowed_npt_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_output_collision_requires_explicit_overwrite",
-        "line": 116,
-        "signature": "MDTests.test_output_collision_requires_explicit_overwrite(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_failed_dynamics_reported_and_nonfinite_preflight_rejected",
-        "line": 127,
-        "signature": "MDTests.test_failed_dynamics_reported_and_nonfinite_preflight_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md.py",
-        "name": "MDTests.test_nonfinite_model_output_stops_dynamics",
-        "line": 146,
-        "signature": "MDTests.test_nonfinite_model_output_stops_dynamics(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests",
-        "line": 17,
-        "signature": "ControllerTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.setUp",
-        "line": 18,
-        "signature": "ControllerTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.run_stage",
-        "line": 24,
-        "signature": "ControllerTests.run_stage(self, name='md', **parameters)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_defaults_and_invalid_parameters",
-        "line": 29,
-        "signature": "ControllerTests.test_defaults_and_invalid_parameters(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_nvt_forwards_only_thermostat_parameters",
-        "line": 42,
-        "signature": "ControllerTests.test_nvt_forwards_only_thermostat_parameters(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_isotropic_forwards_both_chains_and_preserves_shape",
-        "line": 53,
-        "signature": "ControllerTests.test_isotropic_forwards_both_chains_and_preserves_shape(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_full_dispatch_contract",
-        "line": 67,
-        "signature": "ControllerTests.test_full_dispatch_contract(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_missing_full_implementation_fails_before_loading_or_writing",
-        "line": 77,
-        "signature": "ControllerTests.test_missing_full_implementation_fails_before_loading_or_writing(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_stage_overrides_and_reporting",
-        "line": 93,
-        "signature": "ControllerTests.test_stage_overrides_and_reporting(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_controllers.py",
-        "name": "ControllerTests.test_real_full_mtk_changes_cell_shape",
-        "line": 109,
-        "signature": "ControllerTests.test_real_full_mtk_changes_cell_shape(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests",
-        "line": 16,
-        "signature": "MDExampleTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.setUp",
-        "line": 17,
-        "signature": "MDExampleTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.run_example",
-        "line": 29,
-        "signature": "MDExampleTests.run_example(self, config, stages=None, preview=False)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_enabled_exports_last_nvt_after_md",
-        "line": 40,
-        "signature": "MDExampleTests.test_enabled_exports_last_nvt_after_md(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_disabled_does_not_call_exporter",
-        "line": 49,
-        "signature": "MDExampleTests.test_disabled_does_not_call_exporter(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_last_nvt_selection_skips_later_npt",
-        "line": 54,
-        "signature": "MDExampleTests.test_last_nvt_selection_skips_later_npt(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_custom_path_and_explicit_nvt_stage",
-        "line": 62,
-        "signature": "MDExampleTests.test_custom_path_and_explicit_nvt_stage(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_no_nvt_or_wrong_stage_rejected_before_loading",
-        "line": 68,
-        "signature": "MDExampleTests.test_no_nvt_or_wrong_stage_rejected_before_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_existing_csv_rejected_before_loading_and_preview_is_readonly",
-        "line": 77,
-        "signature": "MDExampleTests.test_existing_csv_rejected_before_loading_and_preview_is_readonly(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_example.py",
-        "name": "MDExampleTests.test_md_log_cannot_be_overwritten_and_zero_steps_rejected",
-        "line": 87,
-        "signature": "MDExampleTests.test_md_log_cannot_be_overwritten_and_zero_steps_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests",
-        "line": 16,
-        "signature": "MDSpeedTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.setUp",
-        "line": 17,
-        "signature": "MDSpeedTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.test_optional_and_validated",
-        "line": 23,
-        "signature": "MDSpeedTests.test_optional_and_validated(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.test_stage_rate_uses_integration_duration_and_is_saved",
-        "line": 31,
-        "signature": "MDSpeedTests.test_stage_rate_uses_integration_duration_and_is_saved(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.test_zero_steps_has_no_rate",
-        "line": 40,
-        "signature": "MDSpeedTests.test_zero_steps_has_no_rate(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.test_gpu_synchronization_brackets_timer",
-        "line": 45,
-        "signature": "MDSpeedTests.test_gpu_synchronization_brackets_timer(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_speed.py",
-        "name": "MDSpeedTests.test_workflow_combines_rates_by_total_time",
-        "line": 62,
-        "signature": "MDSpeedTests.test_workflow_combines_rates_by_total_time(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests",
-        "line": 17,
-        "signature": "TimestepTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests.setUp",
-        "line": 18,
-        "signature": "TimestepTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests.test_defaults_and_explicit_values",
-        "line": 24,
-        "signature": "TimestepTests.test_defaults_and_explicit_values(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests.test_run_md_and_msd_time_grid",
-        "line": 33,
-        "signature": "TimestepTests.test_run_md_and_msd_time_grid(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests.test_stage_defaults_and_common_stage_overrides",
-        "line": 46,
-        "signature": "TimestepTests.test_stage_defaults_and_common_stage_overrides(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_timestep.py",
-        "name": "TimestepTests.test_example_transport_preflight_with_auto_timestep",
-        "line": 60,
-        "signature": "TimestepTests.test_example_transport_preflight_with_auto_timestep(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "csv",
-          "io",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "PresetTests",
-        "line": 21,
-        "signature": "PresetTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "PresetTests.test_independent_defaults_and_overrides",
-        "line": 22,
-        "signature": "PresetTests.test_independent_defaults_and_overrides(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "PresetTests.test_dispatch_all_four_backends",
-        "line": 37,
-        "signature": "PresetTests.test_dispatch_all_four_backends(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "BackendContractTests",
-        "line": 53,
-        "signature": "BackendContractTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "BackendContractTests.test_mace_and_sevennet_acceleration_flags",
-        "line": 54,
-        "signature": "BackendContractTests.test_mace_and_sevennet_acceleration_flags(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "BackendContractTests.test_chgnet_pretrained_checkpoint_and_model_instance",
-        "line": 90,
-        "signature": "BackendContractTests.test_chgnet_pretrained_checkpoint_and_model_instance(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "BackendContractTests.test_orb_new_and_legacy_api_local_weights",
-        "line": 110,
-        "signature": "BackendContractTests.test_orb_new_and_legacy_api_local_weights(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests",
-        "line": 132,
-        "signature": "WorkflowTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests.setUp",
-        "line": 133,
-        "signature": "WorkflowTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests.test_load_once_stage_precedence_and_continuation",
-        "line": 142,
-        "signature": "WorkflowTests.test_load_once_stage_precedence_and_continuation(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests.test_independent_single_stage_and_explicit_resampling",
-        "line": 163,
-        "signature": "WorkflowTests.test_independent_single_stage_and_explicit_resampling(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests.test_validate_all_stages_and_collisions_before_loading",
-        "line": 172,
-        "signature": "WorkflowTests.test_validate_all_stages_and_collisions_before_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_md_workflow.py",
-        "name": "WorkflowTests.test_failure_summary_does_not_claim_completion",
-        "line": 195,
-        "signature": "WorkflowTests.test_failure_summary_does_not_claim_completion(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "inspect",
-          "json",
-          "numpy",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_model_adapters.py",
-        "name": "ModelAdapterTests",
-        "line": 16,
-        "signature": "ModelAdapterTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "pathlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_model_adapters.py",
-        "name": "ModelAdapterTests.setUp",
-        "line": 17,
-        "signature": "ModelAdapterTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "pathlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_model_adapters.py",
-        "name": "ModelAdapterTests.test_mh1_filename_variants_and_explicit_head",
-        "line": 23,
-        "signature": "ModelAdapterTests.test_mh1_filename_variants_and_explicit_head(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "pathlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_model_adapters.py",
-        "name": "ModelAdapterTests.test_omni_modal_and_cell_relaxation",
-        "line": 37,
-        "signature": "ModelAdapterTests.test_omni_modal_and_cell_relaxation(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "pathlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_model_adapters.py",
-        "name": "ModelAdapterTests.test_invalid_parameters_and_missing_weights",
-        "line": 60,
-        "signature": "ModelAdapterTests.test_invalid_parameters_and_missing_weights(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "pathlib",
-          "sys",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests",
-        "line": 19,
-        "signature": "MSDTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.setUp",
-        "line": 20,
-        "signature": "MSDTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.trajectory",
-        "line": 25,
-        "signature": "MSDTests.trajectory(self, positions, name='md.traj', symbols='NaO', cell=10)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.rows",
-        "line": 32,
-        "signature": "MSDTests.rows(self, path)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_true_msd_normalization_and_species_selection_use_ase",
-        "line": 36,
-        "signature": "MSDTests.test_true_msd_normalization_and_species_selection_use_ase(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_unwrapped_large_displacements_are_preserved_by_default",
-        "line": 52,
-        "signature": "MSDTests.test_unwrapped_large_displacements_are_preserved_by_default(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_species_population_average",
-        "line": 57,
-        "signature": "MSDTests.test_species_population_average(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_real_nvt_trajectory_all_frames_and_automatic_times",
-        "line": 65,
-        "signature": "MSDTests.test_real_nvt_trajectory_all_frames_and_automatic_times(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_wrapped_nonorthogonal_cell",
-        "line": 76,
-        "signature": "MSDTests.test_wrapped_nonorthogonal_cell(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_wrapped_trajectory_uses_ase_minimum_image",
-        "line": 86,
-        "signature": "MSDTests.test_wrapped_trajectory_uses_ase_minimum_image(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_framework_drift_correction",
-        "line": 93,
-        "signature": "MSDTests.test_framework_drift_correction(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_report_time_axis_includes_irregular_last_frame",
-        "line": 99,
-        "signature": "MSDTests.test_report_time_axis_includes_irregular_last_frame(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_skip_segments_and_multiple_species",
-        "line": 109,
-        "signature": "MSDTests.test_skip_segments_and_multiple_species(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_missing_time_invalid_options_and_output_protection",
-        "line": 118,
-        "signature": "MSDTests.test_missing_time_invalid_options_and_output_protection(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_msd.py",
-        "name": "MSDTests.test_changing_cell_and_atom_order_rejected",
-        "line": 135,
-        "signature": "MSDTests.test_changing_cell_and_atom_order_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "csv",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests",
-        "line": 20,
-        "signature": "PreRelaxTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.setUp",
-        "line": 21,
-        "signature": "PreRelaxTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.run_workflow",
-        "line": 31,
-        "signature": "PreRelaxTests.run_workflow(self, name='md', **kwargs)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_disabled_by_default",
-        "line": 34,
-        "signature": "PreRelaxTests.test_disabled_by_default(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_explicit_enabled_flag_in_configuration",
-        "line": 40,
-        "signature": "PreRelaxTests.test_explicit_enabled_flag_in_configuration(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_alternative_optimizers",
-        "line": 46,
-        "signature": "PreRelaxTests.test_alternative_optimizers(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_atoms_only_relaxation_reuses_model_and_feeds_md",
-        "line": 52,
-        "signature": "PreRelaxTests.test_atoms_only_relaxation_reuses_model_and_feeds_md(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_cell_relaxation_and_md_cell_inheritance",
-        "line": 75,
-        "signature": "PreRelaxTests.test_cell_relaxation_and_md_cell_inheritance(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_explicit_overwrite_preserves_unrelated_files",
-        "line": 92,
-        "signature": "PreRelaxTests.test_explicit_overwrite_preserves_unrelated_files(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_nonconvergence_stops_by_default_or_explicitly_continues",
-        "line": 100,
-        "signature": "PreRelaxTests.test_nonconvergence_stops_by_default_or_explicitly_continues(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_bad_configuration_and_collisions_fail_before_loading",
-        "line": 113,
-        "signature": "PreRelaxTests.test_bad_configuration_and_collisions_fail_before_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_cell_requires_pbc_and_stress_but_atoms_only_does_not",
-        "line": 130,
-        "signature": "PreRelaxTests.test_cell_requires_pbc_and_stress_but_atoms_only_does_not(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_existing_momenta_preserved_and_new_velocities_initialized_after_relaxation",
-        "line": 142,
-        "signature": "PreRelaxTests.test_existing_momenta_preserved_and_new_velocities_initialized_after_relaxation(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_optimizer_failure_stops_md_and_records_failure",
-        "line": 154,
-        "signature": "PreRelaxTests.test_optimizer_failure_stops_md_and_records_failure(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_frechet_step_limit_and_effective_scaling_report",
-        "line": 162,
-        "signature": "PreRelaxTests.test_frechet_step_limit_and_effective_scaling_report(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_custom_step_and_cell_scaling",
-        "line": 176,
-        "signature": "PreRelaxTests.test_custom_step_and_cell_scaling(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_invalid_step_settings_fail_before_model_loading",
-        "line": 187,
-        "signature": "PreRelaxTests.test_invalid_step_settings_fail_before_model_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_pre_relax.py",
-        "name": "PreRelaxTests.test_supercell_full_relaxation_remains_finite_and_reduces_energy",
-        "line": 196,
-        "signature": "PreRelaxTests.test_supercell_full_relaxation_remains_finite_and_reduces_energy(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "json",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_relax.py",
-        "name": "RelaxTests",
-        "line": 9,
-        "signature": "RelaxTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_relax.py",
-        "name": "RelaxTests.test_convergence_and_constraints",
-        "line": 10,
-        "signature": "RelaxTests.test_convergence_and_constraints(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_relax.py",
-        "name": "RelaxTests.test_invalid_input",
-        "line": 21,
-        "signature": "RelaxTests.test_invalid_input(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests",
-        "line": 15,
-        "signature": "SymmetrixTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.setUp",
-        "line": 16,
-        "signature": "SymmetrixTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.test_conversion_closes_json_cleans_and_restores_dtype",
-        "line": 41,
-        "signature": "SymmetrixTests.test_conversion_closes_json_cleans_and_restores_dtype(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.test_json_no_conversion_and_kokkos_forwarding",
-        "line": 55,
-        "signature": "SymmetrixTests.test_json_no_conversion_and_kokkos_forwarding(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.test_invalid_options",
-        "line": 64,
-        "signature": "SymmetrixTests.test_invalid_options(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.test_conversion_failure_propagates_and_restores_dtype",
-        "line": 78,
-        "signature": "SymmetrixTests.test_conversion_failure_propagates_and_restores_dtype(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_symmetrix.py",
-        "name": "SymmetrixTests.test_config_dispatch_and_workflow_reuses_calculator",
-        "line": 85,
-        "signature": "SymmetrixTests.test_config_dispatch_and_workflow_reuses_calculator(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "contextlib",
-          "json",
-          "pathlib",
-          "sys",
-          "tempfile",
-          "types",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests",
-        "line": 13,
-        "signature": "TrajectoryExportTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.setUp",
-        "line": 14,
-        "signature": "TrajectoryExportTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_vasp_indices_geometry_and_atom_order",
-        "line": 28,
-        "signature": "TrajectoryExportTests.test_vasp_indices_geometry_and_atom_order(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_default_last_all_slice_and_traj_momenta",
-        "line": 37,
-        "signature": "TrajectoryExportTests.test_default_last_all_slice_and_traj_momenta(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_other_formats",
-        "line": 47,
-        "signature": "TrajectoryExportTests.test_other_formats(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_invalid_selection_writes_nothing",
-        "line": 53,
-        "signature": "TrajectoryExportTests.test_invalid_selection_writes_nothing(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_output_protection_and_overwrite",
-        "line": 62,
-        "signature": "TrajectoryExportTests.test_output_protection_and_overwrite(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_trajectory.py",
-        "name": "TrajectoryExportTests.test_no_cell_and_empty_trajectory",
-        "line": 76,
-        "signature": "TrajectoryExportTests.test_no_cell_and_empty_trajectory(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "ase",
-          "numpy",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests",
-        "line": 13,
-        "signature": "TransportTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.setUp",
-        "line": 14,
-        "signature": "TransportTests.setUp(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.write",
-        "line": 21,
-        "signature": "TransportTests.write(self, slope=6)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.fit",
-        "line": 31,
-        "signature": "TransportTests.fit(self, **kw)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.test_analytic_units_free_intercept_segments_and_charge",
-        "line": 37,
-        "signature": "TransportTests.test_analytic_units_free_intercept_segments_and_charge(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.test_invalid_and_protected_outputs",
-        "line": 54,
-        "signature": "TransportTests.test_invalid_and_protected_outputs(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.test_nonphysical_negative_and_zero_slope",
-        "line": 68,
-        "signature": "TransportTests.test_nonphysical_negative_and_zero_slope(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportTests.test_malformed_data_rejected",
-        "line": 77,
-        "signature": "TransportTests.test_malformed_data_rejected(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportExampleTests",
-        "line": 88,
-        "signature": "TransportExampleTests",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportExampleTests.test_transport_integration",
-        "line": 91,
-        "signature": "TransportExampleTests.test_transport_integration(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportExampleTests.test_requires_msd_before_model_loading",
-        "line": 103,
-        "signature": "TransportExampleTests.test_requires_msd_before_model_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
-      },
-      {
-        "file": "Process_MLIP/test_transport.py",
-        "name": "TransportExampleTests.test_invalid_fit_window_before_model_loading",
-        "line": 109,
-        "signature": "TransportExampleTests.test_invalid_fit_window_before_model_loading(self)",
-        "doc": "",
-        "imports": [
-          "Process_MLIP",
-          "csv",
-          "json",
-          "pathlib",
-          "tempfile",
-          "unittest"
-        ]
+        "imports": []
       },
       {
         "file": "Process_MLIP/trajectory.py",
         "name": "export_traj_frames",
         "line": 8,
         "signature": "export_traj_frames(trajectory, output_dir=None, frames=-1, *, format='vasp', overwrite=False)",
-        "doc": "按保存帧索引导出结构，返回 frame_indices、structure_files 和 frame_count。\n\nframes: 整数/整数列表/slice；0 为首帧，-1 为末帧，None 为全部。\noutput_dir=None: 输出到输入轨迹所在目录。\nformat: vasp（默认）/ cif / xyz / extxyz / traj；文件名 frame_000000.格式。\n索引对应 MSD 的 frame_index，不一定是 MD 步号。负索引转为实际索引。\n原子顺序保持不变；不弛豫、不加载模型、不修改源轨迹，默认不覆盖文件。\nVASP 使用分数坐标；需完整晶胞。保留 ASE 动量等信息请用 traj。",
+        "doc": "按保存帧索引导出结构，返回 frame_indices、structure_files 和 frame_count。\n\nframes: 整数/整数列表/slice；0 为首帧，-1 为末帧，None 为全部。\noutput_dir=None: 输出到输入轨迹所在目录。\nformat: vasp（默认）/ cif / xyz / extxyz / traj；文件名 frame_000000.格式。\n索引不是 MD 步号；多起点 MSD 的 frame_index 仅作 lag 参考，不代表唯一终点。\n负索引转为实际索引。\n原子顺序保持不变；不弛豫、不加载模型、不修改源轨迹，默认不覆盖文件。\nVASP 使用分数坐标；需完整晶胞。保留 ASE 动量等信息请用 traj。",
         "imports": [
           "ase",
           "numbers",
@@ -5439,15 +3491,16 @@
       {
         "file": "Process_MLIP/transport.py",
         "name": "fit_msd",
-        "line": 10,
-        "signature": "fit_msd(msd_csv, *, fit_start_ps, fit_end_ps, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False)",
-        "doc": "Fit MSD CSV and estimate uncorrelated Nernst–Einstein conductivity.\n\nInclusive fit window in ps; positive temperature in K and fixed cell volume\nin Å³. ion_charge is a signed nonzero charge number (e.g. +1), or a dict\nmapping selected elements to charge numbers. species is a string/list or\nNone (all CSV elements). Fits each segment separately, with a free intercept\nand at least three samples. D_total=slope_total/6; D_axis=slope_axis/2.\nReturns SI and cm²/s diffusion, S/m and S/cm conductivity, and diagnostics.\nOptional JSON refuses overwrite by default. No uncertainty or correlation\ncorrection is inferred; R² alone does not establish a diffusive regime.",
+        "line": 41,
+        "signature": "fit_msd(msd_csv, *, fit_start_ps=None, fit_end_ps=None, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False)",
+        "doc": "Fit MSD CSV and estimate uncorrelated Nernst–Einstein conductivity.\n\nInclusive fit window in ps; None defaults to the first/last positive lag\nof each species/segment separately. Zero lag is excluded. A manual bound\nmay be supplied on either side; this does not detect the diffusive regime.\nPositive temperature in K and fixed cell volume\nin Å³. ion_charge is a signed nonzero charge number (e.g. +1), or a dict\nmapping selected elements to charge numbers. species is a string/list or\nNone (all CSV elements). Fits each segment separately, with a free intercept\nand at least three positive-lag samples. Calls pymatgen's native fitter\nwith its defaults (max-mode, weights 1/lag, positive slope floor), after\nselecting the window. D_total=slope_total/6; D_axis=slope_axis/2.\nSlopes/intercepts describe the raw weighted line before its slope floor;\nr_squared remains ordinary, unweighted R² of the fitted line.\nNative slope-floor flags identify zero/negative slopes replaced by its\nsmall positive value; these results do not establish resolved diffusion.\nReturns SI and cm²/s diffusion, S/m and S/cm conductivity, and diagnostics.\nOptional JSON refuses overwrite by default. No uncertainty or correlation\ncorrection is inferred; R² alone does not establish a diffusive regime.",
         "imports": [
           "csv",
           "json",
           "numbers",
           "numpy",
-          "pathlib"
+          "pathlib",
+          "pymatgen"
         ]
       }
     ],

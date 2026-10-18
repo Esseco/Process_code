@@ -7,7 +7,7 @@ from ase.calculators.calculator import PropertyNotImplementedError
 from ase.io import write
 
 from .MLIP_Relax import MLIPRelaxer
-from .md import _check_outputs, _snapshot, _versions, _write_json
+from ._md_support import _check_outputs, _snapshot, _versions, _write_json
 
 
 _RELAX_FILES = ("relax.traj", "relax.log", "final.traj", "report.json")

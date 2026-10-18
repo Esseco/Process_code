@@ -1,0 +1,64 @@
+{
+  "status": "converged",
+  "parameters": {
+    "enabled": true,
+    "relax_cell": true,
+    "optimizer": "FIRE",
+    "fmax": 0.05,
+    "steps": 200,
+    "maxstep": 0.05,
+    "exp_cell_factor": null,
+    "require_convergence": true
+  },
+  "model": {
+    "type": "mace",
+    "model_path": "\\data\\home\\lichaoyue\\Process_code\\MLIP_model\\mace\\mace-omat-0-medium.model",
+    "device": "cuda",
+    "head": null,
+    "default_dtype": "float32",
+    "enable_cueq": false,
+    "enable_symmetrix": true,
+    "symmetrix_use_kokkos": true,
+    "symmetrix_species": [
+      "Na",
+      "O"
+    ]
+  },
+  "versions": {
+    "python": "3.12.6",
+    "ase": "3.25.0",
+    "numpy": "1.26.4"
+  },
+  "initial_state": {
+    "temperature_K": 0.0,
+    "potential_energy_eV": 0.0,
+    "kinetic_energy_eV": 0.0,
+    "total_energy_eV": 0.0,
+    "pressure_bar": -0.0,
+    "volume_angstrom3": 511.9999999999995,
+    "force_max_eV_per_angstrom": 0.0
+  },
+  "cell_relaxed": true,
+  "trajectory_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_symscan_pyqt8y1c\\sym_700K_10ps\\NVP\\00_relax\\relax.traj",
+  "log_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_symscan_pyqt8y1c\\sym_700K_10ps\\NVP\\00_relax\\relax.log",
+  "final_structure": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_symscan_pyqt8y1c\\sym_700K_10ps\\NVP\\00_relax\\final.traj",
+  "report_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_symscan_pyqt8y1c\\sym_700K_10ps\\NVP\\00_relax\\report.json",
+  "optimizer_converged": true,
+  "relax_steps_used": 0,
+  "energy": 0.0,
+  "energy_per_atom": 0.0,
+  "energy_unit": "eV",
+  "force_max_ev_per_angstrom": 0.0,
+  "cell_filter": "FrechetCellFilter",
+  "maxstep": 0.05,
+  "exp_cell_factor": 32.0,
+  "final_state": {
+    "temperature_K": 0.0,
+    "potential_energy_eV": 0.0,
+    "kinetic_energy_eV": 0.0,
+    "total_energy_eV": 0.0,
+    "pressure_bar": -0.0,
+    "volume_angstrom3": 511.9999999999995,
+    "force_max_eV_per_angstrom": 0.0
+  }
+}

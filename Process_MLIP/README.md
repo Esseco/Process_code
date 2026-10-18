@@ -9,9 +9,30 @@
 可选 `pre_relax` 在 MD 前只优化原子或同时优化晶胞；函数默认关闭，完整 MD 示例默认全弛豫（原子和晶胞）后直接运行 NVT，预弛豫与 MD 共用同一模型。
 NPT 可选 `npt_cell_mode="isotropic"`（默认）或 `"full"`，温控/压控链和积分子步数可按阶段配置。
 `timestep_fs=None` 时按阶段自动选步长：NVT 2 fs、NPT 1 fs；显式数值优先。
-NVT 轨迹可直接用 `export_msd` 导出整段 MSD CSV，复用 ASE 内置分析；见 [MSD.md](MSD.md) 和 [后处理示例](examples/msd.py)。
+NVT 轨迹可直接用 `export_msd` 导出 MSD CSV，默认且仅使用 `pymatgen-analysis-diffusion` 的多时间起点平均；见 [MSD.md](MSD.md) 和 [后处理示例](examples/msd.py)。
+原调用和 CSV 列保留；时间改为 lag time，采用 pymatgen 原生 `smoothed="max"` 采样，不再逐帧输出。分析环境需该包，导入项目或单独跑 MD 不需要加载它。
 完整 MD 示例提供 `MSD_POSTPROCESS` 开关，运行结束后可自动导出指定元素、指定 NVT 阶段的 MSD。
 `fit_msd` 独立读取 MSD CSV 拟合扩散系数和估算 Nernst–Einstein 离子导率；两个示例均提供 `TRANSPORT_FIT` 开关与拟合区间、电荷配置，详见 [MSD.md](MSD.md)。
+扩散拟合直接沿用 pymatgen 原生默认算法、权重和斜率处理；保留手动区间和自设离子电荷，不增加拟合算法开关。
+fit_start_ps/fit_end_ps 默认 None，按每个元素/分段拟合全部正 lag，也支持只设置一端；实际区间在 actual_fit_range_ps 中。全区间不会自动判断线性扩散区。
+已有轨迹的一次性重算可用 [精简独立示例](examples/postprocess_md.py)：顶部修改路径、元素、拟合区间、电荷和实际温度，体积自动读取。运行 `python -m Process_MLIP.examples.postprocess_md`；输出 postprocess/msd.csv 和 transport.json，重复运行覆盖这两个分析文件。
+多模型 LCO/NVP 汇总见 [批处理示例](examples/batch_postprocess_md.py)：自动从各 NVT 阶段 report.json 读取温度、体积、时间、步数及速度，手动指定拟合区间和电荷，输出平铺 out.csv，失败任务保留错误记录。
+
+## 代码分工
+
+| 职责 | 文件 |
+|---|---|
+| 统一公开入口 | `__init__.py`，集中导出已有函数 |
+| 模型配置与加载 | `model_config.py`、`calculators.py`，延迟加载模型 |
+| 结构弛豫 | `MLIP_Relax.py` 是唯一 ASE 优化实现；`mace_relax.py`、`sevennet_relax.py` 保留模型专用入口 |
+| 单阶段 MD | `md.py`，负责积分、输出和实际耗时统计 |
+| 流程编排 | `md_workflow.py`、`pre_relax.py`，负责模型复用、弛豫及多阶段衔接 |
+| 后处理 | `msd.py`、`transport.py`、`trajectory.py`，分别负责 MSD、扩散拟合和抽帧 |
+| 内部共用代码 | `_md_support.py`：校验/状态/报告；`_relaxation.py`：单结构返回值适配 |
+| 示例与测试 | `examples/` 放可修改脚本，`tests/` 放回归测试与共享夹具 |
+
+原公开模块路径、函数签名和返回字段保持兼容。预弛豫与旧单结构接口的默认优化设置不同，
+共用底层实现，但各自保留原默认值；MC 委员会和其他项目仍独立。
 
 ## 从轨迹提取结构
 
@@ -22,7 +43,7 @@ export_traj_frames("md.traj", "frames", frames=[0, 100, -1])
 # 间隔抽帧：frames=slice(0, None, 100)；全部：frames=None；默认：末帧。
 ```
 
-索引从 0 开始，对应 MSD CSV 的 `frame_index`，不是时间或 MD 步号；-1 为末帧。
+索引从 0 开始，不是时间或 MD 步号；-1 为末帧。多起点 MSD 的 `frame_index` 仅是 lag 参考索引，不能将该帧当作 MSD 的唯一终点。
 默认输出 `frame_000000.vasp` 等文件，返回实际帧索引、文件路径和源轨迹总帧数。
 支持 `format="vasp" / "cif" / "xyz" / "extxyz" / "traj"`；VASP/CIF 需完整晶胞。
 不加载模型、不改变结构、不修改源轨迹，重复运行默认拒绝覆盖（可设 `overwrite=True`）。
@@ -67,13 +88,22 @@ MD 预弛豫默认 FIRE、`maxstep=0.05` Å；`exp_cell_factor=None` 按原子�
 
 ## 验证与边界
 
-py1：`python -m unittest Process_MLIP.test_relax`。EMT 小样本验证未收敛标记、真实优化收敛、约束保留及能量归一化；不代表 MACE/CHGNet 科学准确性。两模板安全导入通过，未运行真实模型。
+在仓库根目录用 py1 运行：
+
+```bash
+python -m unittest discover -s Process_MLIP/tests -t . -p "test_*.py"
+```
+
+单独运行弛豫测试：`python -m unittest Process_MLIP.tests.test_relax`。
+测试按功能归并为 10 个文件，临时目录、替代 calculator 和示例夹具集中在 `tests/_support.py`；
+公开 API 索引不包含测试。完整覆盖范围见 [tests/README.md](tests/README.md)。
+测试使用 ASE/EMT 或模型替身，不代表真实模型、GPU 加速或材料性质已验证。
 
 合并候选见 [BOUNDARIES.md](BOUNDARIES.md)，真实签名见 [API.md](API.md)。
 
 ## MACE 合并已完成
 
-单结构 MACE 实现现在只保存在 Process_MLIP/mace_relax.py，Process_AL_MC/relax.py 仅兼容导出同一函数。函数签名、默认值、模型 head 选择、晶胞滤波器和报告保持不变；MC 类的委员会弛豫仍独立。
+单结构 MACE 入口保存在 Process_MLIP/mace_relax.py，底层复用统一优化器；Process_AL_MC/relax.py 仍兼容导出同一函数。函数签名、默认值、模型 head 选择和报告字段保持不变；MC 类的委员会弛豫仍独立。
 
 ## MH-1 与 SevenNet-Omni
 

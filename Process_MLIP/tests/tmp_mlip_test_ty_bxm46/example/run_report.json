@@ -1,0 +1,58 @@
+{
+  "status": "running",
+  "model": {
+    "type": "mace",
+    "model_path": "E:\\Py-Code\\MLIP_model\\mace-mh-1.model",
+    "device": "cuda",
+    "head": "omat_pbe",
+    "default_dtype": "float64",
+    "enable_cueq": false,
+    "enable_symmetrix": false,
+    "symmetrix_use_kokkos": false,
+    "symmetrix_species": null
+  },
+  "input_structure": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\initial.traj",
+  "atom_count": 32,
+  "stages": [
+    {
+      "output_dir": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\example\\01_nvt",
+      "parameters": {
+        "ensemble": "nvt",
+        "temperature_K": 300.0,
+        "steps": 1500,
+        "timestep_fs": 2.0,
+        "tdamp_fs": 100.0,
+        "pressure_bar": 1.0,
+        "pdamp_fs": 1000.0,
+        "initialize_velocities": null,
+        "seed": 42,
+        "remove_com": true,
+        "zero_rotation": false,
+        "trajectory_interval": 50,
+        "log_interval": 10,
+        "overwrite": false,
+        "time_offset_fs": 0.0,
+        "measure_steps_per_second": false,
+        "npt_cell_mode": "isotropic",
+        "tchain": 3,
+        "pchain": 3,
+        "tloop": 1,
+        "ploop": 1
+      }
+    }
+  ],
+  "stages_completed": 0,
+  "stage_results": [],
+  "pre_relax_parameters": {
+    "enabled": false,
+    "relax_cell": false,
+    "optimizer": "FIRE",
+    "fmax": 0.05,
+    "steps": 200,
+    "maxstep": 0.05,
+    "exp_cell_factor": null,
+    "require_convergence": true
+  },
+  "pre_relax_result": null,
+  "active_stage": 1
+}

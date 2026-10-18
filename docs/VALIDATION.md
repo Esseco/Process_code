@@ -1,5 +1,27 @@
 # 验证与已知问题
 
+2026-10-18：fit_msd 的 fit_start_ps/fit_end_ps 默认 None；每个元素/分段分别取全部正 lag，支持单端或双端手动边界。零 lag 不拟合；非有限/负数据、重复时间、越界和不足三点仍报错，未增加自动线性区识别。顶层 fit_range_ps 保留请求（可含 null），各结果 actual_fit_range_ps 记录实际区间。独立、批处理、MSD 和完整 MD 示例默认两端 None，预检查与核心拟合共用边界解析；批处理汇总仍输出实际时间范围。py1 完整 115 项测试 OK（原有 full MTK 缺失跳过 1 项），覆盖默认省略、双端 None、单端 None、多元素/分段不同范围、零 lag 排除、异常和示例完整流程；静态索引 15 项目/596 符号，preview 与 whitespace 检查通过。未调整模型环境或执行超算任务。
+
+2026-10-18：新增 Process_MLIP/examples/batch_postprocess_md.py，沿用用户模型/results/LCO或NVP/阶段目录，自动读取各阶段 report.json 的温度、体积、步数和速度，按手动区间/电荷重算 MSD 与输运系数，输出一阶段一行的平铺 out.csv。跳过 NPT、区分阶段输出，失败记录错误不中断整批。py1 相关 14 项测试通过，含两个元素真实后端处理、报告自动读取和平铺结果/失败记录；静态索引 15 项目/596 符号。未修改模型环境，未访问用户超算数据。
+
+2026-10-18：新增 Process_MLIP/examples/postprocess_md.py 精简独立后处理示例，顶部集中路径、元素、拟合区间、电荷、温度及外部轨迹保存间隔；体积从固定晶胞读取，复用 export_msd/fit_msd 原生 pymatgen 默认流程。重复运行只覆盖分析目录的 msd.csv、transport.json，不修改源轨迹。py1 相关 13 项 MSD/示例测试通过，包括真实后端完整链路、重复运行、区间/电荷传递与源文件保持；索引 15 项目/595 符号，whitespace 检查通过。未调整模型环境或运行超算。
+
+### 2026-10-18 扩散系数采用 pymatgen 原生默认拟合
+
+- fit_msd 原参数/调用保留，先按 fit_start_ps/fit_end_ps 截取 CSV 的 lag 区间，再调用 get_diffusivity_from_msd(msd, dt_fs)，不覆盖 smoothed 或权重等参数。总量和 x/y/z 都用原生默认值；方向结果按一维 Einstein 关系换算，保留 SI/常用单位。
+- 按用户补充要求不添加 OLS 开关，不覆盖原生斜率正数下限。零/负/极小斜率可输出极小正 D，新增 pymatgen_slope_floor_applied 标记；原始加权斜率、截距和普通 R² 作诊断，不能把截断值解释为真实扩散。正 lag、至少三点及输出保护检查保留。
+- 电导率仍使用调用者给定的电荷数、实际温度/体积和目标原子数进行 Nernst–Einstein 换算；不自动推定氧化态、不加入关联修正。两个示例保持手动区间和离子电荷配置，不增加算法参数。
+- 已有 py1 / pymatgen-analysis-diffusion 2024.7.15：完整 108 项测试 OK（1 项原有 full MTK 实测跳过）。新增原生默认调用/裁剪/ps→fs/权重对照、方向系数、斜率下限和缺依赖测试；多元素多段、电荷/单位、JSON、独立及完整 MD 示例通过。静态索引 15 项目、594 符号，whitespace 检查通过。
+- 未安装/升级依赖或调整模型环境；未执行真实 MLIP/GPU/超算或验证真实材料扩散与电导率收敛。
+
+### 2026-10-18 pymatgen 多时间起点 MSD
+
+- export_msd 移除 ASE 单起点统计，唯一后端为 pymatgen-analysis-diffusion DiffusionAnalyzer / smoothed="max"。既有调用与 CSV 列/单位保留，新增可选 min_obs=30；时间改为 lag，原生约 1 ps 起取样，不保证逐帧或零时刻输出。
+- 保留连续坐标、ASE MIC 周期展开、框架质量加权漂移及独立分段。固定零位移参考位点阻止后端额外扣除漂移；不采用其自动拟合。短尾帧警告排除并记录，其他不等间隔报错；数据不足或缺依赖不回退、不写 CSV。
+- 更新独立 MSD/完整 MD 示例、说明与 API 索引。完整 MD 示例在加载模型前检查依赖、原子数、采样范围和拟合窗口；八组/六组批任务原调用无需改动。
+- py1（已有 pymatgen-analysis-diffusion 2024.7.15）：`python -m unittest discover -s Process_MLIP/tests -t . -p test_*.py -q`，102 项，OK，跳过已有缺失 full MTK 的 1 项。手工枚举随机轨迹所有位置对与真实后端比对，覆盖归一化、多元素/纯元素、斜晶胞、分段、漂移、尾帧、min_obs、缺依赖与输出保护；真实零力 MD→MSD→fit_msd 及独立/批量示例通过。
+- 静态索引 15 项目、594 符号；完整 MD --preview 和本次变更 whitespace 检查通过。未安装/升级依赖或调整模型环境，未加载真实 MLIP、执行 GPU/超算任务或验证材料扩散收敛。
+
 2026-10-15：完整 MD 示例新增 MSD_POSTPROCESS，默认关闭；全部 MD 阶段成功后复用 export_msd 自动导出指定 NVT 阶段/最后 NVT 的指定元素 MSD。元素、输出路径及覆盖策略可配置，预先拦截无 NVT、错误阶段、已有 CSV、零步及覆盖 MD 日志等情况；preview 不计算。新增 7 项示例集成测试，使用 EMT 真实短程 NVT/NPT；py-mace 65 项全部通过，py1 仅跳过已有缺失 full MTKNPT 的 1 项。未加载 MLIP 权重或调整模型环境。
 
 2026-10-15：Process_MLIP 新增 export_msd，复用 ASE DiffusionCoefficient，默认导出整段固定晶胞 NVT 轨迹的逐帧、按元素 MSD（总量及 xyz 分量，Å²），不拟合 D 或电导率。可从同目录报告恢复真实时间轴，含末尾短间隔；默认保留本项目的连续坐标，外部 wrapped 轨迹使用 ASE find_mic 展开。新增 11 项解析轨迹/真实 EMT NVT 测试，验证 MSD 归一化、人数平均、周期/斜晶胞、时间轴、漂移修正及输出保护。py-mace 的全部 58 项回归测试通过；py1 的 58 项仅跳过已有的 1 项缺失 full MTKNPT 实测，其余通过。未加载模型或调整环境，未对真实材料扩散采样收敛性作验证。示例见 Process_MLIP/examples/msd.py。
@@ -92,6 +114,18 @@ Process_Struct/examples/percolation_sites.py 在已有 ccnb 环境对 NaFeF3 单
 - Added export_traj_frames and editable examples/extract_frames.py. ASE-based integer/list/slice/all selection, zero-based and negative indices, VASP/CIF/XYZ/extxyz/traj output, default overwrite prevention and source protection. Per-frame cell and atom order preserved; no models or randomness.
 - Six added tests cover geometry/order and varying cells, negative/sliced/all selection, momenta roundtrip, formats, invalid selection, collisions, absent cell and empty input. Full py1 suite: 85 tests, OK (one existing full-MTK skip). Fresh import confirmed no MLIP/Torch import. Updated static API catalog. No production model/GPU run needed for frame extraction.
 
+
+### 2026-10-18 Process_MLIP organization
+
+- Moved 16 root-level test modules into tests/ and grouped into 10 responsibility-based files. Shared temporary-directory/calculator/example fixtures now in tests/_support.py; no test-to-test TestCase imports. All original 95 test identities retained exactly once; added 4 API/architecture/shared-optimizer compatibility checks. tests/public_api.json snapshots all 14 public signatures/defaults.
+- Extracted unchanged MD helpers into _md_support.py and consolidated public exports. MACE/SevenNet single-structure wrappers now share _relaxation.py and MLIPRelaxer; retained historical LBFGS/default step behavior, copied inputs, output fields and legacy Process_AL_MC imports. Pre-relax defaults remain distinct and unchanged.
+- Fresh verification: py1 99 tests OK, 1 existing full-MTK skip; existing py-mace 99 tests OK. AST comparison confirms unchanged MD/helper function bodies. Old/new fixed/full-cell EMT single-structure reports numerically identical at rtol/atol 1e-12. Fresh package import remains model-free. Examples parsed without execution. No dependency/environment/model changes, real GPU/model accuracy or performance not retested.
+- README/module call map/test commands refreshed; MLIP public API catalog excludes tests. Unrelated in-progress VASP source/document changes preserved. Historical validation commands above retain their original test module locations for provenance.
+
+### 2026-10-16 OMat/Symmetrix temperature and duration scans
+
+- Added six standalone task folders for (500/700/900 K, 30 ps) and (700 K, 10/30/50/70 ps), deduplicating 700 K/30 ps. Each uses both LCO/Li-MSD and NVP/Na-MSD, FIRE full pre-relaxation, float32 Symmetrix/Kokkos and explicit 2 fs NVT; steps derived from requested duration. Reused user-provided paths and Slurm resource/environment settings. Delivered new folders and README_sym_scan.md to Desktop/1/2 without changing existing tasks/structures.
+- Two tests verify all six configurations and 12 short model-substituted relaxation/NVT/MSD pipelines, output isolation, species and time grids. Full py1 suite: 95 tests OK (1 existing MTK skip). No real model/GPU/Slurm execution or stability/convergence claim for production temperatures/durations.
 
 ### 2026-10-16 Ensemble-dependent MD timestep
 

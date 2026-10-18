@@ -1,0 +1,60 @@
+{
+  "status": "running",
+  "parameters": {
+    "ensemble": "nvt",
+    "temperature_K": 300.0,
+    "steps": 1500,
+    "timestep_fs": 2.0,
+    "tdamp_fs": 100.0,
+    "pressure_bar": 1.0,
+    "pdamp_fs": 1000.0,
+    "initialize_velocities": null,
+    "seed": 42,
+    "remove_com": true,
+    "zero_rotation": false,
+    "trajectory_interval": 50,
+    "log_interval": 10,
+    "overwrite": false,
+    "time_offset_fs": 0.0,
+    "measure_steps_per_second": false,
+    "npt_cell_mode": "isotropic",
+    "tchain": 3,
+    "pchain": 3,
+    "tloop": 1,
+    "ploop": 1
+  },
+  "model": {
+    "type": "mace",
+    "model_path": "E:\\Py-Code\\MLIP_model\\mace-mh-1.model",
+    "device": "cuda",
+    "head": "omat_pbe",
+    "default_dtype": "float64",
+    "enable_cueq": false,
+    "enable_symmetrix": false,
+    "symmetrix_use_kokkos": false,
+    "symmetrix_species": null
+  },
+  "calculator": "Process_MLIP.tests._support.ZeroCalculator",
+  "md_controller": "NoseHooverChainNVT",
+  "versions": {
+    "python": "3.12.6",
+    "ase": "3.25.0",
+    "numpy": "1.26.4"
+  },
+  "steps_completed": 0,
+  "steps_per_second": null,
+  "velocity_initialization": "sampled",
+  "initial_state": {
+    "temperature_K": 300.00000000000017,
+    "potential_energy_eV": 0.0,
+    "kinetic_energy_eV": 1.2408955685592793,
+    "total_energy_eV": 1.2408955685592793,
+    "pressure_bar": 3551.0507201646087,
+    "volume_angstrom3": 373.2480000000001,
+    "force_max_eV_per_angstrom": 0.0
+  },
+  "trajectory_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\example\\01_nvt\\md.traj",
+  "log_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\example\\01_nvt\\md.csv",
+  "final_structure": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\example\\01_nvt\\final.traj",
+  "report_file": "E:\\Py-Code\\Process_MLIP\\tests\\tmp_mlip_test_ty_bxm46\\example\\01_nvt\\report.json"
+}

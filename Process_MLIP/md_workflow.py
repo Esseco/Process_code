@@ -5,8 +5,9 @@ from pathlib import Path
 import re
 
 from .calculators import create_mlip_calculator
-from .md import (_check_outputs, _copy_structure, _get_dynamics_class, _validate_atoms,
-                 _validate_options, _write_json, run_md)
+from .md import run_md
+from ._md_support import (_check_outputs, _copy_structure, _get_dynamics_class,
+                          _validate_atoms, _validate_options, _write_json)
 from .model_config import _resolve_model_config
 from .pre_relax import _RELAX_FILES, _run_pre_relax, _validate_pre_relax
 

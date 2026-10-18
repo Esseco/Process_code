@@ -1,8 +1,6 @@
 """Single-structure SevenNet-Omni relaxation using the shared ASE optimizer."""
-import numpy as np
-
 from .calculators import create_sevennet_calculator
-from .mace_relax import _relax_structure
+from ._relaxation import _relax_structure, _validate_relax_settings
 
 
 def relax_structure_sevennet(structure, model="7net-omni", *, output_path=None,
@@ -15,10 +13,7 @@ def relax_structure_sevennet(structure, model="7net-omni", *, output_path=None,
     No random sampling, trajectory or log. Named models may download weights;
     supply a trusted local checkpoint for offline repeatable calculations.
     """
-    if not np.isfinite(fmax) or fmax <= 0:
-        raise ValueError("fmax must be finite and positive")
-    if not isinstance(steps, int) or isinstance(steps, bool) or steps < 0:
-        raise ValueError("steps must be a nonnegative integer")
+    _validate_relax_settings(fmax, steps)
     calculator = create_sevennet_calculator(model, device=device, modal=modal)
     result = _relax_structure(structure, calculator, output_path=output_path,
                               fmax=fmax, steps=steps, relax_cell=relax_cell)

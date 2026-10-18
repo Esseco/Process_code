@@ -11,6 +11,8 @@ from numbers import Real
 from pathlib import Path
 
 from Process_MLIP import export_msd, fit_msd, model_config, run_mlip_md
+from Process_MLIP.msd import _load_diffusion_analyzer, _msd_lags
+from Process_MLIP.transport import _fit_window_mask, _load_pymatgen_fitter
 
 
 # 路径与模型
@@ -94,25 +96,28 @@ STAGES = [
     {"name": "production", "ensemble": "nvt", "steps": 5000},
 ]
 
-# MD 完成后导出指定 NVT 阶段的 MSD。
+# MD 完成后用 pymatgen 多时间起点平均导出 NVT MSD。
 
 MSD_POSTPROCESS = {
     "enabled": False,
     "stage": "last_nvt",             # 最后 NVT 或阶段序号（从 1 起）
     "species": "Na",                 # 元素、元素列表；None 为全部
     "output_csv": None,              # None: 阶段目录/msd.csv
+    "skip_frames": 0,                # 跳过平衡段保存帧
+    "min_obs": 30,                   # pymatgen 最低采样量；越大，最大 lag 越短
+    "drift_reference": None,         # "framework": 扣除框架质心漂移
     # 相对路径以 OUTPUT 为根目录。
 
     "overwrite": False,
 }
 
 
-# 拟合需开启 MSD，并选择扩散线性区。
+# 拟合需开启 MSD；None 用全部有效 lag，可手动选扩散线性区。
 # 时间单位 ps，含两端，至少 3 个采样点。
 TRANSPORT_FIT = {
     "enabled": False,
-    "fit_start_ps": 2.0,
-    "fit_end_ps": 8.0,
+    "fit_start_ps": None,             # None: 最早正 lag；可填 ps
+    "fit_end_ps": None,               # None: 最晚有效 lag；可填 ps
     "ion_charge": 1,                  # 电荷数，或 {"Na": 1, "Li": 1}
     "output_json": None,              # None: MSD 同目录/transport.json
     "overwrite": False,
@@ -162,7 +167,27 @@ def _prepare_msd_postprocess():
         raise ValueError("MSD output_csv must not overwrite an MD log")
     if destination.exists() and not MSD_POSTPROCESS.get("overwrite", False):
         raise FileExistsError(destination)
-    return index, destination
+    _load_diffusion_analyzer()  # 开启后处理时，在加载模型前检查依赖和采样量。
+    from ase.io import read
+    symbols = read(str(INPUT), index=0).get_chemical_symbols()
+    selected = MSD_POSTPROCESS.get("species")
+    selected = [selected] if isinstance(selected, str) else selected
+    selected = sorted(set(symbols)) if selected is None else selected
+    if not selected or any(element not in symbols for element in selected):
+        raise ValueError("MSD selected species must be present in the input structure")
+    stage = STAGES[index]
+    steps = stage.get("steps", MD_PARAMETERS.get("steps", 1000))
+    dt = stage.get("timestep_fs", MD_PARAMETERS.get("timestep_fs"))
+    dt = 2.0 if dt is None else dt
+    interval = stage.get("trajectory_interval", MD_PARAMETERS.get("trajectory_interval", 10))
+    skip = MSD_POSTPROCESS.get("skip_frames", 0)
+    min_obs = MSD_POSTPROCESS.get("min_obs", 30)
+    if type(skip) is not int or skip < 0 or type(min_obs) is not int or min_obs < 1:
+        raise ValueError("MSD skip_frames must be nonnegative and min_obs positive integers")
+    count = steps // interval + 1 - skip  # 不计非等间隔的强制末帧。
+    grids = [_msd_lags(count, dt * interval, symbols.count(element), min_obs)
+             * dt * interval / 1000 for element in selected]
+    return index, destination, grids
 
 
 def main(argv=None):
@@ -189,25 +214,10 @@ def main(argv=None):
             raise ValueError("TRANSPORT_FIT requires MSD_POSTPROCESS enabled")
         if type(TRANSPORT_FIT.get("overwrite", False)) is not bool:
             raise TypeError("TRANSPORT_FIT overwrite must be bool")
-        start, end = (TRANSPORT_FIT[key] for key in ("fit_start_ps", "fit_end_ps"))
-        if any(isinstance(v, bool) or not isinstance(v, Real) or not math.isfinite(v)
-               for v in (start, end)) or not 0 <= start < end:
-            raise ValueError("Require finite 0 <= fit_start_ps < fit_end_ps")
-        stage = STAGES[msd_target[0]]
-        steps = stage.get("steps", MD_PARAMETERS.get("steps", 1000))
-        dt = stage.get("timestep_fs", MD_PARAMETERS.get("timestep_fs"))
-        if dt is None:
-            dt = 2.0  # MSD 目标已限定为 NVT。
-        interval = stage.get("trajectory_interval", MD_PARAMETERS.get("trajectory_interval", 10))
-        if end > steps * dt / 1000:
-            raise ValueError("Transport fit window exceeds the selected NVT duration")
-        # 计入强制保存的末帧。
-        first = max(0, math.ceil(start * 1000 / dt / interval - 1e-12))
-        last = min(steps // interval, math.floor(end * 1000 / dt / interval + 1e-12))
-        samples = max(0, last - first + 1)
-        samples += int(steps % interval != 0 and start <= steps * dt / 1000 <= end)
-        if samples < 3:
-            raise ValueError("Transport fit window needs at least three saved MSD frames")
+        _load_pymatgen_fitter()
+        start, end = (TRANSPORT_FIT.get(key) for key in ("fit_start_ps", "fit_end_ps"))
+        for grid in msd_target[2]:
+            _fit_window_mask(grid, start, end)
         charge = TRANSPORT_FIT["ion_charge"]
         values = list(charge.values()) if isinstance(charge, dict) else [charge]
         if not values or any(isinstance(v, bool) or not isinstance(v, Real)
@@ -245,16 +255,19 @@ def main(argv=None):
     print(f"Report: {result['report_file']}")
     print(f"Final atoms with velocities: {result['stage_results'][-1]['final_structure']}")
     if msd_target is not None:
-        index, destination = msd_target
+        index, destination, _ = msd_target
         exported = export_msd(result["stage_results"][index]["trajectory_file"], destination,
                                species=MSD_POSTPROCESS.get("species"),
+                               skip_frames=MSD_POSTPROCESS.get("skip_frames", 0),
+                               min_obs=MSD_POSTPROCESS.get("min_obs", 30),
+                               drift_reference=MSD_POSTPROCESS.get("drift_reference"),
                                overwrite=MSD_POSTPROCESS.get("overwrite", False))
         print(f"MSD: {exported['csv_file']} (NVT stage {index + 1})")
         if fit_destination is not None:
             stage = STAGES[index]
             fitted = fit_msd(exported["csv_file"],
-                             fit_start_ps=TRANSPORT_FIT["fit_start_ps"],
-                             fit_end_ps=TRANSPORT_FIT["fit_end_ps"],
+                             fit_start_ps=TRANSPORT_FIT.get("fit_start_ps"),
+                             fit_end_ps=TRANSPORT_FIT.get("fit_end_ps"),
                              ion_charge=TRANSPORT_FIT["ion_charge"],
                              temperature_K=stage.get("temperature_K", MD_PARAMETERS.get("temperature_K", 300)),
                              volume_A3=result["stage_results"][index]["final_atoms"].get_volume(),

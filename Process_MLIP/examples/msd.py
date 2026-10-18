@@ -1,8 +1,8 @@
-"""Export every saved NVT frame to MSD CSV using ASE's analysis.
+"""Export multi-time-origin NVT MSD CSV using pymatgen-analysis-diffusion.
 
 From repository root, after editing INPUT/SPECIES:
     python -m Process_MLIP.examples.msd
-No MLIP environment, model weights, fitting or plotting required.
+Requires the analysis package, no model weights or MLIP environment.
 """
 from pathlib import Path
 
@@ -19,13 +19,16 @@ FRAME_INTERVAL_FS = None              # infer from adjacent report.json
 UNWRAP = False                        # our MD saves unwrapped positions
 # True only for trajectories whose coordinates were wrapped into the cell.
 DRIFT_REFERENCE = None                # optionally "framework" to subtract framework COM motion
+SKIP_FRAMES = 0                       # 跳过平衡段保存帧
+NUMBER_OF_SEGMENTS = 1                # 各段独立做多起点平均；需足够长
+MIN_OBS = 30                         # pymatgen max 模式采样阈值
 OVERWRITE = False
 
-# Optional fitting of the exported CSV. Use the actual NVT temperature/volume.
+# 拟合使用 pymatgen 原生默认值；手动选区间和电荷，填写实际 NVT 温度/体积。
 TRANSPORT_FIT = {
     "enabled": False,
-    "fit_start_ps": 2.0,
-    "fit_end_ps": 8.0,
+    "fit_start_ps": None,            # None: 最早正 lag；可填 ps
+    "fit_end_ps": None,              # None: 最晚有效 lag；可填 ps
     "temperature_K": 800,
     "volume_A3": 1000.0,
     "ion_charge": 1,                  # or {"Na": 1, "Li": 1}, units e
@@ -35,10 +38,12 @@ TRANSPORT_FIT = {
 
 
 def main():
-    """Export the entire trajectory, with frame zero as the MSD origin."""
+    """Export native max-mode lag sampling; fit only an explicitly chosen range."""
     result = export_msd(INPUT, OUTPUT, species=SPECIES,
                         frame_interval_fs=FRAME_INTERVAL_FS, unwrap=UNWRAP,
-                        drift_reference=DRIFT_REFERENCE, overwrite=OVERWRITE)
+                        drift_reference=DRIFT_REFERENCE, overwrite=OVERWRITE,
+                        skip_frames=SKIP_FRAMES, number_of_segments=NUMBER_OF_SEGMENTS,
+                        min_obs=MIN_OBS)
     print(f"MSD: {result['csv_file']}")
     print(f"Frames: {result['frame_count']}; species: {result['species']}")
     print(f"Time source: {result['time_source']}; MSD unit: angstrom^2")

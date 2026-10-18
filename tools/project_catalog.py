@@ -201,6 +201,8 @@ def collect(directory):
     for path in sorted(directory.rglob("*.py")):
         if any(part.startswith("tmp") or part in ("__pycache__", ".git") for part in path.parts):
             continue
+        if directory.name == "Process_MLIP" and "tests" in path.relative_to(directory).parts:
+            continue  # 测试和夹具不属于 MLIP 公开 API。
         try:
             tree = ast.parse(path.read_text(encoding="utf-8-sig"))
         except (OSError, SyntaxError, UnicodeError) as error:
