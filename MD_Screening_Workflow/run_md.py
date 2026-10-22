@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 from ase.io import read
-from md_screening import ScreeningConfig, run_screening
+from MD_Screening_Workflow import ScreeningConfig, run_screening
 
 
 # ===== 输入结构：在这里填写实际文件路径 =====
