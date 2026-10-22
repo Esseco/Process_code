@@ -1,0 +1,100 @@
+--- a/Process_MLIP/md.py
++++ b/Process_MLIP/md.py
+@@ -2,6 +2,7 @@
+ import csv
+ import json
+ from pathlib import Path
++from numbers import Integral
+ from time import perf_counter
+ 
+ import numpy as np
+@@ -31,7 +32,8 @@
+            zero_rotation=False, trajectory_interval=10, log_interval=10,
+            overwrite=False, time_offset_fs=0.0, model_metadata=None,
+            measure_steps_per_second=False, npt_cell_mode="isotropic",
+-           tchain=3, pchain=3, tloop=1, ploop=1):
++           tchain=3, pchain=3, tloop=1, ploop=1,
++           segment_steps=None, on_segment=None):
+     """Run one NHC NVT or MTK NPT stage with an ASE calculator.
+ 
+     Positions/cell use Å; energies eV, temperature K, time/damping fs, pressure
+@@ -42,6 +44,14 @@
+     npt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.
+     tchain/tloop control the thermostat; pchain/ploop apply only to NPT.
+     Chain lengths and integration substeps must be positive integers.
++
++    segment_steps optionally advances the SAME integrator in blocks. It must
++    be a positive multiple of trajectory_interval and log_interval; total
++    steps must align with trajectory_interval as well. After
++    each block, on_segment(event) sees flushed output and completed steps,
++    time_fs, paths, temperature_K and saved-frame interval. Return True to
++    request a normal early stop; False/None continues. No decision rules are
++    built in. This is in-process continuity, not cross-process checkpointing.
+     timestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.
+ 
+     Writes md.traj, md.csv, final.traj (with momenta), report.json. Existing
+@@ -55,6 +65,16 @@
+     options = _validate_options({key: value for key, value in locals().copy().items()
+                                  if key in _DEFAULTS})
+     timestep_fs = options["timestep_fs"]
++    if segment_steps is not None:
++        if isinstance(segment_steps, bool) or not isinstance(segment_steps, Integral) or segment_steps <= 0:
++            raise ValueError("segment_steps must be a positive integer or None")
++        segment_steps = int(segment_steps)
++        if steps % trajectory_interval:
++            raise ValueError("segmented steps must align with trajectory_interval")
++        if segment_steps % trajectory_interval or segment_steps % log_interval:
++            raise ValueError("segment_steps must be a multiple of trajectory_interval and log_interval")
++    if on_segment is not None and (not callable(on_segment) or segment_steps is None):
++        raise ValueError("on_segment requires a callable and explicit segment_steps")
+     atoms = _copy_structure(structure)
+     _validate_atoms(atoms, options)
+     root = _check_outputs(output_dir, overwrite)
+@@ -93,7 +113,7 @@
+                   md_controller=type(dyn).__name__,
+                   versions=_versions(calculator), steps_completed=0, steps_per_second=None,
+                   velocity_initialization="sampled" if initialized else "preserved",
+-                  initial_state=initial_state, **paths)
++                  initial_state=initial_state, segment_steps=segment_steps, stop_reason=None, **paths)
+     _write_json(paths["report_file"], report)
+     fields = ["step", "time_fs", *initial_state]
+     try:
+@@ -117,14 +137,36 @@
+             if measure_steps_per_second:
+                 _synchronize_for_timing(calculator, metadata)
+                 start = perf_counter()
+-            dyn.run(steps)
++            stopped = False
++            if segment_steps is None:
++                dyn.run(steps)
++            else:
++                segment_index = 0
++                while dyn.nsteps < steps:
++                    dyn.run(min(segment_steps, steps - dyn.nsteps))
++                    segment_index += 1
++                    report.update(steps_completed=int(dyn.nsteps),
++                                  end_time_fs=float(time_offset_fs + dyn.nsteps * timestep_fs))
++                    _write_json(paths["report_file"], report)
++                    if on_segment is not None:
++                        event = dict(segment_index=segment_index, steps_completed=int(dyn.nsteps),
++                                     time_fs=float(time_offset_fs + dyn.nsteps * timestep_fs),
++                                     temperature_K=temperature_K,
++                                     frame_interval_fs=timestep_fs * trajectory_interval, **paths)
++                        request_stop = on_segment(event)
++                        if request_stop is not None and type(request_stop) is not bool:
++                            raise TypeError("on_segment must return bool or None")
++                        if request_stop and dyn.nsteps < steps:
++                            stopped = True
++                            break
+             if measure_steps_per_second:
+                 _synchronize_for_timing(calculator, metadata)
+                 duration = perf_counter() - start
+                 if dyn.nsteps > 0 and np.isfinite(duration) and duration > 0:
+                     report["steps_per_second"] = float(dyn.nsteps / duration)
+         write(paths["final_structure"], atoms, format="traj")
+-        report.update(status="completed", steps_completed=int(dyn.nsteps),
++        report.update(status="stopped" if stopped else "completed",
++                      stop_reason="callback" if stopped else None, steps_completed=int(dyn.nsteps),
+                       end_time_fs=float(time_offset_fs + dyn.nsteps * timestep_fs))
+         _write_json(paths["report_file"], report)
+     except (Exception, KeyboardInterrupt) as exc:
