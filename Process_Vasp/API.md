@@ -411,7 +411,7 @@ Returns:
 
 ## `deduplicate`
 
-源文件：[structures/structure.py](structures/structure.py)，第 13 行。
+源文件：[structures/structure.py](structures/structure.py)，第 14 行。
 
 ```python
 deduplicate(struc_lst: list)
@@ -421,7 +421,7 @@ Load the optional structure toolkit only when deduplication is used.
 
 ## `deduplicate_dict`
 
-源文件：[structures/structure.py](structures/structure.py)，第 20 行。
+源文件：[structures/structure.py](structures/structure.py)，第 21 行。
 
 ```python
 deduplicate_dict(struc_dict: dict)
@@ -431,7 +431,7 @@ Deduplicate a structure dictionary with the shared implementation.
 
 ## `deduplicate_df`
 
-源文件：[structures/structure.py](structures/structure.py)，第 27 行。
+源文件：[structures/structure.py](structures/structure.py)，第 28 行。
 
 ```python
 deduplicate_df(df: pd.DataFrame, n_keep: int, struct_col: str='struct', energy_col: str='energy_mean_per_atom')
@@ -441,7 +441,7 @@ Deduplicate a table with the shared implementation.
 
 ## `gen_ESGS_structure`
 
-源文件：[structures/structure.py](structures/structure.py)，第 39 行。
+源文件：[structures/structure.py](structures/structure.py)，第 40 行。
 
 ```python
 gen_ESGS_structure(disordered_structure: Structure, nstr: int)
@@ -456,9 +456,39 @@ gen_ESGS_structure 的 Docstring
 :return: struct_lsit
 :rtype: list
 
+## `gen_ESGS_by_content`
+
+源文件：[structures/structure.py](structures/structure.py)，第 103 行。
+
+```python
+gen_ESGS_by_content(struct, contents, count=1, *, species='Li', nstr=None, oxidation_states=None, dedu=True, max_candidates=512)
+```
+
+Lowest electrostatic-energy orderings for a list of contents.
+
+``struct`` is a full-occupancy reference (Structure or POSCAR/CIF path) and
+``contents`` are integers of ``species`` per cell, for example Li27 with
+``[25, 23, 22]``. Each content yields ``count`` structures taken from
+``gen_ESGS_structure``, whose ranking is the pymatgen Ewald electrostatic
+energy from low to high, so index 0 is the lowest-energy ordering. Structures
+keep their oxidation states; POSCAR output is unaffected.
+
+:param struct: full reference structure or its file path
+:param contents: integer counts of ``species``, e.g. ``[25, 23, 22]``
+:param count: structures returned per content
+:param species: element whose content varies, default ``"Li"``
+:param nstr: candidate orderings requested per content; default
+    ``max(4 * count, 8)``, doubled until ``count`` distinct ones exist
+:param oxidation_states: element-to-oxidation-state dict used for the
+    electrostatic ranking; guessed from the reference when omitted
+:param dedu: deduplicate candidates with StructureMatcher before truncating
+:param max_candidates: upper bound for the automatic ``nstr`` escalation
+:return: ``{f"{content}_{full}": [Structure, ...]}`` in content list order
+:rtype: dict
+
 ## `generate_neb_endpoints`
 
-源文件：[structures/structure.py](structures/structure.py)，第 62 行。
+源文件：[structures/structure.py](structures/structure.py)，第 188 行。
 
 ```python
 generate_neb_endpoints(fully_intercalated_structure: Structure, deintercalated_structure: Structure, mobile_ion: str, mode: str='random', num_paths_per_ion: int=1, indices: int | Iterable[int] | None=None, random_num: int=3, max_distance: float=5.0, dedu: bool=False, match_tol: float=0.6, overlap_tol: float=0.5, seed: int | None=None)
@@ -472,7 +502,7 @@ ion-vacancy pairs are sampled without replacement.
 
 ## `check_layer_equal`
 
-源文件：[structures/structure.py](structures/structure.py)，第 223 行。
+源文件：[structures/structure.py](structures/structure.py)，第 349 行。
 
 ```python
 check_layer_equal(structure: Structure, element: str='Na', target_layers: int=3, EL_Equal: bool=True)
@@ -493,7 +523,7 @@ check_layer_equal 的 Docstring
 
 ## `build_redox_disordered_structure`
 
-源文件：[structures/structure.py](structures/structure.py)，第 278 行。
+源文件：[structures/structure.py](structures/structure.py)，第 404 行。
 
 ```python
 build_redox_disordered_structure(struct, na_num_now)
@@ -503,7 +533,7 @@ build_redox_disordered_structure(struct, na_num_now)
 
 ## `remove_oxi`
 
-源文件：[structures/structure.py](structures/structure.py)，第 317 行。
+源文件：[structures/structure.py](structures/structure.py)，第 443 行。
 
 ```python
 remove_oxi(struct)
@@ -513,7 +543,7 @@ remove_oxi(struct)
 
 ## `Na1_to_Nax`
 
-源文件：[structures/structure.py](structures/structure.py)，第 329 行。
+源文件：[structures/structure.py](structures/structure.py)，第 455 行。
 
 ```python
 Na1_to_Nax(struct, tar_dir, interval=3, nstr=3, tar_layer=None, equal_num=None, select_num=None, dedu=False, is_Na0=False, phase=None)

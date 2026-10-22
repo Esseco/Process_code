@@ -396,6 +396,44 @@ default cleanup preserves the returned data on lock failure. output_dir
 retains a new unique folder each run; existing results are not overwritten.
 verbose prints elapsed CCNB and packing stages; set False to silence them.
 
+## `get_supercell_matrices`
+
+源文件：[supercell.py](supercell.py)，第 8 行。
+
+```python
+get_supercell_matrices(structure, size: int, dimensions: str='abc', *, symprec: float=1e-05)
+```
+
+Return inequivalent matrices and a reduced matrix for each one.
+
+Args:
+    structure: Ordered pymatgen Structure or ASE Atoms, preferably a
+        primitive cell. The input cell is used as supplied, without
+        primitive-cell conversion. Its original PBC flags are not used.
+    size: Positive integer volume multiplier relative to the input cell,
+        not the final atom count.
+    dimensions: Nonempty subset of "abc", e.g. "ab", "ac", or "abc".
+        These are lattice directions, not Cartesian axes. Unselected
+        directions remain unchanged and are never mixed into selected ones.
+    symprec: icet/spglib symmetry tolerance in angstrom (default 1e-5).
+
+Returns:
+    Dict with two equally long lists of integer (3, 3) numpy arrays:
+    ``all`` contains icet's symmetry-inequivalent HNF representatives;
+    ``recommended[i]`` is a Minkowski-reduced basis of ``all[i]``, using
+    only selected directions. Both use ``new_cell = matrix @ old_cell``
+    and work with pymatgen ``make_supercell`` or ASE ``make_supercell``.
+    Reduction shortens basis vectors; it does not select a globally most
+    cubic cell or rank the inequivalent supercells.
+
+Notes:
+    Requires numpy, ASE and icet in py1; pymatgen only for Structure input.
+    Equivalence uses the input's atomic species, positions and symmetry,
+    not magnetic moments. Supply an ordered structure. No files are
+    written and the input is not modified. No randomness is used; repeated
+    calls with the same input and library versions give the same order.
+    Enumeration can grow rapidly with size, especially in three dimensions.
+
 ## `DeduplicationTests`
 
 源文件：[test_deduplication.py](test_deduplication.py)，第 8 行。

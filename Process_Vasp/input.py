@@ -17,12 +17,14 @@ from .structures.structure import (
     deduplicate,
     deduplicate_df,
     deduplicate_dict,
+    gen_ESGS_by_content,
     gen_ESGS_structure,
     generate_neb_endpoints,
 )
 
 __all__ = [
     "gen_ESGS_structure",
+    "gen_ESGS_by_content",
     "generate_neb_endpoints",
     "deduplicate_dict",
     "deduplicate",

@@ -15,6 +15,7 @@ VASP 输入生成、计算结果读取和可恢复的 atomate2 工作流。默�
 | atomate2 任务生成 | generate_atomate_input | CIF/VASP 结构、分阶段参数 | 可上传的任务文件夹 | [create_workflow.py](examples/create_workflow.py) |
 | AMSET 超算后处理 | generate_amset_task / run_amset_postprocess | 已完成的 DOS 任务 | 输运有效质量、σ/τ、CRT 迁移率，JSON/CSV | [AMSET 说明](docs/AMSET_CRT.md) |
 | 已完成结果复用/后续计算 | get_completed_result / generate_followup_task / run_workflow | 已有任务检查点或实际输出目录 | 已完成目录、后续任务、原任务续跑 | [复用说明](docs/FOLLOWUP_USAGE.md) |
+| 定含量静电序结构 | gen_ESGS_by_content | 满占据参考结构、含量整数 list、每个含量数量 | dict `{f"{n}_{full}": [Structure]}`，Ewald 静电能由低到高 | [doping_contents.py](examples/doping_contents.py) |
 | 结果/状态读取 | read_vasp_output / read_vasp_status | 计算目录 | 结果或状态 dict | [read_results.py](examples/read_results.py) |
 | Fe/Mn 磁矩诊断 | check_dft_magnetic_moments / check_layered_oxide_moments | OUTCAR 或局域磁矩、明确的层状体系标识 | 只读诊断 dict，μB | [磁矩说明](docs/MAGNETIC_CHECK.md) |
 | 原始逐原子磁矩 | read_dft_magnetic_data | OUTCAR、对应结构 | 所有元素的原子索引/磁矩，μB；不筛选 | [磁矩说明](docs/MAGNETIC_CHECK.md) |

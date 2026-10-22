@@ -6,6 +6,7 @@ from importlib import import_module
 
 
 _EXPORTS = {
+    "get_supercell_matrices": "supercell",
     "deduplicate": "deduplication",
     "deduplicate_dict": "deduplication",
     "deduplicate_df": "deduplication",

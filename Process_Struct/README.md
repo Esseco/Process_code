@@ -8,6 +8,7 @@
 
 | 功能 | 公开入口 | 输入 → 输出 | 独立模板 |
 |---|---|---|---|
+| 扩胞矩阵 | get_supercell_matrices | 结构、扩胞倍数、a/b/c 方向 → 不等价矩阵及逐项短基矢约化矩阵 | 见下方调用示例 |
 | 理论容量 | theoretical_specific_capacity | 化学式、迁移离子 → mAh/g | [capacity.py](examples/capacity.py) |
 | Wyckoff 分组 | get_wyckoff_sites | Structure、容差 → 分组列表 | [wyckoff_sites.py](examples/wyckoff_sites.py) |
 | 八面体畸变 | analyze_octahedra_distortion / Octahedron | 有序氧化物结构 → 局域畸变记录 | [octahedra.py](examples/octahedra.py) |
@@ -35,6 +36,29 @@ python -m Process_Struct.examples.percolation_sites
 除容量模板外，需要先修改输入路径。模板导入不会读取结构或启动分析。现有函数和参数保持兼容；每项可单独调用，不要求统一 CLI。
 
 ## 科学语义与限制
+
+### 扩胞矩阵
+
+```python
+from pymatgen.core import Structure
+from Process_Struct import get_supercell_matrices
+
+structure = Structure.from_file("POSCAR")
+matrices = get_supercell_matrices(structure, size=8, dimensions="ab")
+all_matrices = matrices["all"]
+recommended = matrices["recommended"]
+
+expanded = structure.copy()
+expanded.make_supercell(recommended[0])
+```
+
+`size` 是相对输入晶胞的体积/原子数倍数；`dimensions` 是晶格方向，支持 `a/b/c/ab/ac/bc/abc`，与书写顺序无关，未选方向保持原样。返回值仅有 `all` 和 `recommended` 两组整数 3×3 NumPy 矩阵，按索引一一对应；约定 `new_cell = matrix @ old_cell`，可直接传入 pymatgen 或 ASE 的扩胞接口。也支持 ASE Atoms 输入。
+
+`all` 由 icet `enumerate_supercells(..., niggli_reduce=False)` 枚举，按输入结构的元素、坐标和对称性去重；建议使用原胞，不自动转换原胞，不考虑磁矩或无序占位。`recommended[i]` 用 ASE Minkowski reduction 仅在所选方向内约化 `all[i]`，保持同一个超晶胞，可能含负整数；它不是所有候选中唯一最优的矩阵，也不保证接近正方形/立方体。原始 PBC 标志由 `dimensions` 在输入副本上覆盖，仅用于本次枚举和约化。
+
+默认 py1，依赖 icet、ASE、NumPy；输入 Structure 时另需 pymatgen。`symprec=1e-5` Å 可调。无随机性、不修改输入、不写文件，重复调用返回新结果；枚举数会随倍数增长，三维大倍数需注意耗时和内存。已用小型合成立方/三斜晶胞核对数量、矩阵等价性和方向限制，未验证大规模枚举性能。
+
+参考：[icet 枚举接口](https://icet.materialsmodeling.org/_modules/icet/tools/structure_enumeration.html)、[ASE Minkowski reduction](https://ase-lib.org/ase/geometry.html#ase.geometry.minkowski_reduce)。
 
 通道位点导出示例的参数、单位、输出、重复运行策略和验证记录见 [PERCOLATION_EXAMPLE.md](PERCOLATION_EXAMPLE.md)。在已有 ccnb 环境执行；标记 CIF 的 He/Ne 表示几何点位，完整周期连接保留在 NET/CSV 中。
 

@@ -7,6 +7,7 @@ import pandas as pd
 from pymatgen.core import Element, Species, Structure
 from pymatgen.transformations.standard_transformations import (
     OrderDisorderedStructureTransformation,
+    OxidationStateDecorationTransformation,
 )
 
 
@@ -57,6 +58,131 @@ def gen_ESGS_structure(disordered_structure: Structure, nstr: int) -> list:
         f"{len(ordered_structure_dict)} electrostatic ground statete structures found."
     )
     return structure_lst
+
+
+def _as_structure(struct):
+    """Accept a Structure, a POSCAR/CIF path, or a string path."""
+    if isinstance(struct, Structure):
+        return struct.copy()
+    return Structure.from_file(str(struct))
+
+
+def _oxidation_state_dict(struct):
+    """Guess one oxidation state per element from the fully occupied reference."""
+    reference = struct.copy()
+    reference.remove_oxidation_states()
+    try:
+        reference.add_oxidation_state_by_guess()
+    except Exception as error:  # BVAnalyzer rejects unusual coordination
+        raise ValueError(
+            "Automatic oxidation-state guessing failed; pass oxidation_states explicitly"
+        ) from error
+    table = {}
+    for site in reference:
+        for specie in site.species:
+            if getattr(specie, "oxi_state", None) is not None:
+                table[specie.symbol] = specie.oxi_state
+    return table
+
+
+def _disordered_for_content(struct, species, content, full, oxidation_states):
+    """Partially occupy ``species`` and decorate it for electrostatic ordering."""
+    decorated = struct.copy()
+    decorated.remove_oxidation_states()
+    if content:
+        decorated.replace_species(
+            {Element(species): {Element(species): content / full}}
+        )
+    else:
+        decorated.remove_species([species])
+    return OxidationStateDecorationTransformation(oxidation_states).apply_transformation(
+        decorated
+    )
+
+
+def gen_ESGS_by_content(
+    struct,
+    contents,
+    count=1,
+    *,
+    species="Li",
+    nstr=None,
+    oxidation_states=None,
+    dedu=True,
+    max_candidates=512,
+):
+    """Lowest electrostatic-energy orderings for a list of contents.
+
+    ``struct`` is a full-occupancy reference (Structure or POSCAR/CIF path) and
+    ``contents`` are integers of ``species`` per cell, for example Li27 with
+    ``[25, 23, 22]``. Each content yields ``count`` structures taken from
+    ``gen_ESGS_structure``, whose ranking is the pymatgen Ewald electrostatic
+    energy from low to high, so index 0 is the lowest-energy ordering. Structures
+    keep their oxidation states; POSCAR output is unaffected.
+
+    :param struct: full reference structure or its file path
+    :param contents: integer counts of ``species``, e.g. ``[25, 23, 22]``
+    :param count: structures returned per content
+    :param species: element whose content varies, default ``"Li"``
+    :param nstr: candidate orderings requested per content; default
+        ``max(4 * count, 8)``, doubled until ``count`` distinct ones exist
+    :param oxidation_states: element-to-oxidation-state dict used for the
+        electrostatic ranking; guessed from the reference when omitted
+    :param dedu: deduplicate candidates with StructureMatcher before truncating
+    :param max_candidates: upper bound for the automatic ``nstr`` escalation
+    :return: ``{f"{content}_{full}": [Structure, ...]}`` in content list order
+    :rtype: dict
+    """
+    reference = _as_structure(struct)
+    if species not in reference.composition:
+        raise ValueError(f"{species} is not in the reference structure")
+    full = int(round(reference.composition[species]))
+    if full <= 0:
+        raise ValueError(f"{species} count in the reference must be positive")
+    if count < 1:
+        raise ValueError("count must be at least 1")
+
+    requested = []
+    for content in contents:
+        if isinstance(content, bool) or not isinstance(content, int):
+            raise TypeError(f"contents must be integers of {species}, got {content!r}")
+        if not 0 <= content <= full:
+            raise ValueError(f"content {content} outside 0..{full}")
+        if content not in requested:
+            requested.append(content)
+    if not requested:
+        raise ValueError("contents is empty")
+
+    if oxidation_states is None:
+        oxidation_states = _oxidation_state_dict(reference)
+        print(f"oxidation states guessed for the electrostatic ranking: {oxidation_states}")
+
+    series = {}
+    for content in requested:
+        label = f"{content}_{full}"
+        if content == full or content == 0:
+            # Nothing is disordered here; EwaldMinimizer rejects an empty search.
+            built = _disordered_for_content(reference, species, content, full, oxidation_states)
+            series[label] = [built]
+            print(f"{label}: no disorder, 1 structure")
+            continue
+
+        trial = nstr if nstr else max(4 * count, 8)
+        while True:
+            built = _disordered_for_content(reference, species, content, full, oxidation_states)
+            candidates = gen_ESGS_structure(built, trial)
+            if dedu:
+                candidates = deduplicate(candidates)
+            if len(candidates) >= count or trial >= max_candidates:
+                break
+            trial = min(max_candidates, trial * 2)
+
+        series[label] = candidates[:count]
+        print(f"{label}: {len(candidates)} distinct candidates, kept {len(series[label])}")
+        if len(series[label]) < count:
+            print(f"{label}: fewer than {count} distinct orderings exist")
+
+    return series
 
 
 def generate_neb_endpoints(

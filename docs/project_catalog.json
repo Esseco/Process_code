@@ -393,7 +393,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "deduplicate",
-        "line": 13,
+        "line": 14,
         "signature": "deduplicate(struc_lst: list)",
         "doc": "Load the optional structure toolkit only when deduplication is used.",
         "imports": [
@@ -409,7 +409,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "deduplicate_dict",
-        "line": 20,
+        "line": 21,
         "signature": "deduplicate_dict(struc_dict: dict)",
         "doc": "Deduplicate a structure dictionary with the shared implementation.",
         "imports": [
@@ -425,7 +425,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "deduplicate_df",
-        "line": 27,
+        "line": 28,
         "signature": "deduplicate_df(df: pd.DataFrame, n_keep: int, struct_col: str='struct', energy_col: str='energy_mean_per_atom')",
         "doc": "Deduplicate a table with the shared implementation.",
         "imports": [
@@ -441,7 +441,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "gen_ESGS_structure",
-        "line": 39,
+        "line": 40,
         "signature": "gen_ESGS_structure(disordered_structure: Structure, nstr: int)",
         "doc": "gen_ESGS_structure 的 Docstring\n\n:param disordered_structure: disorderd struct\n:type disordered_structure: Structure\n:param nstr: generate nstr structs\n:type nstr: int\n:return: struct_lsit\n:rtype: list",
         "imports": [
@@ -456,8 +456,24 @@
       },
       {
         "file": "Process_Vasp/structures/structure.py",
+        "name": "gen_ESGS_by_content",
+        "line": 103,
+        "signature": "gen_ESGS_by_content(struct, contents, count=1, *, species='Li', nstr=None, oxidation_states=None, dedu=True, max_candidates=512)",
+        "doc": "Lowest electrostatic-energy orderings for a list of contents.\n\n``struct`` is a full-occupancy reference (Structure or POSCAR/CIF path) and\n``contents`` are integers of ``species`` per cell, for example Li27 with\n``[25, 23, 22]``. Each content yields ``count`` structures taken from\n``gen_ESGS_structure``, whose ranking is the pymatgen Ewald electrostatic\nenergy from low to high, so index 0 is the lowest-energy ordering. Structures\nkeep their oxidation states; POSCAR output is unaffected.\n\n:param struct: full reference structure or its file path\n:param contents: integer counts of ``species``, e.g. ``[25, 23, 22]``\n:param count: structures returned per content\n:param species: element whose content varies, default ``\"Li\"``\n:param nstr: candidate orderings requested per content; default\n    ``max(4 * count, 8)``, doubled until ``count`` distinct ones exist\n:param oxidation_states: element-to-oxidation-state dict used for the\n    electrostatic ranking; guessed from the reference when omitted\n:param dedu: deduplicate candidates with StructureMatcher before truncating\n:param max_candidates: upper bound for the automatic ``nstr`` escalation\n:return: ``{f\"{content}_{full}\": [Structure, ...]}`` in content list order\n:rtype: dict",
+        "imports": [
+          "Process_Struct",
+          "collections",
+          "fractions",
+          "pandas",
+          "pymatgen",
+          "random",
+          "warnings"
+        ]
+      },
+      {
+        "file": "Process_Vasp/structures/structure.py",
         "name": "generate_neb_endpoints",
-        "line": 62,
+        "line": 188,
         "signature": "generate_neb_endpoints(fully_intercalated_structure: Structure, deintercalated_structure: Structure, mobile_ion: str, mode: str='random', num_paths_per_ion: int=1, indices: int | Iterable[int] | None=None, random_num: int=3, max_distance: float=5.0, dedu: bool=False, match_tol: float=0.6, overlap_tol: float=0.5, seed: int | None=None)",
         "doc": "Generate NEB endpoints for hops into vacancies of a deintercalated structure.\n\nIn ``select`` mode, ``indices`` are mobile-ion indices in the\ndeintercalated structure. In ``random`` mode, ``random_num`` unique\nion-vacancy pairs are sampled without replacement.",
         "imports": [
@@ -473,7 +489,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "check_layer_equal",
-        "line": 223,
+        "line": 349,
         "signature": "check_layer_equal(structure: Structure, element: str='Na', target_layers: int=3, EL_Equal: bool=True)",
         "doc": "check_layer_equal 的 Docstring\n\n:param structure: Struct\n:type structure: Structure\n:param element: consider Element\n:type element: str\n:param target_layers:element layer >= target_layers\n:type target_layers: int\n:param EL_Equal: if Each Layer element Equal(0,1)\n:type EL_Equal: bool\n:return: if equal and len (0,1)\n:rtype: bool",
         "imports": [
@@ -489,7 +505,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "build_redox_disordered_structure",
-        "line": 278,
+        "line": 404,
         "signature": "build_redox_disordered_structure(struct, na_num_now)",
         "doc": "",
         "imports": [
@@ -505,7 +521,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "remove_oxi",
-        "line": 317,
+        "line": 443,
         "signature": "remove_oxi(struct)",
         "doc": "",
         "imports": [
@@ -521,7 +537,7 @@
       {
         "file": "Process_Vasp/structures/structure.py",
         "name": "Na1_to_Nax",
-        "line": 329,
+        "line": 455,
         "signature": "Na1_to_Nax(struct, tar_dir, interval=3, nstr=3, tar_layer=None, equal_num=None, select_num=None, dedu=False, is_Na0=False, phase=None)",
         "doc": "",
         "imports": [
@@ -1268,11 +1284,12 @@
     "purpose": "通用结构特征、畸变、容量与连通性",
     "kind": "工具包",
     "inputs": "pymatgen Structure、化学式或轨迹",
-    "outputs": "结构特征、容量、畸变及轨迹转换结果",
-    "dependencies": "pymatgen, numpy, pandas, ASE；渗流/位点容量使用 ccnb；部分模块需要 octadist 等",
+    "outputs": "结构特征、容量、畸变、轨迹转换结果及扩胞矩阵 dict",
+    "dependencies": "pymatgen, numpy, pandas, ASE；扩胞枚举需要 icet；渗流/位点容量使用 ccnb；部分模块需要 octadist 等",
     "caution": "包使用延迟导入；不同功能的可选依赖分开检查。位点容量为间距约束下的贪心可行估计，不保证最大装载数。",
     "preferred": [
       "theoretical_specific_capacity",
+      "get_supercell_matrices",
       "get_wyckoff_sites",
       "StructureFeatureExtractor",
       "Octahedron",
@@ -1729,6 +1746,20 @@
           "time",
           "uuid",
           "warnings"
+        ]
+      },
+      {
+        "file": "Process_Struct/supercell.py",
+        "name": "get_supercell_matrices",
+        "line": 8,
+        "signature": "get_supercell_matrices(structure, size: int, dimensions: str='abc', *, symprec: float=1e-05)",
+        "doc": "Return inequivalent matrices and a reduced matrix for each one.\n\nArgs:\n    structure: Ordered pymatgen Structure or ASE Atoms, preferably a\n        primitive cell. The input cell is used as supplied, without\n        primitive-cell conversion. Its original PBC flags are not used.\n    size: Positive integer volume multiplier relative to the input cell,\n        not the final atom count.\n    dimensions: Nonempty subset of \"abc\", e.g. \"ab\", \"ac\", or \"abc\".\n        These are lattice directions, not Cartesian axes. Unselected\n        directions remain unchanged and are never mixed into selected ones.\n    symprec: icet/spglib symmetry tolerance in angstrom (default 1e-5).\n\nReturns:\n    Dict with two equally long lists of integer (3, 3) numpy arrays:\n    ``all`` contains icet's symmetry-inequivalent HNF representatives;\n    ``recommended[i]`` is a Minkowski-reduced basis of ``all[i]``, using\n    only selected directions. Both use ``new_cell = matrix @ old_cell``\n    and work with pymatgen ``make_supercell`` or ASE ``make_supercell``.\n    Reduction shortens basis vectors; it does not select a globally most\n    cubic cell or rank the inequivalent supercells.\n\nNotes:\n    Requires numpy, ASE and icet in py1; pymatgen only for Structure input.\n    Equivalence uses the input's atomic species, positions and symmetry,\n    not magnetic moments. Supply an ordered structure. No files are\n    written and the input is not modified. No randomness is used; repeated\n    calls with the same input and library versions give the same order.\n    Enumeration can grow rapidly with size, especially in three dimensions.",
+        "imports": [
+          "ase",
+          "icet",
+          "numbers",
+          "numpy",
+          "pymatgen"
         ]
       },
       {
