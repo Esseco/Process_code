@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md-screening-workflow"
+version = "0.1.0"
+description = "A small continuous MD screening workflow built on Process_MD"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["process-md[analysis]>=0.1.0,<0.2"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+chgnet = ["process-md[chgnet]>=0.1.0,<0.2"]
+mace = ["process-md[mace]>=0.1.0,<0.2"]
+uncertainty = ["process-md[uncertainty]>=0.1.0,<0.2"]
+jumps = ["process-md[jumps]>=0.1.0,<0.2"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["md_screening*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --import-mode=importlib"

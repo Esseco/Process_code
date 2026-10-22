@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/
+.md_screening_verify_*/
+runs/
+*.traj
+*.pth
+*.pt
+*.ckpt

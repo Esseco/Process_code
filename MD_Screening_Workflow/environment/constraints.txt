@@ -1,0 +1,8 @@
+# Borrow these existing py-mace packages without replacing its model stack.
+numpy==2.2.6
+scipy==1.17.1
+torch==2.9.1
+ase==3.27.0
+mace-torch==0.3.14
+e3nn==0.4.4
+pymatgen==2025.10.7
