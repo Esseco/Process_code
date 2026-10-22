@@ -18,9 +18,9 @@ python -m unittest Process_MLIP.tests.test_relax
 | test_md_timing.py | 系综默认步长、显式覆盖、累计时间、steps/s 和 CUDA 同步边界 |
 | test_md_workflow.py | 多阶段参数优先级、动量衔接、预检查与失败报告 |
 | test_msd.py | pymatgen 多起点与手工位移对比较、归一化、周期展开、漂移、分段、短尾帧及缺依赖 |
-| test_transport.py | pymatgen 默认加权、None/单端/手动区间、fs 单位、斜率下限、电荷及输出保护 |
+| test_transport.py | pymatgen 默认加权、拟合区间、单位/电荷/斜率下限、末端 MSD 自动/手动 1D/2D、阈值与三维兼容、输出保护 |
 | test_trajectory.py | 帧选择、文件格式、原子顺序、晶胞/动量及覆盖保护 |
-| test_examples.py | MD/MSD/导率示例、八模型批任务、六组温度/时长扫描 |
+| test_examples.py | MD/MSD/导率示例、独立与批处理降维输出、八模型批任务、六组温度/时长扫描 |
 
 `_support.py` 是共享夹具，不定义 TestCase；测试不再互相导入 TestCase。
 `public_api.json` 保存 14 个公开签名；export_msd 新增 min_obs=30，fit_msd 两端时间默认 None，原手动区间调用兼容，拟合器用 pymatgen 原生默认值。

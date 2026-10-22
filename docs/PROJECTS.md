@@ -5,6 +5,7 @@
 | [Process_Vasp](../Process_Vasp/README.md) | 工具包 | VASP 输入、结果与可恢复 atomate2 工作流 |
 | [Process_Struct](../Process_Struct/README.md) | 工具包 | 通用结构特征、畸变、容量与连通性 |
 | [Process_LayeredOxide](../Process_LayeredOxide/README.md) | 工具包 | 层状氧化物相变、层特征、相图与电压 |
+| [Process_Phasediagram](../Process_Phasediagram/README.md) | 工具包 | 插层电极相图绘制与 Benchmark：凸包形状误差、相区间 IoU |
 | [Process_face](../Process_face/README.md) | 工具包 | 表面 slab 生成、固定原子与表面配置 |
 | [Process_MLIP](../Process_MLIP/README.md) | 工具包 | 基于 ASE calculator 的结构弛豫与四模型 NVT/NPT 分子动力学 |
 | [Process_AL_MC](../Process_AL_MC/README.md) | 工具包 | 层状氧化物 MC 排序与 MACE 弛豫 |

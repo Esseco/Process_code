@@ -16,6 +16,10 @@ FIT_END_PS = None                    # None: 最晚有效 lag；可手动填 ps
 ION_CHARGE = 1                      # 电荷数；多元素如 {"Li": 1, "Na": 1}
 TEMPERATURE_K = 600                  # 实际 NVT 温度；体积自动从轨迹读取
 FRAME_INTERVAL_FS = None             # 自动读同目录 report.json；无报告时填保存帧间隔
+DIFFUSION_MODE = "auto"              # 自动补算；"3d" 关闭，"2d"/"1d" 手动
+AXES = "xy"                         # 手动模式的 Cartesian 轴；层面须平行所选面
+ANISOTROPY_THRESHOLD = 10            # 拟合区间末端 MSD 分量倍率阈值，>1
+MIN_MSD_A2 = 1.0                    # 末端总 MSD 小于此值跳过自动补算；0 关闭门槛
 
 
 def main():
@@ -28,11 +32,20 @@ def main():
     result = fit_msd(msd_csv, species=SPECIES,
                      fit_start_ps=FIT_START_PS, fit_end_ps=FIT_END_PS,
                      temperature_K=TEMPERATURE_K, volume_A3=volume,
+                     diffusion_mode=DIFFUSION_MODE, axes=AXES,
+                     anisotropy_threshold=ANISOTROPY_THRESHOLD,
+                     min_msd_A2=MIN_MSD_A2,
                      ion_charge=ION_CHARGE, output_json=transport_json, overwrite=True)
     print(f"MSD: {msd_csv}\nTransport: {transport_json}")
     for row in result["results"]:
         print(f"{row['species']}: D={row['diffusion_cm2_s']:.6g} cm²/s; "
               f"sigma_NE={row['conductivity_NE_S_cm']:.6g} S/cm")
+        print(f"方向诊断：{row['anisotropy']['status']}")
+        reduced = row["reduced_dimensional"]
+        if reduced is not None:
+            print(f"{reduced['dimension']}D ({reduced['axes']}): "
+                  f"D={reduced['diffusion_cm2_s']:.6g} cm²/s; "
+                  f"sigma_NE={reduced['conductivity_NE_S_cm']:.6g} S/cm")
     return result
 
 

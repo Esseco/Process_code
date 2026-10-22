@@ -21,6 +21,7 @@ FIELDS = [
     "phase",
     "converged",
     "ranking_eligible",
+    "structure_check",
     "structure_path",
     "na_occupation",
     "tm_occupation",

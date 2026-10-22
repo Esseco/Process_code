@@ -11,6 +11,9 @@ from ase.optimize import LBFGS
 from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 from scipy.optimize import linear_sum_assignment
+from .structure_check import (
+    DEFAULT_ENERGY_JUMP_PER_ATOM, LayeredFrameworkReference, check_structure, compact_structure_check,
+)
 from .occupation_history import ReferenceOccupations, pack_occupation, site_layout
 
 
@@ -67,6 +70,7 @@ class LayeredOxide_MCOrderingClass:
         "occupation_history_seed",
         "occupation_reference_file",
         "min_improvement",
+        "structure_check_parameters",
     }
 
     def __init__(
@@ -102,6 +106,7 @@ class LayeredOxide_MCOrderingClass:
         occupation_history_seed=None,
         occupation_reference_file=None,
         min_improvement=None,
+        structure_check_parameters=None,
     ):
         self.structure = (
             self._load_structure(structure)
@@ -131,6 +136,8 @@ class LayeredOxide_MCOrderingClass:
         if min_improvement is not None:
             self.energy_tol = float(min_improvement)
         self.min_improvement = min_improvement
+        self.structure_check_parameters = dict(structure_check_parameters or {})
+        self._configure_structure_checks()
         self.occupation_history_scope = occupation_history_scope
         self.occupation_history_seed = occupation_history_seed
         self.occupation_reference_file = occupation_reference_file
@@ -278,6 +285,7 @@ class LayeredOxide_MCOrderingClass:
             self.energy_tol = float(self.min_improvement)
         if isinstance(self.max_duplicate_trials, bool) or not isinstance(self.max_duplicate_trials, int) or self.max_duplicate_trials <= 0:
             raise ValueError("max_duplicate_trials must be a positive integer")
+        self._configure_structure_checks()
         self.actual_mc_steps = 0
         self.stop_reason = None
         self.duplicate_rejections = 0
@@ -340,6 +348,8 @@ class LayeredOxide_MCOrderingClass:
                 "na_remove_num": self.na_remove_num,
                 "max_duplicate_trials": self.max_duplicate_trials,
                 "save_relax_traj": self.save_relax_traj,
+                "structure_check_parameters": self._check_settings,
+                "structure_check_uncertain_policy": "retain_with_evidence",
                 "model_path": str(self.model_path) if self.model_path else None,
                 "model_paths": (
                     [str(p) for p in model_paths]
@@ -500,6 +510,59 @@ class LayeredOxide_MCOrderingClass:
     # Initialization
     # ============================================================
 
+    def _configure_structure_checks(self):
+        settings = {"minimum_distance": 0.6,
+                    "energy_jump_per_atom": DEFAULT_ENERGY_JUMP_PER_ATOM}
+        supplied = dict(self.structure_check_parameters or {})
+        if set(supplied) - set(settings):
+            raise ValueError("unknown structure_check_parameters")
+        settings.update(supplied)
+        if any(isinstance(v, bool) or not isinstance(v, (int, float))
+               or not math.isfinite(v) or v <= 0 for v in settings.values()):
+            raise ValueError("structure check thresholds must be finite and positive")
+        self._check_settings = settings
+        self._framework_reference = None
+        self.structure_check_counts = {"basic": 0, "framework": 0, "rejected": 0, "uncertain": 0}
+
+    def _prepare_structure_check(self, structure):
+        basic = check_structure(structure, minimum_distance=self._check_settings["minimum_distance"])
+        if basic["status"] == "invalid":
+            raise ValueError(f"invalid initial structure: {basic}")
+        # Never promote a relaxed current state into the trusted reference.
+        self._framework_reference = LayeredFrameworkReference(
+            structure, minimum_distance=self._check_settings["minimum_distance"]
+        )
+
+    def _check_candidate(self, structure, evaluation, *, initial=False):
+        energy = evaluation["energy_mean_per_atom"]
+        jumped = (not initial and math.isfinite(energy) and
+                  abs(energy - self.current_eval["energy_mean_per_atom"]) >=
+                  self._check_settings["energy_jump_per_atom"])
+        competitive = (initial or len(self.pool) < self.pool_size or
+                       energy <= self.pool[-1]["energy"])
+        full = initial or jumped or competitive
+        result = check_structure(
+            structure, reference=self._framework_reference,
+            minimum_distance=self._check_settings["minimum_distance"],
+            energy_per_atom=energy, check_framework=full,
+        )
+        self.structure_check_counts["basic"] += 1
+        if result["scope"] == "framework":
+            self.structure_check_counts["framework"] += 1
+        if result["status"] in {"invalid", "uncertain"}:
+            key = "rejected" if result["status"] == "invalid" else "uncertain"
+            self.structure_check_counts[key] += 1
+        # Keep trace/pool compact: full graphs are available from the public checker.
+        result = compact_structure_check(result)
+        result["energy_jump_triggered"] = bool(jumped)
+        evaluation["structure_check"] = result
+        if initial and result["status"] == "invalid":
+            self.stop_reason = "invalid_initial_structure"
+            self.trace.append({"step": 0, "status": "initial_structure_rejected", "structure_check": result})
+            self._save_checkpoint()
+            raise ValueError(f"invalid initial structure after relaxation: {result}")
+        return result
+
     def prepare(self):
         if self.mode.startswith("TM_MC_"):
             self._prepare_tm()
@@ -564,10 +627,14 @@ class LayeredOxide_MCOrderingClass:
             self.out_dir / "initial_unrelaxed.vasp"
         )
 
+        self._prepare_structure_check(s)
+
         relaxed, eval_data, relax_traj = self._relax_and_evaluate(
             s,
             traj_dir=self.out_dir,
         )
+
+        self._check_candidate(relaxed, eval_data, initial=True)
 
         self.current_structure = relaxed
         self.current_eval = eval_data
@@ -622,10 +689,14 @@ class LayeredOxide_MCOrderingClass:
 
         self._save_vasp(s, self.out_dir / "initial_unrelaxed.vasp")
 
+        self._prepare_structure_check(s)
+
         relaxed, eval_data, relax_traj = self._relax_and_evaluate(
             s,
             traj_dir=self.out_dir,
         )
+
+        self._check_candidate(relaxed, eval_data, initial=True)
 
         self.current_structure = relaxed
         self.current_eval = eval_data
@@ -1156,6 +1227,7 @@ class LayeredOxide_MCOrderingClass:
                         eval_data["force_uncertainty_var_max"]
                     ),
                     "structure_file": structure_file.name,
+                    "structure_check": eval_data.get("structure_check"),
                     "relax_traj_file": traj_file.name if self.save_relax_traj else None,
                     "relax_traj_contains_structure": self.save_relax_traj,
                     "relax_traj_contains_committee_info": self.save_relax_traj,
@@ -1183,6 +1255,7 @@ class LayeredOxide_MCOrderingClass:
                 "actual_mc_steps": getattr(self, "actual_mc_steps", 0),
                 "stop_reason": getattr(self, "stop_reason", None),
                 "duplicate_rejections": getattr(self, "duplicate_rejections", 0),
+                "structure_check_counts": self.structure_check_counts,
             },
             self.out_dir / "status.json",
         )
@@ -1215,10 +1288,14 @@ class LayeredOxide_MCOrderingClass:
             self.out_dir / "initial_unrelaxed.vasp",
         )
 
+        self._prepare_structure_check(input_structure)
+
         relaxed, eval_data, relax_traj = self._relax_and_evaluate(
             input_structure,
             traj_dir=self.out_dir,
         )
+
+        self._check_candidate(relaxed, eval_data, initial=True)
 
         self.current_structure = relaxed
         self.current_eval = eval_data
@@ -1327,6 +1404,23 @@ class LayeredOxide_MCOrderingClass:
             self.actual_mc_steps = step
             self._record_occupation(trial_key)
 
+            check = self._check_candidate(trial_relaxed, trial_eval)
+            if check["status"] == "invalid":
+                self.trace.append({
+                    "step": int(step), "status": "structure_rejected", "accepted": False,
+                    "structure_check": check,
+                    "trial_energy_mean_per_atom": float(trial_eval["energy_mean_per_atom"])
+                    if math.isfinite(trial_eval["energy_mean_per_atom"]) else None,
+                    "current_energy_mean_per_atom": float(self.current_eval["energy_mean_per_atom"]),
+                    "best_energy_mean_per_atom": float(self.best_energy),
+                })
+                if self._should_stop(step):
+                    self.stop_reason = "patience"
+                    break
+                if step % self.save_every == 0:
+                    self._save_checkpoint()
+                continue
+
             accepted, prob, dE = self._accept(trial_eval)
  
             if accepted:
@@ -1355,6 +1449,7 @@ class LayeredOxide_MCOrderingClass:
                 {
                     "step": int(step),
                     "status": "normal",
+                    "structure_check": check,
                     "accepted": bool(accepted),
                     "accept_prob": float(prob),
                     "delta_E_mean_per_atom": float(dE),

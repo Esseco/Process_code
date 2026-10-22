@@ -20,6 +20,7 @@ from Process_MLIP.tests._support import (
     MDExampleHarness,
     PROJECT_ROOT,
     ZeroCalculator,
+    TemporaryDirectoryMixin,
 )
 
 
@@ -27,7 +28,103 @@ BENCHMARK_TASKS = EXAMPLES_DIR / "md_benchmark" / "tasks"
 SYM_SCAN_TASKS = EXAMPLES_DIR / "sym_md_scan"
 
 
+class PostprocessExampleTests(TemporaryDirectoryMixin, unittest.TestCase):
+    def setUp(self):
+        self.root = self.make_temp_directory()
+
+    def make_trajectory(self, folder, species, moving_axes):
+        folder.mkdir(parents=True)
+        trajectory = folder/'md.traj'
+        # Deterministic motion exercises plumbing only, not diffusion physics.
+        frames = []
+        for frame_index in range(41):
+            positions = [[i % 8, i // 8, 0] for i in range(32)] + [[10, 10, 10]]
+            atoms = Atoms([species]*32 + ['O'], positions=positions, cell=[20]*3, pbc=True)
+            for axis in moving_axes:
+                atoms.positions[:32, 'xyz'.index(axis)] += frame_index * .03
+            frames.append(atoms)
+        write(trajectory, frames)
+        report = dict(status='completed', trajectory_file=str(trajectory),
+                      parameters=dict(ensemble='nvt', temperature_K=600,
+                                      timestep_fs=100, trajectory_interval=1),
+                      steps_completed=40, steps_per_second=12.5,
+                      final_state=dict(volume_angstrom3=8000))
+        (folder/'report.json').write_text(json.dumps(report))
+        return trajectory
+
+    def test_independent_postprocess_exports_3d_and_automatic_2d(self):
+        from Process_MLIP.examples import postprocess_md
+        trajectory = self.make_trajectory(self.root/'stage', 'Na', 'xy')
+        original = trajectory.read_bytes()
+        output = self.root/'analysis'
+        with patch.multiple(postprocess_md, TRAJECTORY=trajectory, OUTPUT_DIR=output,
+                            SPECIES='Na', TEMPERATURE_K=600, ANISOTROPY_THRESHOLD=7), \
+                contextlib.redirect_stdout(io.StringIO()) as stdout:
+            result = postprocess_md.main()
+        row = result['results'][0]
+        self.assertEqual(result['anisotropy_threshold'], 7)
+        self.assertEqual(row['reduced_dimensional']['axes'], 'xy')
+        self.assertAlmostEqual(row['reduced_dimensional']['diffusion_m2_s'],
+                               row['diffusion_m2_s']*1.5)
+        self.assertIn('2D (xy)', stdout.getvalue())
+        self.assertEqual(json.loads((output/'transport.json').read_text()), result)
+        self.assertEqual(trajectory.read_bytes(), original)
+
+    def test_batch_flat_csv_keeps_3d_and_adds_both_reduced_dimensions(self):
+        from Process_MLIP.examples import batch_postprocess_md
+        for system, species, axes in [('LCO', 'Li', 'xy'), ('NVP', 'Na', 'z')]:
+            self.make_trajectory(self.root/'method'/'results'/system/'01_nvt', species, axes)
+        output = self.root/'analysis'
+        summary = output/'out.csv'
+        with patch.multiple(batch_postprocess_md, INIT_DIR=self.root, OUTPUT_DIR=output,
+                            SUMMARY_CSV=summary, ANISOTROPY_THRESHOLD=8, MIN_MSD_A2=1.3), \
+                contextlib.redirect_stdout(io.StringIO()):
+            result = batch_postprocess_md.main()
+        self.assertEqual(set(result['status']), {'completed'})
+        self.assertEqual(set(result['reduced_dimension']), {1, 2})
+        self.assertEqual(set(result['reduced_axes']), {'xy', 'z'})
+        self.assertEqual(set(result['steps_per_second']), {12.5})
+        self.assertEqual(set(result['anisotropy_threshold']), {8})
+        self.assertEqual(set(result['min_msd_A2']), {1.3})
+        self.assertFalse(result['low_msd'].any())
+        with summary.open() as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertTrue(float(row['diffusion_cm2_s']) > 0)
+            self.assertTrue(float(row['reduced_diffusion_cm2_s']) > 0)
+            self.assertIn('sigma_z_S_cm', row)
+            self.assertTrue(Path(row['msd_csv']).is_file())
+
+    def test_independent_postprocess_forwards_min_msd_and_marks_low_curve(self):
+        from Process_MLIP.examples import postprocess_md
+        trajectory = self.make_trajectory(self.root/'stage', 'Na', 'xy')
+        with patch.multiple(postprocess_md, TRAJECTORY=trajectory, OUTPUT_DIR=self.root/'analysis',
+                            SPECIES='Na', MIN_MSD_A2=4), \
+                contextlib.redirect_stdout(io.StringIO()):
+            result = postprocess_md.main()
+        row = result['results'][0]
+        self.assertEqual(result['min_msd_A2'], 4)
+        self.assertTrue(row['low_msd'])
+        self.assertIsNone(row['reduced_dimensional'])
+        self.assertGreater(row['diffusion_cm2_s'], 0)
+
+
 class MDExampleTests(MDExampleHarness, unittest.TestCase):
+    def test_invalid_dimensional_fit_options_rejected_before_model_loading(self):
+        config = dict(enabled=True, fit_start_ps=None, fit_end_ps=None, ion_charge=1,
+                      anisotropy_threshold=1)
+        with patch.object(example, 'TRANSPORT_FIT', config):
+            with self.assertRaisesRegex(ValueError, 'anisotropy_threshold'):
+                self.run_example(dict(enabled=True, species='Cu'))
+        self.loader.assert_not_called()
+
+    def test_invalid_min_msd_rejected_before_model_loading(self):
+        with patch.object(example, 'TRANSPORT_FIT', dict(enabled=True, ion_charge=1, min_msd_A2=-1)):
+            with self.assertRaisesRegex(ValueError, 'min_msd_A2'):
+                self.run_example(dict(enabled=True, species='Cu'))
+        self.loader.assert_not_called()
+
     def test_enabled_exports_last_nvt_after_md(self):
         text = self.run_example(dict(enabled=True, stage="last_nvt", species="Cu",
                                      output_csv=None, overwrite=False))

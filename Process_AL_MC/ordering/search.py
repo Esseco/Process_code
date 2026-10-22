@@ -6,6 +6,9 @@ from pathlib import Path
 
 from pymatgen.core import Structure
 
+from ..structure_check import (
+    DEFAULT_ENERGY_JUMP_PER_ATOM, LayeredFrameworkReference, check_structure, compact_structure_check,
+)
 from .common import occupation_key, tm_key, write_json
 from .planning import build_structure, random_occupation
 
@@ -41,6 +44,7 @@ def run_chain(plan, matrix, initial, chain_index, root, store, evaluator):
     best = float("inf")
     repeats, restarts, stagnation, steps, cached = 0, 0, 0, 0, 0
     reason = "max_steps"
+    framework = LayeredFrameworkReference(build_structure(matrix, initial))
 
     def evaluate(occupation):
         key = occupation_key(occupation)
@@ -79,8 +83,14 @@ def run_chain(plan, matrix, initial, chain_index, root, store, evaluator):
             if isinstance(final, Structure):
                 final = final.as_dict()
             decoded = Structure.from_dict(final)
-            if decoded.composition.get_el_amt_dict() != structure.composition.get_el_amt_dict():
-                raise ValueError("Evaluation changed fixed composition")
+            eligible = observation.get("converged") is True and observation.get("phase") == plan["phase"]
+            jumped = current_energy is not None and abs(energy - current_energy) >= DEFAULT_ENERGY_JUMP_PER_ATOM
+            check = compact_structure_check(check_structure(
+                decoded, reference=framework, energy_per_atom=energy,
+                expected_composition=structure.composition.get_el_amt_dict(),
+                check_framework=eligible or jumped,
+            ))
+            check["energy_jump_triggered"] = bool(jumped)
             # Key provenance is retained separately from any serialized POSCAR ordering.
             path = directory / "structures" / f"{key}.vasp"
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -100,8 +110,9 @@ def run_chain(plan, matrix, initial, chain_index, root, store, evaluator):
                 "det_H": matrix["det_H"],
                 "seed": seed,
                 "model_version": plan["model"]["version"],
+                "structure_check": check,
             }
-            result["ranking_eligible"] = result["converged"] and result["phase"] == plan["phase"]
+            result["ranking_eligible"] = eligible and check["status"] != "invalid"
             store.complete(key, owner, result)
             return result, True
         except BaseException as error:

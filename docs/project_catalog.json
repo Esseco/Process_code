@@ -2594,6 +2594,73 @@
     "scan_errors": []
   },
   {
+    "project": "Process_Phasediagram",
+    "purpose": "插层电极相图绘制与 Benchmark：凸包形状误差、相区间 IoU",
+    "kind": "工具包",
+    "inputs": "绘图：x/eform/phase/is_stable；评价：预测/参考下凸包顶点或相存在区间字典",
+    "outputs": "Matplotlib figure/axes，或 hull_error/integral_error、phase_error/mean_iou/phase_iou",
+    "dependencies": "numpy；绘图另需 matplotlib，CSV 示例需 pandas（Python >= 3.11）",
+    "caution": "能量单位及归一化必须一致；绘图信任传入的全局稳定性，仅可选计算各相下凸包；不识别相、不运行 DFT。见 [绘图与参数示例](PLOTTING.md) 和 [评价约定](BENCHMARK.md)。",
+    "preferred": [
+      "calculate_hull_error",
+      "calculate_phase_iou_error",
+      "plot_phase_diagram"
+    ],
+    "symbols": [
+      {
+        "file": "Process_Phasediagram/examples/plot_phase_diagram.py",
+        "name": "main",
+        "line": 37,
+        "signature": "main()",
+        "doc": "Read the configured CSV or demo arrays, plot, and optionally save/show.",
+        "imports": [
+          "Process_Phasediagram",
+          "matplotlib",
+          "pandas",
+          "pathlib"
+        ]
+      },
+      {
+        "file": "Process_Phasediagram/metrics.py",
+        "name": "calculate_hull_error",
+        "line": 81,
+        "signature": "calculate_hull_error(pred_hull: HullInput, ref_hull: HullInput, x_range: ArrayLike | None=None, *, return_curves: bool=False)",
+        "doc": "Return the exact mean absolute difference between endpoint-relative hulls.\n\nParameters\n----------\npred_hull, ref_hull\n    (N, 2) arrays of (x, energy), or mappings with 1D ``x`` and ``energy``\n    columns. Vertices are sorted by x; duplicate x, NaN/Inf, fewer than two\n    points and nonconvex inputs raise ValueError. Collinear points are allowed.\n    Slopes must be nondecreasing, within 64 machine eps relative roundoff.\n    Both energies must use the same unit/normalization, e.g. meV/TM.\nx_range\n    (xmin, xmax), strictly increasing and covered by both hulls. Defaults to\n    their common coverage. Extrapolation and zero-width ranges are rejected.\nreturn_curves\n    Also return ``x``, ``pred_relative_energy``, ``ref_relative_energy`` on\n    the union of interior vertex positions and evaluation endpoints.\n\nReturns\n-------\ndict\n    ``hull_error`` in input energy units and ``integral_error`` in energy\n    times x units. Each hull has its own endpoint chord subtracted over the\n    evaluation range. Piecewise linear integration splits sign crossings\n    analytically, without sampling error (subject to floating-point precision).\n\nNotes\n-----\nPure deterministic calculation: no mutation, files, models or random seed.\nOnly prepared computational reference hulls are appropriate for this metric.\n\nExamples\n--------\n>>> calculate_hull_error([[0, 0], [0.5, -2], [1, 0]], [[0, 0], [1, 0]])\n{'hull_error': 1.0, 'integral_error': 1.0}",
+        "imports": [
+          "__future__",
+          "collections",
+          "numpy",
+          "typing"
+        ]
+      },
+      {
+        "file": "Process_Phasediagram/metrics.py",
+        "name": "calculate_phase_iou_error",
+        "line": 182,
+        "signature": "calculate_phase_iou_error(pred_phases: PhaseInput, ref_phases: PhaseInput, *, x_range: ArrayLike, delta: float=0.0)",
+        "doc": "Return macro-averaged phase IoU error after symmetric interval dilation.\n\nParameters\n----------\npred_phases, ref_phases\n    Mappings from phase names (strings) to (N, 2) arrays/lists of (start, end).\n    Multiple disconnected intervals and coexistence across labels are allowed.\n    Overlapping/touching intervals within a phase are merged. [] is allowed.\n    All input intervals must be finite with start < end, even outside x_range.\nx_range\n    Required finite (xmin, xmax), xmin < xmax; same x units as intervals/delta.\ndelta\n    Finite nonnegative scalar. Both predicted and reference intervals expand\n    left/right by delta before clipping to x_range. This is dilation IoU,\n    not a rule assigning perfect scores to boundary shifts smaller than delta.\n\nReturns\n-------\ndict\n    ``phase_error = 1 - mean_iou``, ``mean_iou`` and ``phase_iou`` (per-label\n    IoU), all in [0, 1]. Each label in either mapping has equal weight. A label\n    missing from either mapping scores 0. If a label exists in both mappings\n    but both dilated/clipped sets are empty, its IoU is 1 (equal empty sets).\n    Two empty mappings raise ValueError because the macro mean is undefined.\n\nNotes\n-----\nNo phase identification, mutation, file I/O or randomness. Invalid inputs\nraise ValueError. Repeat calls on identical inputs return identical results.\n\nExamples\n--------\n>>> calculate_phase_iou_error({'O3': [(0, 1)]}, {'O3': [(0, 1)]}, x_range=(0, 1))\n{'phase_error': 0.0, 'mean_iou': 1.0, 'phase_iou': {'O3': 1.0}}",
+        "imports": [
+          "__future__",
+          "collections",
+          "numpy",
+          "typing"
+        ]
+      },
+      {
+        "file": "Process_Phasediagram/plotting.py",
+        "name": "plot_phase_diagram",
+        "line": 38,
+        "signature": "plot_phase_diagram(x, eform, phase, is_stable, *, phase_hulls=False, phase_styles=None, point_size=28, stable_size=85, phase_hull_size=50, unstable_alpha=0.22, phase_hull_alpha=0.9, stable_alpha=0.95, hull_atol=1e-10, linewidth=1.6, edgewidth=1.2, xlabel='$\\\\mathregular{x}$ in $\\\\mathregular{Na_xTMO_2}$', ylabel='Formation energy (meV / formula unit)', figsize=(6.5, 4.8), ax=None, legend=True, font_family='Arial', font_size=13, xlim=None, ylim=None)",
+        "doc": "Plot supplied formation energies and global stability flags.\n\nParameters\n----------\nx, eform, phase, is_stable\n    Equal-length nonempty 1D arrays (or pandas Series). x/eform must be\n    finite real numbers, phase nonempty strings, is_stable booleans or 0/1.\n    eform is used unchanged: supply a consistent energy normalization and\n    set ylabel to its actual unit. Global stability is trusted, not inferred.\nphase_hulls : bool\n    Also compute each phase's lower hull, draw matching colored dashed\n    lines, and make its hull points opaque without black edges. Globally\n    stable points always take precedence (larger, black edges).\nphase_styles : dict or None\n    Per-phase overrides, e.g. {'O3': {'color': '#397CA5', 'marker': 's'}}.\n    Missing properties use DEFAULT_PHASE_STYLES; unknown phases use X.\npoint_size, stable_size, phase_hull_size : float\n    Scatter areas in points squared for ordinary, global stable, and\n    non-global phase hull points. Non-hull points use unstable_alpha\n    (0 transparent, 1 opaque).\nfont_family : str\n    Font for axis labels, major tick labels, offset text and legend.\n    Defaults to Arial; install the font on the rendering machine.\nfont_size : float\n    Axis label, major tick label and legend size in points (default 13).\nunstable_alpha, phase_hull_alpha, stable_alpha : float\n    Opacity for ordinary, phase hull, and global stable points (0 to 1).\n    Global stable points default to 0.95; the black hull line stays opaque.\nxlim, ylim : tuple or None\n    Optional (minimum, maximum) axis limits. None (default) leaves automatic\n    scaling unchanged; on existing axes, any caller-set limits are retained.\nhull_atol : float\n    Absolute energy tolerance for highlighting points on a phase hull,\n    including tied minima and collinear points. Same unit as eform.\n    The hull line itself uses the exact minima, without tolerance pruning.\nlinewidth, edgewidth : float\n    Hull line and global stable marker edge widths in points.\nax : matplotlib.axes.Axes or None\n    Existing axes, or create a figure with figsize (inches).\n\nReturns\n-------\n(figure, axes)\n    Caller owns saving/showing/closing. Global stable points are connected\n    in increasing x with a black solid line; at duplicate x the lowest\n    marked energy is used for the line, while all marked points are shown.\n    Zero marked points produces no global line; one produces only a marker.\n    A one-composition phase has markers but no dashed segment.\n\nNotes\n-----\nNo energy conversion, phase identification, files, randomness or input\nmutation. Global points/line render above phase hull points/lines, which\nrender above other structures. Only left/bottom major ticks are shown.\nCalls add artists to ax. Metrics still need only NumPy;\nMatplotlib is needed only when this function is called.",
+        "imports": [
+          "matplotlib",
+          "numpy"
+        ]
+      }
+    ],
+    "scan_errors": []
+  },
+  {
     "project": "Process_face",
     "purpose": "表面 slab 生成、固定原子与表面配置",
     "kind": "工具包",
@@ -3083,7 +3150,7 @@
       {
         "file": "Process_MLIP/examples/batch_postprocess_md.py",
         "name": "main",
-        "line": 21,
+        "line": 25,
         "signature": "main()",
         "doc": "每个 NVT 阶段一行；失败也记录，避免一个任务中断整批。",
         "imports": [
@@ -3238,7 +3305,7 @@
       {
         "file": "Process_MLIP/examples/mlip_md.py",
         "name": "main",
-        "line": 193,
+        "line": 197,
         "signature": "main(argv=None)",
         "doc": "Preview configuration or run MD after editing the parameters above.",
         "imports": [
@@ -3254,7 +3321,7 @@
       {
         "file": "Process_MLIP/examples/msd.py",
         "name": "main",
-        "line": 40,
+        "line": 44,
         "signature": "main()",
         "doc": "Export native max-mode lag sampling; fit only an explicitly chosen range.",
         "imports": [
@@ -3265,7 +3332,7 @@
       {
         "file": "Process_MLIP/examples/postprocess_md.py",
         "name": "main",
-        "line": 21,
+        "line": 25,
         "signature": "main()",
         "doc": "复用项目后处理函数；只写 msd.csv 和 transport.json。",
         "imports": [
@@ -3377,13 +3444,14 @@
       {
         "file": "Process_MLIP/md.py",
         "name": "run_md",
-        "line": 28,
-        "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)",
-        "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\ntimestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
+        "line": 29,
+        "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1, segment_steps=None, on_segment=None)",
+        "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\n\nsegment_steps optionally advances the SAME integrator in blocks. It must\nbe a positive multiple of trajectory_interval and log_interval; total\nsteps must align with trajectory_interval as well. After\neach block, on_segment(event) sees flushed output and completed steps,\ntime_fs, paths, temperature_K and saved-frame interval. Return True to\nrequest a normal early stop; False/None continues. No decision rules are\nbuilt in. This is in-process continuity, not cross-process checkpointing.\ntimestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
         "imports": [
           "ase",
           "csv",
           "json",
+          "numbers",
           "numpy",
           "pathlib",
           "time",
@@ -3491,9 +3559,9 @@
       {
         "file": "Process_MLIP/transport.py",
         "name": "fit_msd",
-        "line": 41,
-        "signature": "fit_msd(msd_csv, *, fit_start_ps=None, fit_end_ps=None, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False)",
-        "doc": "Fit MSD CSV and estimate uncorrelated Nernst–Einstein conductivity.\n\nInclusive fit window in ps; None defaults to the first/last positive lag\nof each species/segment separately. Zero lag is excluded. A manual bound\nmay be supplied on either side; this does not detect the diffusive regime.\nPositive temperature in K and fixed cell volume\nin Å³. ion_charge is a signed nonzero charge number (e.g. +1), or a dict\nmapping selected elements to charge numbers. species is a string/list or\nNone (all CSV elements). Fits each segment separately, with a free intercept\nand at least three positive-lag samples. Calls pymatgen's native fitter\nwith its defaults (max-mode, weights 1/lag, positive slope floor), after\nselecting the window. D_total=slope_total/6; D_axis=slope_axis/2.\nSlopes/intercepts describe the raw weighted line before its slope floor;\nr_squared remains ordinary, unweighted R² of the fitted line.\nNative slope-floor flags identify zero/negative slopes replaced by its\nsmall positive value; these results do not establish resolved diffusion.\nReturns SI and cm²/s diffusion, S/m and S/cm conductivity, and diagnostics.\nOptional JSON refuses overwrite by default. No uncertainty or correlation\ncorrection is inferred; R² alone does not establish a diffusive regime.",
+        "line": 125,
+        "signature": "fit_msd(msd_csv, *, fit_start_ps=None, fit_end_ps=None, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False, diffusion_mode='auto', axes='xy', anisotropy_threshold=10, min_msd_A2=1.0)",
+        "doc": "Fit MSD CSV and estimate uncorrelated Nernst–Einstein conductivity.\n\nInclusive fit window in ps; None defaults to the first/last positive lag\nof each species/segment separately. Zero lag is excluded. A manual bound\nmay be supplied on either side; this does not detect the diffusive regime.\nPositive temperature in K and fixed cell volume\nin Å³. ion_charge is a signed nonzero charge number (e.g. +1), or a dict\nmapping selected elements to charge numbers. species is a string/list or\nNone (all CSV elements). Fits each segment separately, with a free intercept\nand at least three positive-lag samples. Calls pymatgen's native fitter\nwith its defaults (max-mode, weights 1/lag, positive slope floor), after\nselecting the window. D_total=slope_total/6; D_axis=slope_axis/2.\nSlopes/intercepts describe the raw weighted line before its slope floor;\nr_squared remains ordinary, unweighted R² of the fitted line.\nNative slope-floor flags identify zero/negative slopes replaced by its\nsmall positive value; these results do not establish resolved diffusion.\nReturns SI and cm²/s diffusion, S/m and S/cm conductivity, and diagnostics.\nOptional JSON refuses overwrite by default. No uncertainty or correlation\ncorrection is inferred; R² alone does not establish a diffusive regime.\n\ndiffusion_mode='auto' keeps 3D results, then checks Cartesian MSD at the\nlast lag in the fit window: largest/middle > threshold adds 1D; otherwise\nmiddle/smallest > threshold adds 2D. All zero with the MSD gate disabled\nmakes it indeterminate.\nZero denominators are recorded as None; positive/zero triggers a supplement.\nNative slope-floor flags remain diagnostics, not evidence of diffusion.\n'3d' disables the check; '1d'/'2d' manually projects onto axes ('x'/'xy', etc.).\naxes must be distinct Cartesian letters, not crystallographic directions.\nThreshold must be finite and >1 (default 10); it is a heuristic, not a\nproof of dimensionality. Projected fits use the same lag window and native\ndefaults, with D=slope/(2*d). Conductivity still uses the full volume.\nNew anisotropy/reduced_dimensional and directional conductivity fields\nsupplement, never replace, the original 3D fields. No source files change.\nmin_msd_A2=1.0 skips auto supplements when endpoint total MSD is below\nthis nonnegative Å² threshold (0 disables this gate). low_msd flags each\ncurve; 3D results and manual 1D/2D fits remain available. This does not\nidentify thermal vibration or establish a diffusion detection limit.",
         "imports": [
           "csv",
           "json",
@@ -3585,7 +3653,7 @@
       {
         "file": "Process_AL_MC/MC_sample.py",
         "name": "LayeredOxide_MCOrderingClass",
-        "line": 17,
+        "line": 20,
         "signature": "LayeredOxide_MCOrderingClass",
         "doc": "MLIP relaxation and MC ordering for layered Na-TM-O systems.\n\nSupported modes are ``TM_MC_random``, ``TM_MC_input``,\n``Na_MC_input``, and ``Relax``. Models can be loaded when the object is\ncreated; the structure, mode, output directory, and run parameters can be\nsupplied later to :meth:`run`.\n\nCommittee:\n    - one main model performs relaxation\n    - all models evaluate each relaxed structure\n    - MC accept/reject uses committee mean energy per atom\n\nOutput:\n    settings.json\n    trace.json\n    status.json\n    initial_unrelaxed.vasp\n    initial_relaxed.vasp\n    initial_relax_traj.json\n    pool/\n        rank_XXX_step_YYYY.vasp\n        rank_XXX_step_YYYY_relax_traj.json\n        pool_summary.json",
         "imports": [
@@ -3606,8 +3674,8 @@
       {
         "file": "Process_AL_MC/MC_sample.py",
         "name": "LayeredOxide_MCOrderingClass.__init__",
-        "line": 72,
-        "signature": "LayeredOxide_MCOrderingClass.__init__(self, structure=None, mode=None, out_dir=None, temperature=300, max_steps=1000, seed=0, pool_size=50, fmax=0.05, relax_steps=150, relax_cell=True, save_every=100, patience=10, energy_tol=0.001, tm_original_element=None, tm_ratios=None, na_remove_num=0, max_duplicate_trials=100, model_path=None, model_paths=None, main_model_index=0, model_type='chgnet', device='cpu', mace_head=None, mace_default_dtype='float64', initialize='random', full_na_structure=None, save_relax_traj=False, occupation_history_scope=None, occupation_history_seed=None, occupation_reference_file=None, min_improvement=None)",
+        "line": 76,
+        "signature": "LayeredOxide_MCOrderingClass.__init__(self, structure=None, mode=None, out_dir=None, temperature=300, max_steps=1000, seed=0, pool_size=50, fmax=0.05, relax_steps=150, relax_cell=True, save_every=100, patience=10, energy_tol=0.001, tm_original_element=None, tm_ratios=None, na_remove_num=0, max_duplicate_trials=100, model_path=None, model_paths=None, main_model_index=0, model_type='chgnet', device='cpu', mace_head=None, mace_default_dtype='float64', initialize='random', full_na_structure=None, save_relax_traj=False, occupation_history_scope=None, occupation_history_seed=None, occupation_reference_file=None, min_improvement=None, structure_check_parameters=None)",
         "doc": "",
         "imports": [
           "ase",
@@ -3627,7 +3695,7 @@
       {
         "file": "Process_AL_MC/MC_sample.py",
         "name": "LayeredOxide_MCOrderingClass.prepare",
-        "line": 503,
+        "line": 566,
         "signature": "LayeredOxide_MCOrderingClass.prepare(self)",
         "doc": "",
         "imports": [
@@ -3648,7 +3716,7 @@
       {
         "file": "Process_AL_MC/MC_sample.py",
         "name": "LayeredOxide_MCOrderingClass.run",
-        "line": 1259,
+        "line": 1336,
         "signature": "LayeredOxide_MCOrderingClass.run(self, structure=None, mode=None, out_dir=None, **options)",
         "doc": "Configure and execute one MC or relaxation run.\n\nArgs:\n    structure: Structure file path or pymatgen ``Structure``.\n    mode: One of ``TM_MC_random``, ``TM_MC_input``,\n        ``Na_MC_input``, or ``Relax``.\n    out_dir: Directory in which to save the run outputs.\n    **options: Optional run parameters such as ``max_steps``,\n        ``tm_ratios``, ``full_na_structure``, and ``patience``.\n\nReturns:\n    For ``Relax`` and ``Na_MC_input`` without a valid Na/Vac swap, the\n    relaxed structure, final committee evaluation, and relaxation\n    trajectory. Other MC runs return ``None``.",
         "imports": [
@@ -4036,7 +4104,7 @@
       {
         "file": "Process_AL_MC/ordering/export.py",
         "name": "write_csv",
-        "line": 35,
+        "line": 36,
         "signature": "write_csv(path, rows)",
         "doc": "",
         "imports": [
@@ -4048,7 +4116,7 @@
       {
         "file": "Process_AL_MC/ordering/export.py",
         "name": "export_results",
-        "line": 53,
+        "line": 54,
         "signature": "export_results(plan, root, stores, chains)",
         "doc": "",
         "imports": [
@@ -4296,7 +4364,7 @@
       {
         "file": "Process_AL_MC/ordering/search.py",
         "name": "trial",
-        "line": 13,
+        "line": 16,
         "signature": "trial(occupation, matrix, config, rng)",
         "doc": "",
         "imports": [
@@ -4309,7 +4377,7 @@
       {
         "file": "Process_AL_MC/ordering/search.py",
         "name": "run_chain",
-        "line": 33,
+        "line": 36,
         "signature": "run_chain(plan, matrix, initial, chain_index, root, store, evaluator)",
         "doc": "",
         "imports": [
@@ -4317,6 +4385,78 @@
           "pathlib",
           "pymatgen",
           "random"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "compact_structure_check",
+        "line": 17,
+        "signature": "compact_structure_check(result)",
+        "doc": "Keep serializable decisions/metrics without duplicating topology graphs in MC logs.",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "check_structure",
+        "line": 40,
+        "signature": "check_structure(structure, *, expected_composition=None, reference=None, minimum_distance=0.6, energy_per_atom=None, check_framework=False)",
+        "doc": "Return passed/invalid/uncertain evidence; only invalid warrants exclusion.\n\nBasic checking uses a cutoff neighbor list, including periodic self images\nand distinct coincident atoms. minimum_distance reports the closest pair\nwithin the cutoff, or None (all pairs >= cutoff), not an all-pairs minimum.\nFramework context is prepared once from a trusted initial geometry.",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "periodic_framework",
+        "line": 141,
+        "signature": "periodic_framework(structure, cutoff, *, neighbors=None)",
+        "doc": "Rank lattice translations around bond-graph cycles, not Cartesian axes.",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "LayeredFrameworkReference",
+        "line": 204,
+        "signature": "LayeredFrameworkReference",
+        "doc": "Cache initial cutoffs/topology; index roles permit TM species exchanges.\n\nSite order must preserve O/backbone/alkali roles. Whole composition must\nmatch. Initial and trial geometries from one relaxation satisfy this binding;\nfile-backed callers additionally verify provenance before using this class.",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "LayeredFrameworkReference.__init__",
+        "line": 212,
+        "signature": "LayeredFrameworkReference.__init__(self, structure, *, minimum_distance=0.6)",
+        "doc": "",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_AL_MC/structure_check.py",
+        "name": "LayeredFrameworkReference.inspect",
+        "line": 340,
+        "signature": "LayeredFrameworkReference.inspect(self, structure)",
+        "doc": "Apply the existing sufficient domain-rejection rule, never a validity proof.",
+        "imports": [
+          "math",
+          "numpy",
+          "pymatgen"
         ]
       }
     ],

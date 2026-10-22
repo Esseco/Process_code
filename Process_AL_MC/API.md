@@ -54,7 +54,7 @@ main()
 
 ## `LayeredOxide_MCOrderingClass`
 
-源文件：[MC_sample.py](MC_sample.py)，第 17 行。
+源文件：[MC_sample.py](MC_sample.py)，第 20 行。
 
 ```python
 LayeredOxide_MCOrderingClass
@@ -86,17 +86,17 @@ Output:
 
 ## `LayeredOxide_MCOrderingClass.__init__`
 
-源文件：[MC_sample.py](MC_sample.py)，第 72 行。
+源文件：[MC_sample.py](MC_sample.py)，第 76 行。
 
 ```python
-LayeredOxide_MCOrderingClass.__init__(self, structure=None, mode=None, out_dir=None, temperature=300, max_steps=1000, seed=0, pool_size=50, fmax=0.05, relax_steps=150, relax_cell=True, save_every=100, patience=10, energy_tol=0.001, tm_original_element=None, tm_ratios=None, na_remove_num=0, max_duplicate_trials=100, model_path=None, model_paths=None, main_model_index=0, model_type='chgnet', device='cpu', mace_head=None, mace_default_dtype='float64', initialize='random', full_na_structure=None, save_relax_traj=False, occupation_history_scope=None, occupation_history_seed=None, occupation_reference_file=None, min_improvement=None)
+LayeredOxide_MCOrderingClass.__init__(self, structure=None, mode=None, out_dir=None, temperature=300, max_steps=1000, seed=0, pool_size=50, fmax=0.05, relax_steps=150, relax_cell=True, save_every=100, patience=10, energy_tol=0.001, tm_original_element=None, tm_ratios=None, na_remove_num=0, max_duplicate_trials=100, model_path=None, model_paths=None, main_model_index=0, model_type='chgnet', device='cpu', mace_head=None, mace_default_dtype='float64', initialize='random', full_na_structure=None, save_relax_traj=False, occupation_history_scope=None, occupation_history_seed=None, occupation_reference_file=None, min_improvement=None, structure_check_parameters=None)
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
 ## `LayeredOxide_MCOrderingClass.prepare`
 
-源文件：[MC_sample.py](MC_sample.py)，第 503 行。
+源文件：[MC_sample.py](MC_sample.py)，第 566 行。
 
 ```python
 LayeredOxide_MCOrderingClass.prepare(self)
@@ -106,7 +106,7 @@ LayeredOxide_MCOrderingClass.prepare(self)
 
 ## `LayeredOxide_MCOrderingClass.run`
 
-源文件：[MC_sample.py](MC_sample.py)，第 1259 行。
+源文件：[MC_sample.py](MC_sample.py)，第 1336 行。
 
 ```python
 LayeredOxide_MCOrderingClass.run(self, structure=None, mode=None, out_dir=None, **options)
@@ -389,7 +389,7 @@ MACEOrderingEvaluator.__init__(self, model, config)
 
 ## `write_csv`
 
-源文件：[ordering/export.py](ordering/export.py)，第 35 行。
+源文件：[ordering/export.py](ordering/export.py)，第 36 行。
 
 ```python
 write_csv(path, rows)
@@ -399,7 +399,7 @@ write_csv(path, rows)
 
 ## `export_results`
 
-源文件：[ordering/export.py](ordering/export.py)，第 53 行。
+源文件：[ordering/export.py](ordering/export.py)，第 54 行。
 
 ```python
 export_results(plan, root, stores, chains)
@@ -569,7 +569,7 @@ make_plan(reference, *, phase, tm_ratios, na_content, max_det_H=None, h_matrices
 
 ## `trial`
 
-源文件：[ordering/search.py](ordering/search.py)，第 13 行。
+源文件：[ordering/search.py](ordering/search.py)，第 16 行。
 
 ```python
 trial(occupation, matrix, config, rng)
@@ -579,11 +579,80 @@ trial(occupation, matrix, config, rng)
 
 ## `run_chain`
 
-源文件：[ordering/search.py](ordering/search.py)，第 33 行。
+源文件：[ordering/search.py](ordering/search.py)，第 36 行。
 
 ```python
 run_chain(plan, matrix, initial, chain_index, root, store, evaluator)
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `compact_structure_check`
+
+源文件：[structure_check.py](structure_check.py)，第 17 行。
+
+```python
+compact_structure_check(result)
+```
+
+Keep serializable decisions/metrics without duplicating topology graphs in MC logs.
+
+## `check_structure`
+
+源文件：[structure_check.py](structure_check.py)，第 40 行。
+
+```python
+check_structure(structure, *, expected_composition=None, reference=None, minimum_distance=0.6, energy_per_atom=None, check_framework=False)
+```
+
+Return passed/invalid/uncertain evidence; only invalid warrants exclusion.
+
+Basic checking uses a cutoff neighbor list, including periodic self images
+and distinct coincident atoms. minimum_distance reports the closest pair
+within the cutoff, or None (all pairs >= cutoff), not an all-pairs minimum.
+Framework context is prepared once from a trusted initial geometry.
+
+## `periodic_framework`
+
+源文件：[structure_check.py](structure_check.py)，第 141 行。
+
+```python
+periodic_framework(structure, cutoff, *, neighbors=None)
+```
+
+Rank lattice translations around bond-graph cycles, not Cartesian axes.
+
+## `LayeredFrameworkReference`
+
+源文件：[structure_check.py](structure_check.py)，第 204 行。
+
+```python
+LayeredFrameworkReference
+```
+
+Cache initial cutoffs/topology; index roles permit TM species exchanges.
+
+Site order must preserve O/backbone/alkali roles. Whole composition must
+match. Initial and trial geometries from one relaxation satisfy this binding;
+file-backed callers additionally verify provenance before using this class.
+
+## `LayeredFrameworkReference.__init__`
+
+源文件：[structure_check.py](structure_check.py)，第 212 行。
+
+```python
+LayeredFrameworkReference.__init__(self, structure, *, minimum_distance=0.6)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `LayeredFrameworkReference.inspect`
+
+源文件：[structure_check.py](structure_check.py)，第 340 行。
+
+```python
+LayeredFrameworkReference.inspect(self, structure)
+```
+
+Apply the existing sufficient domain-rejection rule, never a validity proof.
 

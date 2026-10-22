@@ -4,6 +4,8 @@ __all__ = [
     "LayeredOxide_MCOrderingClass",
     "extract_data_from_mcjson",
     "relax_structure_mace",
+    "check_structure",
+    "LayeredFrameworkReference",
     "plan_ordering_search",
     "prepare_ordering_search",
     "run_ordering_search",
@@ -13,6 +15,10 @@ __all__ = [
 
 
 def __getattr__(name):
+    if name in {"check_structure", "LayeredFrameworkReference"}:
+        from . import structure_check
+
+        return getattr(structure_check, name)
     if name in {
         "plan_ordering_search",
         "prepare_ordering_search",

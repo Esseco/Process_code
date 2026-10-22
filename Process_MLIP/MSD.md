@@ -150,6 +150,59 @@ conductivity_NE_sum_S_m 是每段所选元素的导率之和，不包含未选�
 不将 pymatgen 返回的回归标准差作为可靠的多起点 MSD 置信区间。
 导率是忽略离子间交叉关联的 Nernst–Einstein 估算，不代表关联修正后的真实导率。
 
+## 三维结果与末端 MSD 维度检查
+
+`fit_msd` 默认先完成原有三维拟合，再检查每个元素/分段所选拟合区间内**最后一个 lag 点**
+的 `msd_x_A2/msd_y_A2/msd_z_A2`。这里是多起点平均的 MSD，不是末帧坐标或按 D 比较。
+`fit_end_ps=None` 时使用该曲线最后一个有效 MSD 点；指定结束时间时用不晚于它的最后采样点。
+
+```python
+fitted = fit_msd(
+    "msd.csv", species="Na", temperature_K=600, volume_A3=8000, ion_charge=1,
+    fit_start_ps=None, fit_end_ps=None,
+    diffusion_mode="auto", anisotropy_threshold=10, min_msd_A2=1.0,
+)
+row = fitted["results"][0]
+three_dimensional_D = row["diffusion_cm2_s"]  # 原字段始终是 3D
+extra = row["reduced_dimensional"]           # 未触发时为 None
+```
+
+将末端 MSD 分量排序为 M1≥M2≥M3：M1/M2 严格大于阈值时补算最大方向的 1D；
+否则 M2/M3 严格大于阈值时补算前两个方向的 2D；其他情况不补算。
+阈值默认 10，可设为任意有限且 >1 的数；恰好等于阈值不触发。
+自动检查前先比较同一末端点的总 MSD：小于 `min_msd_A2=1.0` Å² 时跳过降维补算，
+保留三维 D/导率，`row["low_msd"]=True`、`anisotropy.status="low_msd"`。
+恰好等于门槛仍继续检查；门槛可设为任意有限非负值，0 关闭这个过滤。
+门槛按每个元素/分段独立应用，只影响 auto；手动 1D/2D 仍可补算，但保留 low_msd 标记。
+小 MSD 不等于热振动，也可能是慢扩散或模拟时间短；此门槛只是经验筛选，不是物理探测限。
+正分量对零分量也可触发，无法表示的比值记为 JSON null；全部为零且关闭门槛时标为 indeterminate。
+`diffusion_mode="3d"` 关闭检查；`"2d", axes="xy"` 或 `"1d", axes="z"` 可手动补算，
+仍保留三维结果。axes 必须是互不重复的 Cartesian x/y/z 字母，不是晶格 a/b/c。
+
+二维使用选中两个分量的 MSD **之和**拟合，斜率除以 4；一维选一个分量，斜率除以 2。
+仍调用 pymatgen 原生默认加权拟合，时间区间不变；不能将包含法向分量的总 MSD 直接除以 4。
+方向及投影导率都使用完整 N/V，单位 S/m 或 S/cm，是体相方向导率，不是片电导。
+若层面平行 xy，投影结果是面内平均；倾斜层面需先旋转轨迹或另行计算位移张量，
+现有 CSV 不能恢复任意倾斜平面的交叉分量，也不会自动识别晶体层面。
+
+新增结果字段（原有三维字段及 conductivity_NE_sum_S_m 含义保持不变）：
+
+| 字段 | 含义 |
+|---|---|
+| directional_conductivity_NE_S_m / directional_conductivity_NE_S_cm | [σx, σy, σz] |
+| low_msd | 末端总 MSD 是否严格低于 min_msd_A2 |
+| anisotropy | status、阈值、min_msd_A2、basis、末端 time_ps/MSD/endpoint_total_msd_A2、排序、比值及 unresolved_axes |
+| reduced_dimensional | None 或投影结果 dict：dimension、axes、selection(auto/manual)、D、导率、斜率/截距、R²、实际区间、点数及斜率下限标记 |
+
+`anisotropy.status` 的 1d/2d 只是触发补算的筛选标签，3d 表示未触发，disabled 表示关闭。
+末端 MSD 比值可能受热振动平台、非零截距及最大 lag 的采样噪声影响，不证明扩散维数。
+unresolved_axes 记录三维方向拟合触发斜率下限的轴；补算结果也有独立的斜率下限标记。
+即使自动补算成功，若曲线平台化、斜率为负或未进入线性区，仍不能宣称观测到可靠扩散。
+
+独立示例 `examples/postprocess_md.py` 在顶部开放 DIFFUSION_MODE/AXES/ANISOTROPY_THRESHOLD/MIN_MSD_A2，
+JSON 同时保留三维与补算结果；批处理示例 `examples/batch_postprocess_md.py` 保留原三维列，
+另写方向 D/导率、anisotropy_status、low_msd、末端总 MSD、门槛和 reduced_dimension/axes/D/导率/R²/斜率下限等平铺列。
+
 完整 MD 示例中，先开启 MSD_POSTPROCESS，再开启 TRANSPORT_FIT；后者自动使用选中
 NVT 阶段的目标温度与最终晶胞体积，默认 JSON 写在 MSD CSV 旁边。
 自定义相对 output_json 以 OUTPUT 为根目录。各示例默认两端 None；

@@ -32,6 +32,10 @@ TRANSPORT_FIT = {
     "temperature_K": 800,
     "volume_A3": 1000.0,
     "ion_charge": 1,                  # or {"Na": 1, "Li": 1}, units e
+    "diffusion_mode": "auto",         # "3d" 关闭，"2d"/"1d" 手动
+    "axes": "xy",                     # 手动模式的 Cartesian 轴
+    "anisotropy_threshold": 10,        # 拟合区间末端 MSD 分量倍率，>1
+    "min_msd_A2": 1.0,                # 末端总 MSD 门槛，Å²；0 关闭
     "output_json": Path("md_results/03_diffusion/transport.json"),
     "overwrite": False,
 }

@@ -61,6 +61,15 @@ PROJECTS = {
             "row_factor",
         ],
     ),
+    "Process_Phasediagram": (
+        "插层电极相图绘制与 Benchmark：凸包形状误差、相区间 IoU",
+        "工具包",
+        "绘图：x/eform/phase/is_stable；评价：预测/参考下凸包顶点或相存在区间字典",
+        "Matplotlib figure/axes，或 hull_error/integral_error、phase_error/mean_iou/phase_iou",
+        "numpy；绘图另需 matplotlib，CSV 示例需 pandas（Python >= 3.11）",
+        "能量单位及归一化必须一致；绘图信任传入的全局稳定性，仅可选计算各相下凸包；不识别相、不运行 DFT。见 [绘图与参数示例](PLOTTING.md) 和 [评价约定](BENCHMARK.md)。",
+        ["calculate_hull_error", "calculate_phase_iou_error", "plot_phase_diagram"],
+    ),
     "Process_face": (
         "表面 slab 生成、固定原子与表面配置",
         "工具包",

@@ -87,7 +87,7 @@ main()
 
 ## `main`
 
-源文件：[examples/batch_postprocess_md.py](examples/batch_postprocess_md.py)，第 21 行。
+源文件：[examples/batch_postprocess_md.py](examples/batch_postprocess_md.py)，第 25 行。
 
 ```python
 main()
@@ -207,7 +207,7 @@ main()
 
 ## `main`
 
-源文件：[examples/mlip_md.py](examples/mlip_md.py)，第 193 行。
+源文件：[examples/mlip_md.py](examples/mlip_md.py)，第 197 行。
 
 ```python
 main(argv=None)
@@ -217,7 +217,7 @@ Preview configuration or run MD after editing the parameters above.
 
 ## `main`
 
-源文件：[examples/msd.py](examples/msd.py)，第 40 行。
+源文件：[examples/msd.py](examples/msd.py)，第 44 行。
 
 ```python
 main()
@@ -227,7 +227,7 @@ Export native max-mode lag sampling; fit only an explicitly chosen range.
 
 ## `main`
 
-源文件：[examples/postprocess_md.py](examples/postprocess_md.py)，第 21 行。
+源文件：[examples/postprocess_md.py](examples/postprocess_md.py)，第 25 行。
 
 ```python
 main()
@@ -321,10 +321,10 @@ only the final structure is written there.
 
 ## `run_md`
 
-源文件：[md.py](md.py)，第 28 行。
+源文件：[md.py](md.py)，第 29 行。
 
 ```python
-run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1)
+run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1, segment_steps=None, on_segment=None)
 ```
 
 Run one NHC NVT or MTK NPT stage with an ASE calculator.
@@ -337,6 +337,14 @@ options apply only to initialization. Constraints are not supported.
 npt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.
 tchain/tloop control the thermostat; pchain/ploop apply only to NPT.
 Chain lengths and integration substeps must be positive integers.
+
+segment_steps optionally advances the SAME integrator in blocks. It must
+be a positive multiple of trajectory_interval and log_interval; total
+steps must align with trajectory_interval as well. After
+each block, on_segment(event) sees flushed output and completed steps,
+time_fs, paths, temperature_K and saved-frame interval. Return True to
+request a normal early stop; False/None continues. No decision rules are
+built in. This is in-process continuity, not cross-process checkpointing.
 timestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.
 
 Writes md.traj, md.csv, final.traj (with momenta), report.json. Existing
@@ -488,10 +496,10 @@ VASP 使用分数坐标；需完整晶胞。保留 ASE 动量等信息请用 tra
 
 ## `fit_msd`
 
-源文件：[transport.py](transport.py)，第 41 行。
+源文件：[transport.py](transport.py)，第 125 行。
 
 ```python
-fit_msd(msd_csv, *, fit_start_ps=None, fit_end_ps=None, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False)
+fit_msd(msd_csv, *, fit_start_ps=None, fit_end_ps=None, temperature_K, volume_A3, ion_charge, species=None, output_json=None, overwrite=False, diffusion_mode='auto', axes='xy', anisotropy_threshold=10, min_msd_A2=1.0)
 ```
 
 Fit MSD CSV and estimate uncorrelated Nernst–Einstein conductivity.
@@ -513,4 +521,22 @@ small positive value; these results do not establish resolved diffusion.
 Returns SI and cm²/s diffusion, S/m and S/cm conductivity, and diagnostics.
 Optional JSON refuses overwrite by default. No uncertainty or correlation
 correction is inferred; R² alone does not establish a diffusive regime.
+
+diffusion_mode='auto' keeps 3D results, then checks Cartesian MSD at the
+last lag in the fit window: largest/middle > threshold adds 1D; otherwise
+middle/smallest > threshold adds 2D. All zero with the MSD gate disabled
+makes it indeterminate.
+Zero denominators are recorded as None; positive/zero triggers a supplement.
+Native slope-floor flags remain diagnostics, not evidence of diffusion.
+'3d' disables the check; '1d'/'2d' manually projects onto axes ('x'/'xy', etc.).
+axes must be distinct Cartesian letters, not crystallographic directions.
+Threshold must be finite and >1 (default 10); it is a heuristic, not a
+proof of dimensionality. Projected fits use the same lag window and native
+defaults, with D=slope/(2*d). Conductivity still uses the full volume.
+New anisotropy/reduced_dimensional and directional conductivity fields
+supplement, never replace, the original 3D fields. No source files change.
+min_msd_A2=1.0 skips auto supplements when endpoint total MSD is below
+this nonnegative Å² threshold (0 disables this gate). low_msd flags each
+curve; 3D results and manual 1D/2D fits remain available. This does not
+identify thermal vibration or establish a diffusion detection limit.
 

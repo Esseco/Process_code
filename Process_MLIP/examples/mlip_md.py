@@ -12,7 +12,7 @@ from pathlib import Path
 
 from Process_MLIP import export_msd, fit_msd, model_config, run_mlip_md
 from Process_MLIP.msd import _load_diffusion_analyzer, _msd_lags
-from Process_MLIP.transport import _fit_window_mask, _load_pymatgen_fitter
+from Process_MLIP.transport import _fit_window_mask, _load_pymatgen_fitter, _validate_dimension_options
 
 
 # 路径与模型
@@ -119,6 +119,10 @@ TRANSPORT_FIT = {
     "fit_start_ps": None,             # None: 最早正 lag；可填 ps
     "fit_end_ps": None,               # None: 最晚有效 lag；可填 ps
     "ion_charge": 1,                  # 电荷数，或 {"Na": 1, "Li": 1}
+    "diffusion_mode": "auto",         # "3d" 关闭，"2d"/"1d" 手动
+    "axes": "xy",                     # 手动模式的 Cartesian 轴
+    "anisotropy_threshold": 10,        # 拟合区间末端 MSD 分量倍率，>1
+    "min_msd_A2": 1.0,                # 末端总 MSD 门槛，Å²；0 关闭
     "output_json": None,              # None: MSD 同目录/transport.json
     "overwrite": False,
 }
@@ -214,6 +218,10 @@ def main(argv=None):
             raise ValueError("TRANSPORT_FIT requires MSD_POSTPROCESS enabled")
         if type(TRANSPORT_FIT.get("overwrite", False)) is not bool:
             raise TypeError("TRANSPORT_FIT overwrite must be bool")
+        _validate_dimension_options(TRANSPORT_FIT.get("diffusion_mode", "auto"),
+                                    TRANSPORT_FIT.get("axes", "xy"),
+                                    TRANSPORT_FIT.get("anisotropy_threshold", 10),
+                                    TRANSPORT_FIT.get("min_msd_A2", 1.0))
         _load_pymatgen_fitter()
         start, end = (TRANSPORT_FIT.get(key) for key in ("fit_start_ps", "fit_end_ps"))
         for grid in msd_target[2]:
@@ -269,6 +277,10 @@ def main(argv=None):
                              fit_start_ps=TRANSPORT_FIT.get("fit_start_ps"),
                              fit_end_ps=TRANSPORT_FIT.get("fit_end_ps"),
                              ion_charge=TRANSPORT_FIT["ion_charge"],
+                             diffusion_mode=TRANSPORT_FIT.get("diffusion_mode", "auto"),
+                             axes=TRANSPORT_FIT.get("axes", "xy"),
+                             anisotropy_threshold=TRANSPORT_FIT.get("anisotropy_threshold", 10),
+                             min_msd_A2=TRANSPORT_FIT.get("min_msd_A2", 1.0),
                              temperature_K=stage.get("temperature_K", MD_PARAMETERS.get("temperature_K", 300)),
                              volume_A3=result["stage_results"][index]["final_atoms"].get_volume(),
                              output_json=fit_destination,

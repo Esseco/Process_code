@@ -15,6 +15,8 @@ NVT 轨迹可直接用 `export_msd` 导出 MSD CSV，默认且仅使用 `pymatge
 `fit_msd` 独立读取 MSD CSV 拟合扩散系数和估算 Nernst–Einstein 离子导率；两个示例均提供 `TRANSPORT_FIT` 开关与拟合区间、电荷配置，详见 [MSD.md](MSD.md)。
 扩散拟合直接沿用 pymatgen 原生默认算法、权重和斜率处理；保留手动区间和自设离子电荷，不增加拟合算法开关。
 fit_start_ps/fit_end_ps 默认 None，按每个元素/分段拟合全部正 lag，也支持只设置一端；实际区间在 actual_fit_range_ps 中。全区间不会自动判断线性扩散区。
+默认先保留三维拟合，再检查拟合区间末端 MSD 分量；超过 anisotropy_threshold=10 时补算一维或二维 D/导率。阈值可调，diffusion_mode="3d" 可关闭，"1d"/"2d" 配合 axes 可手动指定 Cartesian 方向。新结果写入 reduced_dimensional，原三维字段不变；该检查只是筛选，不证明扩散维数。规则与单位见 [MSD.md](MSD.md)。
+末端总 MSD 小于 min_msd_A2=1.0 Å² 时跳过自动降维补算，保留三维结果并标记 low_msd；门槛可调，0 关闭过滤。手动降维不受此门槛限制；小 MSD 不自动归因为热振动。
 已有轨迹的一次性重算可用 [精简独立示例](examples/postprocess_md.py)：顶部修改路径、元素、拟合区间、电荷和实际温度，体积自动读取。运行 `python -m Process_MLIP.examples.postprocess_md`；输出 postprocess/msd.csv 和 transport.json，重复运行覆盖这两个分析文件。
 多模型 LCO/NVP 汇总见 [批处理示例](examples/batch_postprocess_md.py)：自动从各 NVT 阶段 report.json 读取温度、体积、时间、步数及速度，手动指定拟合区间和电荷，输出平铺 out.csv，失败任务保留错误记录。
 

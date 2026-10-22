@@ -214,6 +214,162 @@ class TransportTests(TemporaryDirectoryMixin, unittest.TestCase):
                 self.fit(fit_start_ps=start, fit_end_ps=end, output_json=output)
         self.assertFalse(output.exists())
 
+    def write_directional_curve(self, slopes, intercepts=(0, 0, 0)):
+        with self.source.open('w', newline='') as handle:
+            writer = csv.writer(handle)
+            writer.writerow(['segment', 'species', 'atom_count', 'time_ps',
+                             'msd_x_A2', 'msd_y_A2', 'msd_z_A2', 'msd_total_A2'])
+            for time in [0, 1, 2, 4, 5]:
+                values = np.asarray(intercepts) + np.asarray(slopes) * time
+                writer.writerow([1, 'Na', 2, time, *values, values.sum()])
+
+    def test_endpoint_auto_projection_and_three_dimensional_results_unchanged(self):
+        for slopes, expected in [((2, 2, 2), None), ((20, 20, .1), 'xy'),
+                                 ((.1, 20, 20), 'yz'), ((20, .1, 20), 'xz'),
+                                 ((20, .1, .1), 'x'), ((.1, 20, .1), 'y'),
+                                 ((.1, .1, 20), 'z')]:
+            with self.subTest(slopes=slopes):
+                self.write_directional_curve(slopes)
+                result = self.fit(species='Na', ion_charge=1)
+                row = result['results'][0]
+                baseline = self.fit(species='Na', ion_charge=1, diffusion_mode='3d')['results'][0]
+                for key in ('diffusion_m2_s', 'diffusion_cm2_s', 'conductivity_NE_S_m',
+                            'directional_diffusion_m2_s', 'slope_A2_per_ps', 'r_squared'):
+                    self.assertEqual(row[key], baseline[key])
+                diagnostic = row['anisotropy']
+                self.assertEqual(diagnostic['basis'], 'last_msd_in_fit_window')
+                self.assertEqual(diagnostic['time_ps'], 5)
+                self.assertEqual(diagnostic['endpoint_msd_A2'], dict(zip('xyz', np.array(slopes)*5)))
+                reduced = row['reduced_dimensional']
+                if expected is None:
+                    self.assertEqual(diagnostic['status'], '3d')
+                    self.assertIsNone(reduced)
+                else:
+                    dimension = len(expected)
+                    self.assertEqual(diagnostic['status'], f'{dimension}d')
+                    self.assertEqual(reduced['axes'], expected)
+                    self.assertEqual(reduced['dimension'], dimension)
+                    projected_slope = sum(slopes['xyz'.index(axis)] for axis in expected)
+                    self.assertAlmostEqual(reduced['diffusion_m2_s'], projected_slope/(2*dimension)*1e-8)
+                    self.assertEqual(reduced['actual_fit_range_ps'], row['actual_fit_range_ps'])
+                    self.assertEqual(reduced['r_squared'], 1)
+                    factor = row['conductivity_NE_S_m']/row['diffusion_m2_s']
+                    self.assertAlmostEqual(reduced['conductivity_NE_S_m'], factor*reduced['diffusion_m2_s'])
+                    np.testing.assert_allclose(row['directional_conductivity_NE_S_m'],
+                                               np.array(slopes)/2*1e-8*factor)
+                    np.testing.assert_allclose(row['directional_conductivity_NE_S_cm'],
+                                               np.array(row['directional_conductivity_NE_S_m'])/100)
+
+    def test_endpoint_screen_uses_msd_not_diffusivity_and_selected_window(self):
+        self.write_directional_curve((1, 1, 1), (100, 100, 0))
+        early = self.fit(species='Na', fit_end_ps=4)['results'][0]
+        late = self.fit(species='Na', anisotropy_threshold=25)['results'][0]
+        self.assertEqual(early['anisotropy']['endpoint_msd_A2'], dict(x=104, y=104, z=4))
+        self.assertEqual(early['reduced_dimensional']['axes'], 'xy')
+        self.assertIsNone(late['reduced_dimensional'])  # 105/5=21 < 25
+        np.testing.assert_allclose(early['directional_diffusion_m2_s'], [5e-9]*3)
+
+    def test_strict_threshold_and_manual_overrides(self):
+        self.write_directional_curve((10, 1, 1))
+        self.assertIsNone(self.fit(species='Na')['results'][0]['reduced_dimensional'])
+        self.assertEqual(self.fit(species='Na', anisotropy_threshold=5)['results'][0]
+                         ['reduced_dimensional']['axes'], 'x')
+        for mode, axes in [('2d', 'yz'), ('1d', 'z')]:
+            row = self.fit(species='Na', diffusion_mode=mode, axes=axes)['results'][0]
+            reduced = row['reduced_dimensional']
+            self.assertEqual(reduced['selection'], 'manual')
+            self.assertEqual(reduced['axes'], axes)
+            self.assertAlmostEqual(reduced['diffusion_m2_s'], 5e-9)
+
+    def test_zero_msd_and_unresolved_slopes_remain_json_safe(self):
+        for slopes, intercepts, expected in [((0, 0, 0), (0, 0, 0), None),
+                                            ((20, 20, 0), (0, 0, 0), 'xy'),
+                                            ((20, 0, 0), (0, 0, 0), 'x'),
+                                            ((0, 0, 0), (1000, 1000, 0), 'xy'),
+                                            ((-1, -1, 0), (1000, 1000, 0), 'xy')]:
+            with self.subTest(slopes=slopes, intercepts=intercepts):
+                self.write_directional_curve(slopes, intercepts)
+                result = self.fit(species='Na', min_msd_A2=0,
+                                  output_json=self.root/'transport.json', overwrite=True)
+                self.assertEqual(json.loads((self.root/'transport.json').read_text()), result)
+                row = result['results'][0]
+                self.assertIn('z', row['anisotropy']['unresolved_axes'])
+                if expected is None:
+                    self.assertEqual(row['anisotropy']['status'], 'indeterminate')
+                    self.assertIsNone(row['reduced_dimensional'])
+                else:
+                    reduced = row['reduced_dimensional']
+                    self.assertEqual(reduced['axes'], expected)
+                    self.assertEqual(reduced['pymatgen_slope_floor_applied'], slopes[0] <= 0)
+
+    def test_native_projected_fit_defaults_and_all_groups(self):
+        self.write_directional_curve((20, 20, 1))
+        native = Mock(wraps=get_diffusivity_from_msd)
+        with patch('Process_MLIP.transport._load_pymatgen_fitter', return_value=native):
+            row = self.fit(species='Na')['results'][0]
+        self.assertEqual(native.call_count, 5)
+        np.testing.assert_array_equal(native.call_args.args[0], np.array([1, 2, 4, 5])*40)
+        np.testing.assert_array_equal(native.call_args.args[1], [1000, 2000, 4000, 5000])
+        self.assertEqual(native.call_args.kwargs, {})
+        self.assertAlmostEqual(row['reduced_dimensional']['diffusion_m2_s'], 1e-7)
+        self.write()
+        result = self.fit(diffusion_mode='2d', axes='yz')
+        self.assertEqual(len(result['results']), 4)
+        for item in result['results']:
+            self.assertEqual(item['reduced_dimensional']['axes'], 'yz')
+
+    def test_invalid_dimension_options_do_not_write(self):
+        for kw in [dict(anisotropy_threshold=x) for x in (True, 1, 0, -1, float('nan'), float('inf'), '10')] + [
+                dict(diffusion_mode='4d'), dict(diffusion_mode='1d'),
+                dict(diffusion_mode='2d', axes='x'), dict(axes='xx'),
+                dict(axes='ab'), dict(axes=None)]:
+            with self.subTest(kw=kw), self.assertRaises((TypeError, ValueError)):
+                self.fit(output_json=self.root/'bad.json', **kw)
+        self.assertFalse((self.root/'bad.json').exists())
+
+    def test_low_total_msd_skips_only_automatic_supplement_and_keeps_3d(self):
+        self.write_directional_curve((.08, .08, 0))  # endpoint total = 0.8 Å²
+        native = Mock(wraps=get_diffusivity_from_msd)
+        with patch('Process_MLIP.transport._load_pymatgen_fitter', return_value=native):
+            result = self.fit(species='Na', output_json=self.root/'low.json')
+        row = result['results'][0]
+        self.assertEqual(native.call_count, 4)  # no projected fit
+        self.assertTrue(row['low_msd'])
+        self.assertEqual(row['anisotropy']['status'], 'low_msd')
+        self.assertAlmostEqual(row['anisotropy']['endpoint_total_msd_A2'], .8)
+        self.assertEqual(result['min_msd_A2'], 1)
+        self.assertIsNone(row['reduced_dimensional'])
+        self.assertGreater(row['diffusion_cm2_s'], 0)
+        self.assertEqual(json.loads((self.root/'low.json').read_text()), result)
+        for config in [dict(min_msd_A2=.5), dict(min_msd_A2=np.float64(.5)), dict(min_msd_A2=0),
+                       dict(diffusion_mode='2d', axes='xy')]:
+            with self.subTest(config=config):
+                override = self.fit(species='Na', output_json=self.root/'override.json',
+                                    overwrite=True, **config)['results'][0]
+                self.assertEqual(override['reduced_dimensional']['axes'], 'xy')
+                self.assertEqual(override['diffusion_cm2_s'], row['diffusion_cm2_s'])
+                self.assertEqual(override['conductivity_NE_S_cm'], row['conductivity_NE_S_cm'])
+
+    def test_low_msd_gate_is_strict_and_uses_fit_window_total(self):
+        self.write_directional_curve((.125, .125, 0))
+        at_boundary = self.fit(species='Na', fit_end_ps=4)['results'][0]
+        self.assertEqual(at_boundary['anisotropy']['endpoint_total_msd_A2'], 1)
+        self.assertFalse(at_boundary['low_msd'])
+        self.assertEqual(at_boundary['reduced_dimensional']['axes'], 'xy')
+        below = self.fit(species='Na', fit_end_ps=4, min_msd_A2=1.1)['results'][0]
+        self.assertTrue(below['low_msd'])
+        later = self.fit(species='Na', min_msd_A2=1.1)['results'][0]
+        self.assertFalse(later['low_msd'])
+        self.assertEqual(later['reduced_dimensional']['axes'], 'xy')
+        self.write_directional_curve((0, 0, 0))
+        self.assertEqual(self.fit(species='Na')['results'][0]['anisotropy']['status'], 'low_msd')
+
+    def test_invalid_min_msd_does_not_write(self):
+        for value in (True, -1, float('nan'), float('inf'), None, '1'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.fit(min_msd_A2=value, output_json=self.root/'invalid.json')
+        self.assertFalse((self.root/'invalid.json').exists())
+
 
 if __name__ == "__main__":
     unittest.main()

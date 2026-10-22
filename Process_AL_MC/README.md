@@ -38,3 +38,7 @@ Auc_code 导出器依赖 JSON 字段、目录层级和文件名（下划线拆�
 新增独立、以 TM 为重点的扩胞搜索入口：`plan_ordering_search`、`prepare_ordering_search`、`run_ordering_search`、`inspect_ordering_search`、`reconcile_ordering_search`。支持任意 TM 比例、部分 Na 联合搜索、H 上限或指定矩阵，以及总排名/矩阵排名 CSV。完整参数与边界见 [独立搜索说明](ORDERING_SEARCH.md)。
 
 四个模板已安全导入，采样模板不会在导入时构造对象或加载模型。未运行模型或 MC 长采样。功能合并建议见 [BOUNDARIES.md](BOUNDARIES.md)，签名见 [API.md](API.md)。
+
+## 公共结构检查
+
+`check_structure` 和 `LayeredFrameworkReference` 可直接从包导入；MC 在更新链和候选池前复用检查，明确异常候选排除后继续。接口、触发值及成本见 [STRUCTURE_CHECK.md](STRUCTURE_CHECK.md)。
