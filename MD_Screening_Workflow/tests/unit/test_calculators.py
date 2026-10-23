@@ -29,6 +29,43 @@ def test_mace_omat_defaults_do_not_select_mh1_or_download(tmp_path, monkeypatch)
     assert result is factory.return_value
 
 
+def test_symmetrix_species_are_inferred_from_md_structure(tmp_path, monkeypatch):
+    from ase import Atoms
+
+    model = tmp_path / "mace-omat-0-medium.model"
+    model.write_bytes(b"not real weights")
+    factory = Mock()
+    monkeypatch.setattr(calculators, "create_mace_calculator", factory)
+    create_default_calculator(
+        ScreeningConfig(model_path=model, enable_symmetrix=True,
+                        symmetrix_use_kokkos=True),
+        atoms=Atoms("LiCoO2"),
+    )
+    factory.assert_called_once_with(
+        model, device="cuda", default_dtype="float64", head=None,
+        enable_cueq=False, enable_symmetrix=True, symmetrix_use_kokkos=True,
+        symmetrix_species=["Co", "Li", "O"],
+    )
+
+
+def test_preconverted_symmetrix_json_keeps_its_embedded_species(tmp_path, monkeypatch):
+    from ase import Atoms
+
+    model = tmp_path / "mace-omat.json"
+    model.write_text("{}")
+    factory = Mock()
+    monkeypatch.setattr(calculators, "create_mace_calculator", factory)
+    create_default_calculator(
+        ScreeningConfig(model_path=model, enable_symmetrix=True,
+                        symmetrix_use_kokkos=True),
+        atoms=Atoms("LiCoO2"),
+    )
+    factory.assert_called_once_with(
+        model, device="cuda", default_dtype="float64", head=None,
+        enable_cueq=False, enable_symmetrix=True, symmetrix_use_kokkos=True,
+        symmetrix_species=None,
+    )
+
 def test_missing_model_is_not_replaced_with_another_model(monkeypatch, tmp_path):
     monkeypatch.delenv("PROCESS_MD_MACE_MODEL", raising=False)
     with pytest.raises(ValueError, match="model_path"):

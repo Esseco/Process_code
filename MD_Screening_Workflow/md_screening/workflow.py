@@ -175,7 +175,7 @@ def run_screening(
             metadata["model_path"] = str(mace_model_path(config))
             metadata["stage"] = "loading_model"
             persist()
-            calculator = create_default_calculator(config)
+            calculator = create_default_calculator(config, atoms=atoms)
             metadata["calculator_class"] = f"{type(calculator).__module__}.{type(calculator).__name__}"
         if config.pre_relax:
             from Process_MLIP.pre_relax import _run_pre_relax, _validate_pre_relax

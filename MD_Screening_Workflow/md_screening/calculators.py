@@ -17,12 +17,16 @@ def mace_model_path(config: ScreeningConfig) -> Path:
     return path
 
 
-def create_default_calculator(config: ScreeningConfig):
-    """Load only the specified local file, with no download or model fallback."""
-    return create_mace_calculator(mace_model_path(config), device=config.device,
+def create_default_calculator(config: ScreeningConfig, atoms=None):
+    """Load the local model and limit Symmetrix conversion to simulated elements."""
+    model_path = mace_model_path(config)
+    species = config.symmetrix_species
+    if (species is None and config.enable_symmetrix and atoms is not None
+            and model_path.suffix.lower() != ".json"):
+        species = tuple(sorted(set(atoms.get_chemical_symbols())))
+    return create_mace_calculator(model_path, device=config.device,
                                   default_dtype=config.default_dtype, head=None,
                                   enable_cueq=config.enable_cueq,
                                   enable_symmetrix=config.enable_symmetrix,
                                   symmetrix_use_kokkos=config.symmetrix_use_kokkos,
-                                  symmetrix_species=None if config.symmetrix_species is None
-                                  else list(config.symmetrix_species))
+                                  symmetrix_species=None if species is None else list(species))
