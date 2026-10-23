@@ -31,6 +31,13 @@ class ScreeningConfig:
     configuration_id: str | None = None
     model_label: str | None = None
     model_path: str | Path | None = None
+    pre_relax: bool = True
+    relax_cell: bool = True
+    relax_optimizer: str = "LBFGS"
+    relax_fmax_ev_A: float = 0.05
+    relax_steps: int = 1000
+    relax_maxstep_A: float = 0.05
+    require_relax_convergence: bool = True
     device: str = "cuda"
     default_dtype: str = "float64"
     enable_cueq: bool = False
@@ -75,6 +82,16 @@ class ScreeningConfig:
                 raise ValueError(f"{name} must be a string or None")
         if self.model_path is not None and not isinstance(self.model_path, (str, Path)):
             raise ValueError("model_path must be a path or None")
+        if any(type(value) is not bool for value in (self.pre_relax, self.relax_cell, self.require_relax_convergence)):
+            raise ValueError("pre_relax, relax_cell and require_relax_convergence must be bool")
+        if self.relax_optimizer not in ("FIRE", "BFGS", "LBFGS"):
+            raise ValueError("relax_optimizer must be FIRE, BFGS or LBFGS")
+        for name in ("relax_fmax_ev_A", "relax_maxstep_A"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be finite and positive")
+        if isinstance(self.relax_steps, bool) or not isinstance(self.relax_steps, Integral) or self.relax_steps < 0:
+            raise ValueError("relax_steps must be a nonnegative integer")
         if not isinstance(self.device, str) or not self.device.strip():
             raise ValueError("device must be an explicit device string")
         if self.default_dtype not in ("float32", "float64"):

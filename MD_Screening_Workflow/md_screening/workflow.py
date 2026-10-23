@@ -29,6 +29,7 @@ class WorkflowResult:
     check_reports: list[Path] = field(default_factory=list)
     last_check: CheckReport | None = None
     error: str | None = None
+    relaxation: dict | None = None
 
 
 def _summary(report: CheckReport) -> dict:
@@ -176,6 +177,48 @@ def run_screening(
             persist()
             calculator = create_default_calculator(config)
             metadata["calculator_class"] = f"{type(calculator).__module__}.{type(calculator).__name__}"
+        if config.pre_relax:
+            from Process_MLIP.pre_relax import _run_pre_relax, _validate_pre_relax
+
+            metadata["stage"] = "pre_relaxation"
+            persist()
+            relax_dir = root / "relaxation"
+            relaxation_config = _validate_pre_relax(dict(
+                enabled=True, relax_cell=config.relax_cell, optimizer=config.relax_optimizer,
+                fmax=config.relax_fmax_ev_A, steps=config.relax_steps,
+                maxstep=config.relax_maxstep_A,
+                require_convergence=config.require_relax_convergence,
+            ))
+            relaxed = _run_pre_relax(
+                atoms, calculator, relax_dir, relaxation_config,
+                model_metadata=dict(model_path=metadata.get("model_path")),
+            )
+            atoms = relaxed["final_atoms"]
+            result.relaxation = {key: value for key, value in relaxed.items() if key != "final_atoms"}
+            write(str(prepared / "relaxed_structure.extxyz"), atoms, format="extxyz")
+            if config.require_relax_convergence and not relaxed["optimizer_converged"]:
+                raise RuntimeError(
+                    "Pre-relaxation did not converge; increase relax_steps or set "
+                    "require_relax_convergence=False to continue into MD"
+                )
+            metadata["structure"].update(
+                info=get_structure_info(atoms), cell=describe_cell(atoms),
+                relaxed_cell=atoms.cell.array.tolist(),
+            )
+            if config.relax_cell:
+                # Apply the same cell deformation to full-site reference positions.
+                sites.set_cell(atoms.cell, scale_atoms=True)
+                write(str(prepared / "reference_sites.extxyz"), sites, format="extxyz")
+                nearest = estimate_hop_distance(sites, species=config.mobile_species)
+                metadata["reference_nearest_neighbor_A"] = nearest
+                if automatic_review:
+                    distance = config.hop_distance_A if config.hop_distance_A is not None else nearest
+                    metadata["hop_distance"] = dict(
+                        distance_A=distance,
+                        source="user_override" if config.hop_distance_A is not None else "reference_mobile_sites",
+                        limitation="Geometric proxy only; vacancies and allowed migration paths are not inferred.",
+                    )
+                    active_reviewer = TransportStopper(hop_distance_A=distance, criteria=config.stop_criteria)
         metadata["stage"] = "md"
         persist()
 

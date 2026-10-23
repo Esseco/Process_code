@@ -107,6 +107,12 @@ python examples/run_case.py POSCAR runs/material_A `
 
 `stop_criteria=None` 且不传 reviewer 时恢复记录模式：诊断仍保存，运行至预算上限。`jump_analysis=False` 可关闭 GEMDAT 分析，`framework_criteria=None` 可关闭结构判据。传入 `reviewer(CheckReport)->Decision` 会替换默认自动决策，保留完整诊断。调整动作只保存请求和理由，暂不自动执行。自定义 accept 记录为 `accepted`。
 
+## 单结构筛选流程
+
+默认先把 SOC 结构扩胞到至少 200 个原子，再调用 `Process_MLIP` 的 ASE 预弛豫实现（默认原子与晶胞一起优化，LBFGS、`fmax=0.05 eV/Å`、最多 1000 步、`maxstep=0.05 Å`），然后进行 5 ps NVT 初检。弛豫不收敛时默认停止；可通过 `ScreeningConfig` 调整参数或关闭弛豫。初检通过后每 10 ps 检查结构、MSD、GEMDAT 跳跃和输运拟合，生产阶段最多 200 ps。
+
+弛豫轨迹、日志和报告写入 `relaxation/`，弛豫后的结构写入 `prepared/relaxed_structure.extxyz`。完整位点参考结构不参与弛豫或 MD；若弛豫改变晶胞，程序按相同晶胞变形同步更新参考位点。
+
 ## GEMDAT 跳跃与平台检查
 
 通过原生GEMDAT内位点区域与最小驻留时间过滤热振动，默认驻留 **0.2 ps**，可用 `jump_min_residence_ps` 调整。报告包含事件、参与离子、位点覆盖率和未映射诊断。站点半径默认最近位点间距的0.45倍，可用 `jump_site_radius_A` 覆盖。

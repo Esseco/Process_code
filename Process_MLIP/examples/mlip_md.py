@@ -61,9 +61,9 @@ MODEL_OVERRIDES = {
 PRE_RELAX = {
     "enabled": True,                # 是否预弛豫
     "relax_cell": True,               # False: 仅原子；True: 原子+晶胞
-    "optimizer": "FIRE",              # BFGS / FIRE / LBFGS（大写）
+    "optimizer": "LBFGS",             # BFGS / FIRE / LBFGS（大写）
     "fmax": 0.05,                     # 收敛阈值，eV/Å
-    "steps": 200,                    # 最大步数，非负整数
+    "steps": 1000,                   # 最大步数，非负整数
     "maxstep": 0.05,                 # 优化步幅上限，Å
     "exp_cell_factor": None,         # None: 晶胞变量按原子数缩放
     "require_convergence": True,      # 未收敛则停止 MD

@@ -16,10 +16,10 @@ _RELAX_FILES = ("relax.traj", "relax.log", "final.traj", "report.json")
 def _validate_pre_relax(config):
     options = dict(
         enabled=False,             # 是否预弛豫
-        relax_cell=False,          # False: 仅原子；True: 原子+晶胞
-        optimizer="FIRE",          # BFGS / FIRE / LBFGS（大写）
+        relax_cell=True,           # 默认原子与晶胞一起弛豫
+        optimizer="LBFGS",         # BFGS / FIRE / LBFGS（大写）
         fmax=0.05,                 # 收敛阈值，eV/Å
-        steps=200,                 # 最大步数，非负整数
+        steps=1000,                # 最大步数，非负整数
         maxstep=0.05,               # 优化步幅上限，Å（晶胞变量按比例缩放）
         exp_cell_factor=None,      # 晶胞缩放因子；None 使用原子数
         require_convergence=True,  # 未收敛则停止 MD

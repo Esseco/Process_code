@@ -19,6 +19,10 @@ MODEL_PATH = None                       # 可填模型路径；None时自动查�
 MOBILE_SPECIES = None                   # 自动识别Li/Na；两者都有时填写"Li"或"Na"
 DEVICE = "cuda"
 ENABLE_SYMMETRIX = True
+PRE_RELAX = True
+RELAX_CELL = True
+RELAX_OPTIMIZER = "LBFGS"
+RELAX_STEPS = 1000
 
 
 def main():
@@ -55,9 +59,12 @@ def main():
         mobile_species=species, model_path=model, configuration_id=structure.stem,
         temperature_K=TEMPERATURE_K, max_production_ps=MAX_PRODUCTION_PS,
         device=DEVICE, enable_symmetrix=ENABLE_SYMMETRIX,
-        symmetrix_use_kokkos=ENABLE_SYMMETRIX, timestep_fs=2, trajectory_interval=10,
+        symmetrix_use_kokkos=ENABLE_SYMMETRIX, pre_relax=PRE_RELAX,
+        relax_cell=RELAX_CELL, relax_optimizer=RELAX_OPTIMIZER,
+        relax_steps=RELAX_STEPS,
+        timestep_fs=2, trajectory_interval=10,
     )
-    print(f"{species} / {TEMPERATURE_K} K / {DEVICE} / Symmetrix={ENABLE_SYMMETRIX}", flush=True)
+    print(f"{species} / {TEMPERATURE_K} K / {DEVICE} / Symmetrix={ENABLE_SYMMETRIX} / pre-relax={PRE_RELAX} / relax-cell={RELAX_CELL}", flush=True)
     print(f"结果目录：{output}", flush=True)
     result = run_screening(structure, reference_sites=reference, config=config, output_dir=output)
     print(f"结束状态：{result.status}\n汇总：{output / 'summary.csv'}")

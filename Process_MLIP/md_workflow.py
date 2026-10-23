@@ -21,9 +21,9 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
     衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。
 
     pre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：
-      enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。
-      optimizer="FIRE"（BFGS / FIRE / LBFGS，须大写）。
-      fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。
+      enabled=True；relax_cell=True（原子与晶胞一起弛豫，False 仅弛豫原子）。
+      optimizer="LBFGS"（BFGS / FIRE / LBFGS，须大写）。
+      fmax=0.05 eV/Å；steps=1000（非负整数）；require_convergence=True（未收敛停止）。
       maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。
     MD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。
     tdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。
@@ -31,7 +31,7 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
     trajectory_interval/log_interval=10（步）；seed=42；overwrite=False。
     measure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。
 
-    参考：pre_relax={"relax_cell": True, "optimizer": "FIRE", "steps": 200}，
+    参考：pre_relax={"relax_cell": True, "optimizer": "LBFGS", "steps": 1000}，
     配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。
     返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；
     elapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。
