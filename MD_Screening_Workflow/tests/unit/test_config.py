@@ -22,6 +22,7 @@ def test_defaults_and_five_ps_precheck_boundary():
     assert config.stop_criteria.msd_hop_factor == 3
     assert config.uncertainty_on_stop is False
     assert config.jump_analysis is True
+    assert config.jump_site_inner_fraction == 0.8
     assert config.stop_criteria.no_jump_stop_ps == 10
     assert config.framework_criteria.min_msd_A2 == 1
 
@@ -39,7 +40,8 @@ def test_defaults_and_five_ps_precheck_boundary():
     {"device": ""}, {"default_dtype": "half"}, {"uncertainty_on_stop": "yes"},
     {"uncertainty_samples": 2},
     {"jump_analysis": "yes"}, {"jump_min_residence_ps": 0},
-    {"jump_site_radius_A": -1}, {"framework_criteria": {}},
+    {"jump_site_radius_A": -1}, {"jump_site_inner_fraction": 0},
+    {"jump_site_inner_fraction": 1.01}, {"framework_criteria": {}},
     {"framework_rdf_repeat": (0, 2, 2)}, {"framework_rdf_repeat": (True, 2, 2)},
     {"framework_rdf_repeat": [2, 2, 2]},
     {"enable_symmetrix": "yes"}, {"enable_symmetrix": True}, {"symmetrix_use_kokkos": True},

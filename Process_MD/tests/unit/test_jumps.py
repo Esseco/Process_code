@@ -66,6 +66,22 @@ def test_native_events_units_atom_identity_and_residence(frames, backend):
     assert any("vacancies" in note for note in result.diagnostics)
 
 
+def test_empty_inner_state_index_is_unresolved_not_a_measured_zero(frames, backend):
+    backend[1].transitions_between_sites.side_effect = IndexError(
+        "index -1 is out of bounds for axis 0 with size 0")
+    result = analyze(frames)
+    assert result.status == "unmapped"
+    assert result.n_jumps is None and result.n_jumping_ions is None
+    assert result.site_coverage is None
+    assert any("inner-site" in note and "site_inner_fraction" in note for note in result.diagnostics)
+
+
+def test_unrelated_index_error_is_not_hidden(frames, backend):
+    backend[1].transitions_between_sites.side_effect = IndexError("unexpected index error")
+    with pytest.raises(IndexError, match="unexpected index error"):
+        analyze(frames)
+
+
 def test_fully_mapped_static_trajectory_is_a_measured_zero(frames, backend):
     result = analyze(frames)
     assert result.status == "estimated" and result.n_jumps == result.n_jumping_ions == 0

@@ -239,7 +239,17 @@ def analyze_jumps(
     try:
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
-            transitions = _native_transitions(native, native_sites, species, radius, float(site_inner_fraction))
+            try:
+                transitions = _native_transitions(native, native_sites, species, radius, float(site_inner_fraction))
+            except IndexError as exc:
+                if str(exc) != "index -1 is out of bounds for axis 0 with size 0":
+                    raise
+                result.status = "unmapped"
+                result.diagnostics.append(
+                    "GEMDAT could not form an event because an outer-site change had no inner-site transition record; "
+                    "jump counts are unknown. Increase site_inner_fraction or review reference-site alignment and site_radius_A."
+                )
+                return result
             states = np.asarray(transitions.states)
             if states.shape != (len(positions), len(mobile_indices)) or not np.isfinite(states).all() or np.any(states < -1) or np.any(states >= len(sites)):
                 raise ValueError("GEMDAT returned invalid site states")

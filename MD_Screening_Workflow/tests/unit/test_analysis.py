@@ -124,7 +124,8 @@ def test_jump_analysis_uses_cumulative_production_frames_and_records_unresolved_
     event, _ = sample
     config = ScreeningConfig(target_atoms=2, precheck_ps=0.002, check_interval_ps=0.004,
                              max_production_ps=0.004, timestep_fs=1, trajectory_interval=1,
-                             stop_criteria=StopCriteria(no_jump_stop_ps=0.004))
+                             stop_criteria=StopCriteria(no_jump_stop_ps=0.004),
+                             jump_site_inner_fraction=0.65)
     calls = []
     def capture(frames, **kwargs):
         selected = list(frames)
@@ -142,5 +143,6 @@ def test_jump_analysis_uses_cumulative_production_frames_and_records_unresolved_
     report = analyze_check(event, config, 1, reference_sites=reference)
     assert len(calls) == 1
     assert calls[0]["reference_sites"] is reference
+    assert calls[0]["site_inner_fraction"] == config.jump_site_inner_fraction
     assert report.jumps.status == "unmapped"
     assert report.transport_status == "insufficient_data"

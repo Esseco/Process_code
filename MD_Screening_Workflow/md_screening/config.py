@@ -51,6 +51,7 @@ class ScreeningConfig:
     jump_analysis: bool = True
     jump_min_residence_ps: float = 0.2
     jump_site_radius_A: float | None = None
+    jump_site_inner_fraction: float = 0.8
     framework_criteria: FrameworkCriteria | None = field(default_factory=FrameworkCriteria)
     framework_rdf_repeat: tuple[int, int, int] = (1, 1, 1)
 
@@ -119,6 +120,10 @@ class ScreeningConfig:
             raise ValueError("framework_rdf_repeat must be a tuple of three positive integers")
         if type(self.jump_analysis) is not bool:
             raise ValueError("jump_analysis must be bool")
+        value = self.jump_site_inner_fraction
+        if (isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value)
+                or not 0 < value <= 1):
+            raise ValueError("jump_site_inner_fraction must be finite and lie in (0, 1]")
         for name in ("jump_min_residence_ps", "jump_site_radius_A"):
             value = getattr(self, name)
             if value is None and name == "jump_site_radius_A":

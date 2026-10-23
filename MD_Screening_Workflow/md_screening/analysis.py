@@ -61,6 +61,7 @@ def analyze_check(event: dict, config: ScreeningConfig, index: int, *, reference
                 islice(frames, first_production_frame, end_frame), species=config.mobile_species,
                 frame_interval_ps=config.frame_interval_ps, reference_sites=reference_sites,
                 site_radius_A=config.jump_site_radius_A, min_residence_ps=config.jump_min_residence_ps,
+                site_inner_fraction=config.jump_site_inner_fraction,
             )
 
     with Trajectory(str(event["trajectory_file"]), "r") as frames:

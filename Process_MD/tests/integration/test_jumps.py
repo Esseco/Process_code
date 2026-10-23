@@ -65,6 +65,18 @@ def test_native_short_excursion_and_destination_without_residence_have_no_jump()
     assert result.status == "estimated" and result.n_jumps == 0
 
 
+def test_native_offset_sites_use_configurable_inner_tolerance():
+    # Both sites are offset by .6 A: outside .5*.9, inside .8*.9 A.
+    frames = make_frames(np.r_[np.full(10, 1.6), np.full(20, 3.6)])
+    strict = analyze(frames, site_inner_fraction=0.5)
+    assert strict.status == "unmapped" and strict.n_jumps is None
+    tolerant = analyze(frames, site_inner_fraction=0.8)
+    assert tolerant.status == "estimated" and tolerant.n_jumps == 1
+    assert tolerant.site_coverage == 1
+    assert tolerant.events[0]["start_site"] == 0
+    assert tolerant.events[0]["end_site"] == 1
+
+
 def test_native_resident_hop_and_event_times():
     result = analyze(make_frames(np.r_[np.ones(10), np.full(20, 3)]))
     assert result.status == "estimated" and result.n_jumps == result.n_jumping_ions == 1
