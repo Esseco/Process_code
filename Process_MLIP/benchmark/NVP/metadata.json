@@ -1,0 +1,76 @@
+{
+  "source": "E:/0-Crystal_structure/Polyanion/NASICON/NVP_FullNa_full_Na.cif",
+  "oxidation_states": {
+    "Na": 1,
+    "V": 3,
+    "P": 5,
+    "O": -2
+  },
+  "method": "pymatgen OrderDisorderedStructureTransformation algo=2 best-first, first result",
+  "structures": [
+    {
+      "file": "NVP_120.vasp",
+      "atoms": 120,
+      "composition": {
+        "Na": 18.0,
+        "V": 12.0,
+        "P": 18.0,
+        "O": 72.0
+      },
+      "supercell_factors": [
+        1,
+        1,
+        1
+      ],
+      "ewald_eV": -5580.773134031897
+    },
+    {
+      "file": "NVP_240.vasp",
+      "atoms": 240,
+      "composition": {
+        "Na": 36.0,
+        "V": 24.0,
+        "P": 36.0,
+        "O": 144.0
+      },
+      "supercell_factors": [
+        2,
+        1,
+        1
+      ],
+      "ewald_eV": -11161.54626806375
+    },
+    {
+      "file": "NVP_480.vasp",
+      "atoms": 480,
+      "composition": {
+        "Na": 72.0,
+        "V": 48.0,
+        "P": 72.0,
+        "O": 288.0
+      },
+      "supercell_factors": [
+        2,
+        2,
+        1
+      ],
+      "ewald_eV": -22321.236675727316
+    },
+    {
+      "file": "NVP_720.vasp",
+      "atoms": 720,
+      "composition": {
+        "Na": 108.0,
+        "V": 72.0,
+        "P": 108.0,
+        "O": 432.0
+      },
+      "supercell_factors": [
+        3,
+        2,
+        1
+      ],
+      "ewald_eV": -33483.77010334865
+    }
+  ]
+}

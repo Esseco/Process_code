@@ -18,6 +18,9 @@ RECIPES = {
     "capacity": ("Process_Struct", "theoretical_specific_capacity"),
     "wyckoff": ("Process_Struct", "get_wyckoff_sites"),
     "mace_relax": ("Process_MLIP.mace_relax", "relax_structure_mace"),
+    "nep_train": ("Process_MLIP.nep_training", "prepare_nep_training"),
+    "nep_finetune": ("Process_MLIP.nep_training", "fine_tune_nep"),
+    "nep_run": ("Process_MLIP.nep_training", "train_nep"),
 }
 
 

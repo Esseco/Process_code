@@ -2,9 +2,249 @@
 
 源码静态索引；保留原有函数名。类构造和公开方法分别列出。默认值不代表适用于所有体系。
 
+## `main`
+
+源文件：[benchmark/__main__.py](benchmark/__main__.py)，第 8 行。
+
+```python
+main(argv=None)
+```
+
+CLI; validate never loads models, runs MD, or creates output files.
+
+## `load_config`
+
+源文件：[benchmark/config.py](benchmark/config.py)，第 35 行。
+
+```python
+load_config(path)
+```
+
+Read YAML, resolve paths relative to it, validate all benchmark parameters.
+
+## `validate_endmembers`
+
+源文件：[benchmark/ehull.py](benchmark/ehull.py)，第 10 行。
+
+```python
+validate_endmembers(compositions)
+```
+
+Require elemental terminal phases; never invent/reference-download competitors.
+
+## `compute_hull`
+
+源文件：[benchmark/ehull.py](benchmark/ehull.py)，第 20 行。
+
+```python
+compute_hull(records, tolerance=1e-06)
+```
+
+Return PhaseDiagram and per-ID eV/atom values from relaxed whole-cell eV.
+
+## `read_reference`
+
+源文件：[benchmark/ehull.py](benchmark/ehull.py)，第 47 行。
+
+```python
+read_reference(path)
+```
+
+Strict ID,ehull_eV_per_atom CSV; references are already-normalized Ehull.
+
+## `compare_reference`
+
+源文件：[benchmark/ehull.py](benchmark/ehull.py)，第 69 行。
+
+```python
+compare_reference(rows, reference, tolerance=1e-06)
+```
+
+Match IDs exactly, report coverage, errors and stable-set confusion counts.
+
+## `make_demo`
+
+源文件：[benchmark/examples/make_demo.py](benchmark/examples/make_demo.py)，第 10 行。
+
+```python
+make_demo(directory, quick=False)
+```
+
+Create synthetic structures and YAML; EMT is only an end-to-end demonstration.
+
+## `Measurement`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 13 行。
+
+```python
+Measurement
+```
+
+Synchronized wall time and same-process torch allocator peak in MiB.
+
+## `Measurement.__init__`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 16 行。
+
+```python
+Measurement.__init__(self, device)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `Measurement.synchronize`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 26 行。
+
+```python
+Measurement.synchronize(self)
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `warmup`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 49 行。
+
+```python
+warmup(atoms, calculator, device)
+```
+
+One uncached energy/force/stress probe per structure, outside both timers.
+
+## `relax`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 62 行。
+
+```python
+relax(atoms, calculator, directory, parameters, device)
+```
+
+Full-cell LBFGS; count uncached ASE force requests, save final structure.
+
+## `molecular_dynamics`
+
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 92 行。
+
+```python
+molecular_dynamics(atoms, calculator, directory, parameters, device, seed)
+```
+
+Reuse NHC NVT; return the existing integrator-only timer, not outer wall time.
+
+## `speed_plots`
+
+源文件：[benchmark/plotting.py](benchmark/plotting.py)，第 9 行。
+
+```python
+speed_plots(rows, root, stage)
+```
+
+Separate curves per stage; same atom count replicates remain separate points.
+
+## `phase_plot`
+
+源文件：[benchmark/plotting.py](benchmark/plotting.py)，第 37 行。
+
+```python
+phase_plot(diagram, root, rows)
+```
+
+Plot <=4-component hulls; always provide an ID/Ehull plot for any dimension.
+
+## `register_model`
+
+源文件：[benchmark/registry.py](benchmark/registry.py)，第 8 行。
+
+```python
+register_model(name, factory)
+```
+
+Register factory(model_config_dict) -> ASE calculator; reject replacement.
+
+## `create_calculator`
+
+源文件：[benchmark/registry.py](benchmark/registry.py)，第 36 行。
+
+```python
+create_calculator(config)
+```
+
+Build one configured calculator without silent model/backend fallback.
+
+## `run_benchmark`
+
+源文件：[benchmark/runner.py](benchmark/runner.py)，第 164 行。
+
+```python
+run_benchmark(config_path, mode, model_ids=None)
+```
+
+Run speed or ehull; resume completed stages, retry failed stages, reject input drift.
+
+## `write_json`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 18 行。
+
+```python
+write_json(path, value)
+```
+
+Atomically replace one owned JSON report, rejecting NaN/Infinity.
+
+## `write_csv`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 34 行。
+
+```python
+write_csv(path, rows)
+```
+
+Write union-of-columns CSV, retaining explicit error records.
+
+## `file_hash`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 47 行。
+
+```python
+file_hash(path)
+```
+
+Stream SHA256 without loading large checkpoints into memory.
+
+## `identity`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 56 行。
+
+```python
+identity(config)
+```
+
+Bind outputs to input bytes, checkpoints, configuration and core implementation.
+
+## `output_lock`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 74 行。
+
+```python
+output_lock(root)
+```
+
+Prevent concurrent writers; stale locks require explicit user inspection/removal.
+
+## `environment`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 90 行。
+
+```python
+environment()
+```
+
+Record environment and GPU inventory without requiring torch on CPU.
+
 ## `create_mace_calculator`
 
-源文件：[calculators.py](calculators.py)，第 20 行。
+源文件：[calculators.py](calculators.py)，第 22 行。
 
 ```python
 create_mace_calculator(model_path, *, device='cuda', head=None, default_dtype='float64', enable_cueq=False, enable_symmetrix=False, symmetrix_use_kokkos=False, symmetrix_species=None)
@@ -17,7 +257,7 @@ Pass head explicitly for renamed multihead weights or other DFT tasks.
 
 ## `create_sevennet_calculator`
 
-源文件：[calculators.py](calculators.py)，第 97 行。
+源文件：[calculators.py](calculators.py)，第 99 行。
 
 ```python
 create_sevennet_calculator(model='7net-omni', *, device='cpu', modal='mpa', enable_flash=False)
@@ -31,7 +271,7 @@ combine energies from different tasks. No dtype conversion is applied.
 
 ## `create_chgnet_calculator`
 
-源文件：[calculators.py](calculators.py)，第 130 行。
+源文件：[calculators.py](calculators.py)，第 132 行。
 
 ```python
 create_chgnet_calculator(model_path=None, *, device='cuda', model_name='0.3.0', model=None)
@@ -44,7 +284,7 @@ of model_path and model may be supplied; no dependencies are installed.
 
 ## `create_orb_calculator`
 
-源文件：[calculators.py](calculators.py)，第 149 行。
+源文件：[calculators.py](calculators.py)，第 151 行。
 
 ```python
 create_orb_calculator(model_path=None, *, device='cuda', model_name='orb-v3-conservative-inf-omat', precision='float32-highest', compile=False)
@@ -57,7 +297,7 @@ model_path must match model_name's architecture. No fallback model is used.
 
 ## `create_mlip_calculator`
 
-源文件：[calculators.py](calculators.py)，第 175 行。
+源文件：[calculators.py](calculators.py)，第 177 行。
 
 ```python
 create_mlip_calculator(model='mace-mh1')
@@ -370,9 +610,9 @@ stages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公�
 衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。
 
 pre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：
-  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。
-  optimizer="FIRE"（BFGS / FIRE / LBFGS，须大写）。
-  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。
+  enabled=True；relax_cell=True（原子与晶胞一起弛豫，False 仅弛豫原子）。
+  optimizer="LBFGS"（BFGS / FIRE / LBFGS，须大写）。
+  fmax=0.05 eV/Å；steps=1000（非负整数）；require_convergence=True（未收敛停止）。
   maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。
 MD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。
 tdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。
@@ -380,7 +620,7 @@ NPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。
 trajectory_interval/log_interval=10（步）；seed=42；overwrite=False。
 measure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。
 
-参考：pre_relax={"relax_cell": True, "optimizer": "FIRE", "steps": 200}，
+参考：pre_relax={"relax_cell": True, "optimizer": "LBFGS", "steps": 1000}，
 配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。
 返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；
 elapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。
@@ -423,7 +663,7 @@ MLIPRelaxer.relax(self, traj_file='relax.traj', log_file='relax.log', final_stru
 
 ## `model_config`
 
-源文件：[model_config.py](model_config.py)，第 23 行。
+源文件：[model_config.py](model_config.py)，第 25 行。
 
 ```python
 model_config(preset='mace-mh1', **overrides)
@@ -431,8 +671,9 @@ model_config(preset='mace-mh1', **overrides)
 
 Return an independent dict of model defaults with explicit overrides.
 
-Presets: mace-mh1, sevennet-omni, chgnet, orb-v3. Default device is cuda;
-accelerators default off. model_path overrides pretrained weights. This
+Presets: mace-mh1, sevennet-omni, chgnet, orb-v3 and nep. Default device
+is cuda for the original model loaders; NEP uses an explicit cpu/gpu
+backend. Accelerators default off. model_path overrides pretrained weights. This
 function does not check local files, import models, or download anything.
 
 ## `export_msd`
@@ -461,6 +702,105 @@ Requires pymatgen-analysis-diffusion only when called; no models are loaded.
 Writes only output_csv, refuses overwrite by default. Internal pymatgen
 diffusion/conductivity fits are discarded; use fit_msd explicitly.
 
+## `create_nep_calculator`
+
+源文件：[nep.py](nep.py)，第 6 行。
+
+```python
+create_nep_calculator(model_path, *, backend='cpu', gpumd_command=None, directory=None)
+```
+
+Load a NEP4 model through Calorine's explicit CPU/GPU backend.
+
+``backend='cpu'`` constructs ``CPUNEP``. ``backend='gpu'`` constructs
+``GPUNEP`` and optionally forwards a GPUMD command and persistent working
+directory. Optional dependencies are imported only when this function is
+called; no fallback between CPU and GPU is attempted.
+
+## `vasp_to_nep_xyz`
+
+源文件：[nep_data.py](nep_data.py)，第 109 行。
+
+```python
+vasp_to_nep_xyz(inputs, output_file='train.xyz', *, index=':', energy_type='free_energy', include_virial=True, overwrite=False)
+```
+
+Convert labelled VASP results to GPUMD NEP extended XYZ.
+
+## `validate_nep_dataset`
+
+源文件：[nep_data.py](nep_data.py)，第 149 行。
+
+```python
+validate_nep_dataset(path, *, expected_species=None, require_forces=True, require_virial=False)
+```
+
+Validate a GPUMD NEP extended XYZ dataset and return a summary.
+
+## `split_nep_dataset`
+
+源文件：[nep_data.py](nep_data.py)，第 193 行。
+
+```python
+split_nep_dataset(input_file, output_dir, *, train_fraction=0.9, seed=42, overwrite=False)
+```
+
+Deterministically split a NEP dataset into train.xyz and test.xyz.
+
+## `run_nep_md`
+
+源文件：[nep_md.py](nep_md.py)，第 105 行。
+
+```python
+run_nep_md(structure, model_path, output_dir, *, parameters, executable='gpumd', overwrite=False, env=None, timeout=None)
+```
+
+Run a native GPUMD task with an explicit NEP model and run parameters.
+
+The task directory contains ``model.xyz``, ``nep.txt``, ``run.in``,
+captured stdout/stderr, and ``report.json``. GPUMD output files such as
+``thermo.out`` and ``dump.xyz`` are preserved for later analysis.
+
+## `relax_structure_nep`
+
+源文件：[nep_relax.py](nep_relax.py)，第 6 行。
+
+```python
+relax_structure_nep(structure, model_path, *, output_path=None, backend='cpu', gpumd_command=None, directory=None, fmax=0.05, steps=150, relax_cell=True)
+```
+
+Relax one structure with a Calorine NEP calculator.
+
+## `prepare_nep_training`
+
+源文件：[nep_training.py](nep_training.py)，第 129 行。
+
+```python
+prepare_nep_training(output_dir, train_xyz, test_xyz, *, species, parameters=None, overwrite=False, mode='train')
+```
+
+Create a self-contained GPUMD NEP training/fine-tuning directory.
+
+## `fine_tune_nep`
+
+源文件：[nep_training.py](nep_training.py)，第 166 行。
+
+```python
+fine_tune_nep(output_dir, foundation_model, foundation_restart, *, species, train_xyz=None, test_xyz=None, parameters=None, executable='nep', env=None, timeout=None, overwrite=False)
+```
+
+Prepare and run a NEP fine-tuning task from a foundation model/restart.
+
+## `train_nep`
+
+源文件：[nep_training.py](nep_training.py)，第 231 行。
+
+```python
+train_nep(output_dir, *, executable='nep', env=None, timeout=None, overwrite=False)
+```
+
+Run the external ``nep`` executable in a prepared task directory.
+
 ## `relax_structure_sevennet`
 
 源文件：[sevennet_relax.py](sevennet_relax.py)，第 6 行。
@@ -475,6 +815,33 @@ Inputs are a structure path, ASE Atoms or pymatgen Structure. Atoms are
 copied. Only output_path is written (VASP format, overwrites if present).
 No random sampling, trajectory or log. Named models may download weights;
 supply a trusted local checkpoint for offline repeatable calculations.
+
+## `vasp_to_xyz`
+
+源文件：[training_data.py](training_data.py)，第 12 行。
+
+```python
+vasp_to_xyz(inputs, output_file='mace_train.xyz', *, index=':', energy_type='free_energy', include_stress=True, overwrite=False)
+```
+
+Export VASP results to MACE extxyz; return the number of written frames.
+
+inputs: OUTCAR/vasprun.xml path, calculation directory, or a list of these.
+Directories prefer vasprun.xml over OUTCAR; .gz versions are supported.
+index: ASE frame selector, e.g. ":" (all), -1 (last), or "::10".
+REF_energy is the whole-cell energy in eV. Default "free_energy" uses
+VASP's force-consistent free energy; "energy" selects ASE's extrapolated
+zero-smearing energy. Never mix energy conventions within a dataset.
+REF_forces are raw DFT forces in eV/Angstrom, without applying constraints.
+REF_stress is ASE tensile-positive stress in eV/Angstrom^3 (3x3), including
+ASE's VASP sign/unit conversion. Set include_stress=False if unavailable.
+
+Coordinates, cell, species and PBC are retained; constraints/calculators
+are removed. Missing/non-finite labels fail without changing an existing
+output. The output is replaced only after every selected frame succeeds.
+No DFT/model calculation, random sampling or convergence filtering occurs;
+the caller must select electronically converged, consistent DFT results.
+Uses the existing ASE/NumPy stack (py1); no MACE training dependency.
 
 ## `export_traj_frames`
 

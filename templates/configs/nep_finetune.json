@@ -1,0 +1,16 @@
+{
+  "recipe": "nep_finetune",
+  "parameters": {
+    "output_dir": "nep_finetune_task",
+    "foundation_model": "foundation.txt",
+    "foundation_restart": "foundation.restart",
+    "species": ["Li", "O"],
+    "train_xyz": "train.xyz",
+    "test_xyz": "test.xyz",
+    "parameters": {
+      "generation": 5000,
+      "batch": 5000,
+      "population": 50
+    }
+  }
+}

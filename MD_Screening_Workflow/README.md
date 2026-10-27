@@ -1,8 +1,81 @@
 # MD_Screening_Workflow
 
+## 直接运行（推荐）
+
+先提供用于 MD 的超胞，以及同一超胞/原点下的满位点参考。
+直接入口不自动扩胞，弛豫仍按设置优化原子和晶胞。
+
+在根目录 run_md.py 顶部填写：
+```python
+STRUCTURE_PATH = "0.vasp"
+REFERENCE_SITES_PATH = "LCO.vasp"
+OUTPUT_DIR = None  # 自动新建 runs/结构名_时间戳_唯一后缀
+PRESET = dict(temperature_K=800, max_production_ps=200, model_path=None)
+```
+然后运行 `python run_md.py`。也可覆盖路径：
+```text
+python run_md.py 0.vasp LCO.vasp --output runs/case_001
+```
+
+Python API（Py-Code 已在 PYTHONPATH）：
+```python
+from MD_Screening_Workflow import run_md, screening_preset
+preset = screening_preset(temperature_K=800, max_production_ps=200)
+result = run_md("0.vasp", reference_sites="LCO.vasp", config=preset)
+print(result.status, result.output_dir / "results/summary.json")
+```
+editable/wheel 安装时也可从 md_screening 导入同名 API。
+默认 MACE-OMat、GPU/Symmetrix、变胞 LBFGS 1000 步、5 ps 初检、
+10 ps 检查周期、生产最多 200 ps；积分 2 fs、每 20 fs 存帧。
+不传 config/mobile_species 时自动识别 Li/Na，混合时显式指定；
+Na 预设可用 screening_preset(mobile_species="Na")。
+模型依次使用配置、PROCESS_MD_MACE_MODEL、与 Process_MLIP 相邻的
+MLIP_model/mace/mace-omat-0-medium.model；不下载或自动转为 CPU。
+输出目录必须是新的，不覆盖或搬动既有结果。
+
+## 输出从哪里看
+
+```text
+runs/一次任务/
+├── README.md                 # 自动生成的文件导航
+├── parameters.json           # 参数与输入来源
+├── run.log                   # 阶段、检查决定与错误
+├── prepared/                 # 实际结构、参考、弛豫后结构
+├── relaxation/               # 弛豫轨迹、日志、末结构、报告
+├── md/production/            # md.traj.gz（运行中 md.traj）、md.csv、final.traj
+├── checks/                   # 000_precheck、001_production...
+├── results/                  # 首先查看这里
+│   ├── summary.json          # 状态、D、σ_NE、R²、原因、文件路径
+│   ├── summary.csv           # 最终/最新单行结果
+│   ├── msd.csv               # 最新生产 MSD（如有）
+│   └── final_structure.extxyz
+├── summary.csv               # 所有检查点历史
+└── run.json                  # 完整状态与详细数据
+```
+
+results/summary.* 在运行中更新。空值表示未解析，预算耗尽不等于 D=0。
+ready_for_screening 对应 heuristic_ready，同时保留 transport_status、
+framework_status 和停止原因。初检失败没有 D/σ，计算错误保留 failed 与错误信息。
+连续轨迹不复制，严格 restart 尚未实现。
+
+## 代码分工
+
+| 职责 | 文件 |
+| --- | --- |
+| 直接运行模板 | run_md.py：输入、预设和启动 |
+| 预设 | md_screening/presets.py；完整参数校验在 config.py |
+| 启动适配 | runner.py：路径、模型来源、移动离子、任务目录 |
+| 工作流 | workflow.py：弛豫、连续 MD 与检查调度 |
+| 输出 | reporting.py：日志、导航、最终汇总 |
+| 轨迹归档 | archiving.py：流式 gzip、无损校验、后端路径同步 |
+| 数值与审查 | analysis.py 调用 Process_MD；stopping.py/stability.py 保留既有判据 |
+
+旧 run_screening 和 ScreeningConfig() 保留 target_atoms=200 的默认值；
+保持输入结构时设置 target_atoms=None，或使用新的 run_md/screening_preset。
+
 复用 `Process_MD` 的简单、低成本 MLIP-MD 筛选。第一版处理**一个已生成的结构/SOC 构型、一个温度**，默认模型为 **MACE-OMat**。
 
-默认：至少 200 原子、800 K NVT、**2 fs 积分步长，每 20 fs 保存一帧**，前 **5 ps** 骨架检查，随后每 **10 ps** 分析一次累计生产轨迹。全程使用同一积分器，不重置 thermostat。
+直接入口使用你提供的超胞，800 K NVT、**2 fs 积分步长，每 20 fs 保存一帧**，前 **5 ps** 骨架检查，随后每 **10 ps** 分析一次累计生产轨迹。全程使用同一积分器，不重置 thermostat。
 
 ## 输入当前结构和满位点参考运行
 
@@ -70,7 +143,7 @@ result = run_screening(
     reference_sites="POSCAR_FULL",
     output_dir="runs/material_A_SOC_50",  # 必须为新目录
     config=ScreeningConfig(
-        mobile_species="Na",
+        mobile_species="Na", target_atoms=None,
         configuration_id="material_A_SOC_50",  # 只记录标签，不生成SOC构型
         model_path="/path/to/mace-omat-0-medium.model",
         device="cuda",
@@ -109,7 +182,7 @@ python examples/run_case.py POSCAR runs/material_A `
 
 ## 单结构筛选流程
 
-默认先把 SOC 结构扩胞到至少 200 个原子，再调用 `Process_MLIP` 的 ASE 预弛豫实现（默认原子与晶胞一起优化，LBFGS、`fmax=0.05 eV/Å`、最多 1000 步、`maxstep=0.05 Å`），然后进行 5 ps NVT 初检。弛豫不收敛时默认停止；可通过 `ScreeningConfig` 调整参数或关闭弛豫。初检通过后每 10 ps 检查结构、MSD、GEMDAT 跳跃和输运拟合，生产阶段最多 200 ps。
+推荐入口直接使用已扩胞的 SOC 结构，调用 `Process_MLIP` 的 ASE 预弛豫实现（默认原子与晶胞一起优化，LBFGS、`fmax=0.05 eV/Å`、最多 1000 步、`maxstep=0.05 Å`），然后进行 5 ps NVT 初检。弛豫不收敛时默认停止；可通过 `ScreeningConfig` 调整参数或关闭弛豫。初检通过后每 10 ps 检查结构、MSD、GEMDAT 跳跃和输运拟合，生产阶段最多 200 ps。
 
 弛豫轨迹、日志和报告写入 `relaxation/`，弛豫后的结构写入 `prepared/relaxed_structure.extxyz`。完整位点参考结构不参与弛豫或 MD；若弛豫改变晶胞，程序按相同晶胞变形同步更新参考位点。
 
@@ -164,3 +237,26 @@ python examples/run_case.py POSCAR runs/case --reference-sites POSCAR_FULL --spe
 短 LJ 演示只跑 14 步并使用记录模式，不加载模型，不验证真实材料性质。验证临时产物结束后清理。
 
 已有真实CPU MACE-OMat短测：[结果记录](environment/SMOKE_RESULT.md)。8原子LiF、1900步、总1.9 ps，约471秒；结构/跳跃分析运行成功，按短测预算结束。此测试压缩检查窗口，未改变正式5+10 ps默认值，也未强行触发低移动性早停。
+
+## 轨迹无损归档
+
+推荐的 `run_md` / `screening_preset` 默认 `compress_trajectory=True`：
+全部 MD、检查和末结构导出成功后，将 `md/production/md.traj` 用 gzip level 6
+按块压缩，解压读回并核对 SHA-256 与原始字节数；路径和汇总写入成功后才移除原轨迹。
+坐标、力、动量、精度和全部已保存帧保持不变，不改变 2 fs 积分或 20 fs 存帧。
+失败或中断的 MD 不自动归档；压缩失败保留原轨迹，`summary.json` 和 `run.log` 记录警告，
+不会把已完成的 MD 判为计算失败。压缩需要额外磁盘空间，完成后才释放原轨迹空间。
+
+归档后的实际路径在 `result.md.trajectory` 和 `results/summary.json` 的 `files.trajectory`；
+`trajectory_archive` 保存原始/压缩字节数与校验值。单独分析前先解压，例如在 Linux：
+
+```text
+cd md/production
+gzip -dk md.traj.gz
+```
+
+此命令保留压缩包，解压后可用原有 ASE/Process_MD 接口读取 `md.traj`。
+若希望运行后直接读取未压缩轨迹，使用 `run_md(..., compress_trajectory=False)`，
+或在 `run_md.py` 的 `PRESET` 中设置 `compress_trajectory=False`。
+旧 `ScreeningConfig()` / `run_screening` 默认关闭归档；显式设置 `True` 可开启。
+底层 `Process_MD.MDRunner`、`Process_MLIP.run_md` 的行为保持不变。

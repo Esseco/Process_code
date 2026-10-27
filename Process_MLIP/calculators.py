@@ -6,6 +6,8 @@ import re
 import os
 import inspect
 
+from .nep import create_nep_calculator
+
 
 def _e3nn_import_context():
     # e3nn 0.4.x constants contain slice objects; torch >=2.6 defaults to
@@ -183,4 +185,6 @@ def create_mlip_calculator(model="mace-mh1"):
         return create_sevennet_calculator(source, **config)
     factories = {"mace": create_mace_calculator, "chgnet": create_chgnet_calculator,
                  "orb": create_orb_calculator}
+    if kind == "nep":
+        return create_nep_calculator(**config)
     return factories[kind](**config)

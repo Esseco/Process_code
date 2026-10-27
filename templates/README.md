@@ -10,6 +10,7 @@
 | capacity | Process_Struct.theoretical_specific_capacity | py1 |
 | wyckoff | Process_Struct.get_wyckoff_sites | py1，自动把结构路径转换为 Structure |
 | mace_relax | Process_MLIP.mace_relax.relax_structure_mace | 已有 MACE 环境 |
+| nep_train / nep_finetune / nep_run | Process_MLIP.nep_training | 独立 GPUMD/NEP 环境；先生成任务，再显式运行 |
 
 复制 configs 中的 JSON，parameters 使用 API.md 中的真实参数名；路径按执行时工作目录解释，建议绝对路径。
 

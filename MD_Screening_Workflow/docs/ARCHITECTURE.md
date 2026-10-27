@@ -1,3 +1,11 @@
+# 直接运行与输出整理
+
+run_md.py → runner.run_md → workflow.run_screening → Process_MD → Process_MLIP/ASE。
+presets.screening_preset 默认 target_atoms=None：使用输入超胞，旧低层默认值保持兼容。
+reporting.py 生成 UTC 流程日志、参数、导航与 results/summary.json、summary.csv；末结构和最新 MSD 为小型导出，连续轨迹不复制。原 prepared/relaxation/md/checks 路径保持稳定。
+未解析的 D/σ 保持 None，区分粗筛通过、预算耗尽、结构异常和失败。
+完整说明见项目 README；实现记录见 MD_ENTRY_PLAN.md。
+
 # 职责与扩展入口
 
 第一版只有一个执行入口 `run_screening`，没有调度器、任务数据库或 Agent。

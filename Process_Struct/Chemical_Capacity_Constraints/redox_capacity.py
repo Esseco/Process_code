@@ -54,6 +54,17 @@ def infer_environment(formula: str | Composition) -> str:
     if "O" in symbols and halogens:
         return "oxyhalide"
     if "O" in symbols:
+        alkali_metals = symbols.intersection({"Li", "Na", "K"})
+        layered_oxide_cations = symbols.intersection(
+            {
+                "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Nb",
+                "Mo", "W", "Ru", "Rh", "Pd", "Ag", "Ta", "Re", "Ir",
+                "Pt", "Mg", "Al", "Zn", "Zr", "Hf", "Ga", "Ge", "Sc",
+                "Y", "La", "Ce", "Pr", "Nd", "Sm", "Gd", "Cd", "Pb",
+            }
+        )
+        if alkali_metals and layered_oxide_cations:
+            return "layered_oxide"
         return "oxide"
     if halogens and has_sulfur_family:
         return "mixed_anion"

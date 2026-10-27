@@ -16,6 +16,8 @@ _PRESETS = {
     "orb-v3": dict(type="orb", model_path=None,
                    model_name="orb-v3-conservative-inf-omat", device="cuda",
                    precision="float32-highest", compile=False),
+    "nep": dict(type="nep", model_path=None, backend="cpu",
+                 gpumd_command=None, directory=None),
 }
 _ALIASES = dict(mace="mace-mh1", sevennet="sevennet-omni", orb="orb-v3")
 
@@ -23,8 +25,9 @@ _ALIASES = dict(mace="mace-mh1", sevennet="sevennet-omni", orb="orb-v3")
 def model_config(preset="mace-mh1", **overrides):
     """Return an independent dict of model defaults with explicit overrides.
 
-    Presets: mace-mh1, sevennet-omni, chgnet, orb-v3. Default device is cuda;
-    accelerators default off. model_path overrides pretrained weights. This
+    Presets: mace-mh1, sevennet-omni, chgnet, orb-v3 and nep. Default device
+    is cuda for the original model loaders; NEP uses an explicit cpu/gpu
+    backend. Accelerators default off. model_path overrides pretrained weights. This
     function does not check local files, import models, or download anything.
     """
     if not isinstance(preset, str):
@@ -44,7 +47,7 @@ def model_config(preset="mace-mh1", **overrides):
     for key in ("enable_cueq", "enable_symmetrix", "symmetrix_use_kokkos", "enable_flash", "compile"):
         if key in result and type(result[key]) is not bool:
             raise TypeError(f"{key} must be bool")
-    if not isinstance(result["device"], str) or not result["device"]:
+    if "device" in result and (not isinstance(result["device"], str) or not result["device"]):
         raise ValueError("device must be a nonempty string")
     if result["model_path"] is not None and not isinstance(result["model_path"], str):
         raise TypeError("model_path must be a path string or None")
@@ -57,6 +60,18 @@ def model_config(preset="mace-mh1", **overrides):
             raise ValueError("MACE default_dtype must be float32 or float64")
         if result["head"] is not None and not isinstance(result["head"], str):
             raise TypeError("MACE head must be a string or None")
+    elif result["type"] == "nep":
+        if result["model_path"] is None or not isinstance(result["model_path"], str) or not result["model_path"]:
+            raise ValueError("NEP requires a local model_path")
+        if result["backend"] not in ("cpu", "gpu"):
+            raise ValueError("NEP backend must be cpu or gpu")
+        for key in ("gpumd_command", "directory"):
+            if isinstance(result[key], Path):
+                result[key] = str(result[key])
+            if result[key] is not None and not isinstance(result[key], str):
+                raise TypeError(f"{key} must be a string or None")
+        if result["backend"] == "cpu" and result["gpumd_command"] is not None:
+            raise ValueError("gpumd_command is only valid for the GPU backend")
     else:
         if not isinstance(result["model_name"], str) or not result["model_name"]:
             raise ValueError("model_name must be a nonempty string")

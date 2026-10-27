@@ -198,3 +198,5 @@ python tools/verify.py --package
 前两个示例结束后清理临时结果；short_md 通过原库运行八步 ASE LJ，仅用于接口检查。验证工具运行单元/集成测试，并可离线构建 wheel、临时安装、检查导入与示例，不修改当前环境的包。
 
 py1最终检查为234 passed、12项可选依赖测试跳过；专用运行环境为246 passed，无跳过，含原生GEMDAT和kinisi集成。wheel、临时安装与示例通过。另用本地MACE-OMat对8原子LiF完成1.9 ps短测，结构/跳跃分析及预算停止正常，详见[短测记录](../MD_Screening_Workflow/environment/SMOKE_RESULT.md)。GPU、长时间MD、科学收敛与严格restart尚未验证。
+
+NEP 使用 `create_nep_calculator(model_path, backend="cpu"|"gpu", gpumd_command=None, directory=None)` 惰性委托 `Process_MLIP`。CPU 后端适合本地单点/弛豫和短程 MD；超算长 MD 使用 `Process_MLIP.run_nep_md` 的原生 GPUMD 输出。

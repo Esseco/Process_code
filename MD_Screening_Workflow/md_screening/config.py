@@ -14,7 +14,7 @@ from .stability import FrameworkCriteria
 @dataclass(frozen=True)
 class ScreeningConfig:
     mobile_species: str = "Li"
-    target_atoms: int = 200
+    target_atoms: int | None = 200
     temperature_K: float = 800
     precheck_ps: float = 5
     check_interval_ps: float = 10
@@ -54,6 +54,7 @@ class ScreeningConfig:
     jump_site_inner_fraction: float = 0.8
     framework_criteria: FrameworkCriteria | None = field(default_factory=FrameworkCriteria)
     framework_rdf_repeat: tuple[int, int, int] = (1, 1, 1)
+    compress_trajectory: bool = False
 
     def __post_init__(self) -> None:
         for duration in (self.precheck_ps, self.check_interval_ps, self.max_production_ps):
@@ -62,6 +63,8 @@ class ScreeningConfig:
                      seed=self.seed)
         for name in ("target_atoms", "min_obs"):
             value = getattr(self, name)
+            if name == "target_atoms" and value is None:
+                continue
             if isinstance(value, bool) or not isinstance(value, Integral) or value <= 0:
                 raise ValueError(f"{name} must be a positive integer")
         if not isinstance(self.mobile_species, str) or atomic_numbers.get(self.mobile_species, 0) <= 0:
@@ -118,6 +121,8 @@ class ScreeningConfig:
         if (not isinstance(self.framework_rdf_repeat, tuple) or len(self.framework_rdf_repeat) != 3
                 or any(isinstance(v, bool) or not isinstance(v, Integral) or v <= 0 for v in self.framework_rdf_repeat)):
             raise ValueError("framework_rdf_repeat must be a tuple of three positive integers")
+        if type(self.compress_trajectory) is not bool:
+            raise ValueError("compress_trajectory must be bool")
         if type(self.jump_analysis) is not bool:
             raise ValueError("jump_analysis must be bool")
         value = self.jump_site_inner_fraction

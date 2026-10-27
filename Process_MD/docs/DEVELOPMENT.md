@@ -79,3 +79,7 @@ python tools/verify.py --package
 - 新运行环境最终`tools/verify.py --package`：246 passed，无跳过；py1复核234 passed、12项可选依赖跳过。wheel构建、临时安装、导入和示例通过；验证工具采用短TemporaryDirectory避免Windows构建路径过长，退出后清理。
 - 实际本地MACE-OMat/CPU/800 K/8原子LiF完成1900步、1.9 ps，耗时471.3秒。四个检查点结构无联合失稳告警；原生GEMDAT返回0跳跃、100%覆盖率。平台变化0.22516未低于0.2，因此按测试预算结束，没有强行触发升温建议或输出可信D/σ。
 - 只保留workflow中一份`runs/mace_omat_smoke`真实结果及专用环境。该短测验证接线和预算停止；正式5 ps初检、10 ps生产检查与200 ps生产上限不变。长MD、材料性质、阈值校准、GPU及严格restart仍未验证。
+
+## NEP 双后端接入
+
+Process_MD 新增 `create_nep_calculator` 薄适配，实际模型加载、NEP 数据、训练/微调和原生 GPUMD MD 均属于 `Process_MLIP`。测试使用替身，不安装 Calorine/GPUMD；真实 CPU、GPU、`nep` 训练和长时间 GPUMD MD 仍需在专用环境验证。

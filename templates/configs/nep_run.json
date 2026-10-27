@@ -1,0 +1,8 @@
+{
+  "recipe": "nep_run",
+  "parameters": {
+    "output_dir": "nep_task",
+    "executable": "nep",
+    "timeout": null
+  }
+}

@@ -2,7 +2,7 @@
 
 复制到具体任务记录后填写，模板本身不启动计算。
 
-- 目标：基于 ASE calculator 的结构弛豫与四模型 NVT/NPT 分子动力学中的哪项功能？
+- 目标：基于 ASE calculator 的多模型/NEP 弛豫、训练与 MD，独立 Speed/Ehull Benchmark中的哪项功能？
 - 类型：工具包。
 - 输入：ASE Atoms / 结构文件、calculator 或模型预设及 MD 阶段参数；填写绝对路径、格式、数据量及前置检查。
 - 输出：弛豫/MD 最终结构、能量、轨迹、CSV 日志、MSD CSV 与 JSON 报告；填写独立目标目录与已有文件处理规则。

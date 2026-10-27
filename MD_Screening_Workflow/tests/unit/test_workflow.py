@@ -10,7 +10,7 @@ import md_screening.workflow as workflow
 
 @pytest.fixture
 def config():
-    return ScreeningConfig(target_atoms=8, temperature_K=100, precheck_ps=0.002,
+    return ScreeningConfig(pre_relax=False, target_atoms=8, temperature_K=100, precheck_ps=0.002,
                            check_interval_ps=0.004, max_production_ps=0.012, trajectory_interval=1,
                            stop_criteria=None)
 
@@ -145,7 +145,7 @@ def test_missing_mobile_ions_fail_before_md(crystal, config, backend, tmp_path):
 
 
 def test_default_rule_stops_at_first_eligible_production_checkpoint(crystal, backend, tmp_path):
-    config = ScreeningConfig(target_atoms=8, max_production_ps=20)
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, max_production_ps=20)
     result = run_screening(crystal, calculator=object(), config=config, output_dir=tmp_path / "coarse", reference_sites=crystal)
     assert result.status == "heuristic_ready"
     assert result.md.steps_completed == 7500
@@ -157,7 +157,7 @@ def test_default_rule_stops_at_first_eligible_production_checkpoint(crystal, bac
 
 
 def test_manual_hop_distance_is_recorded(crystal, backend, tmp_path):
-    config = ScreeningConfig(target_atoms=8, max_production_ps=20, hop_distance_A=2)
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, max_production_ps=20, hop_distance_A=2)
     result = run_screening(crystal, calculator=object(), config=config, output_dir=tmp_path / "override", reference_sites=crystal)
     assert result.last_check.stop_metrics["msd_threshold_A2"] == 12
     saved = json.loads((result.output_dir / "run.json").read_text())
@@ -169,8 +169,8 @@ def test_default_mace_loader_is_used_only_without_injected_calculator(crystal, b
     model.write_bytes(b"loader boundary test, not weights")
     loaded = []
     marker = object()
-    monkeypatch.setattr(workflow, "create_default_calculator", lambda config: loaded.append(config) or marker)
-    config = ScreeningConfig(target_atoms=8, max_production_ps=20, model_path=model)
+    monkeypatch.setattr(workflow, "create_default_calculator", lambda config, atoms=None: loaded.append(config) or marker)
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, max_production_ps=20, model_path=model)
     result = run_screening(crystal, config=config, output_dir=tmp_path / "default_model", reference_sites=crystal)
     assert loaded == [config]
     assert result.status == "heuristic_ready"
@@ -188,7 +188,7 @@ def test_optional_uncertainty_runs_once_and_does_not_gate_the_coarse_decision(cr
         return UncertaintyResult("Li", "xyz", 1, 4, 0.95, 4, 42, status="unresolved",
                                  diagnostics=["Uncertainty unresolved in this test"])
     monkeypatch.setattr(workflow, "_estimate_uncertainty", estimate)
-    config = ScreeningConfig(target_atoms=8, max_production_ps=20, uncertainty_on_stop=True)
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, max_production_ps=20, uncertainty_on_stop=True)
     result = run_screening(crystal, calculator=object(), config=config, output_dir=tmp_path / "uncertainty", reference_sites=crystal)
     assert result.status == "heuristic_ready"
     assert checked == ["production"]
@@ -201,7 +201,7 @@ def test_requested_but_missing_uncertainty_backend_fails_before_md(crystal, back
     def missing():
         raise ImportError("kinisi backend not installed")
     monkeypatch.setattr(process_md, "check_uncertainty_backend", missing)
-    config = ScreeningConfig(target_atoms=8, uncertainty_on_stop=True)
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, uncertainty_on_stop=True)
     output = tmp_path / "missing_kinisi"
     with pytest.raises(ImportError, match="kinisi"):
         run_screening(crystal, calculator=object(), config=config, output_dir=output, reference_sites=crystal)
@@ -218,7 +218,7 @@ def test_missing_jump_backend_fails_before_spending_md(crystal, backend, monkeyp
     monkeypatch.setattr(process_md, "check_jump_backend", missing)
     output = tmp_path / "missing_jumps"
     with pytest.raises(ImportError, match="GEMDAT"):
-        run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8), output_dir=output, reference_sites=crystal)
+        run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8), output_dir=output, reference_sites=crystal)
     assert backend == []
     assert json.loads((output / "run.json").read_text())["stage"] == "checking_jump_backend"
 
@@ -231,7 +231,7 @@ def test_framework_warning_stops_precheck_before_transport_acceptance(crystal, b
         report.framework.rdf_difference = 0.8
         return report
     monkeypatch.setattr(workflow, "analyze_check", unstable)
-    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8), output_dir=tmp_path / "collapse", reference_sites=crystal)
+    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8), output_dir=tmp_path / "collapse", reference_sites=crystal)
     assert result.status == "framework_unstable"
     assert result.md.steps_completed == 2500
     assert result.last_check.decision.action == "stop"
@@ -253,7 +253,7 @@ def test_ten_ps_no_jumps_plateau_stops_at_total_fifteen_ps(crystal, backend, mon
                                       site_coverage=1, minimum_ion_site_coverage=1)
         return report
     monkeypatch.setattr(workflow, "analyze_check", immobile)
-    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8), output_dir=tmp_path / "immobile", reference_sites=crystal)
+    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8), output_dir=tmp_path / "immobile", reference_sites=crystal)
     assert result.status == "needs_review"
     assert result.md.steps_completed == 7500
     assert result.last_check.decision.action == "raise_temperature"
@@ -275,7 +275,7 @@ def test_partial_jumps_continue_to_two_hundred_ps_budget(crystal, backend, monke
                                       site_coverage=1, minimum_ion_site_coverage=1)
         return report
     monkeypatch.setattr(workflow, "analyze_check", sparse)
-    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8), output_dir=tmp_path / "sparse", reference_sites=crystal)
+    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8), output_dir=tmp_path / "sparse", reference_sites=crystal)
     assert result.status == "budget_exhausted"
     assert result.md.steps_completed == 102500
     assert len(result.check_reports) == 21
@@ -295,7 +295,7 @@ def test_unstable_diagnostics_do_not_override_external_modes(mode, crystal, back
     monkeypatch.setattr(workflow, "analyze_check", analyze)
     reviewer = None if mode == "record_only" else lambda report: (
         Decision() if report.phase == "precheck" else Decision("accept", "Caller elects to retain transport"))
-    config = ScreeningConfig(target_atoms=8, max_production_ps=20,
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, max_production_ps=20,
                              stop_criteria=None if mode == "record_only" else StopCriteria())
     result = run_screening(crystal, calculator=object(), config=config, reviewer=reviewer,
                            output_dir=tmp_path / mode, reference_sites=crystal)
@@ -313,7 +313,7 @@ def test_production_instability_vetoes_an_otherwise_passing_curve(crystal, backe
             report.framework.rdf_difference = 0.8
         return report
     monkeypatch.setattr(workflow, "analyze_check", analyze)
-    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8),
+    result = run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8),
                            output_dir=tmp_path / "production_collapse", reference_sites=crystal)
     assert result.status == "framework_unstable"
     assert result.md.steps_completed == 7500
@@ -325,7 +325,7 @@ def test_reference_sites_share_the_structure_supercell_matrix(crystal, backend, 
     from ase.io import read
     sites = crystal.copy()
     sites += Atoms("Li", positions=[[2.65, 2.65, 2.65]])
-    config = ScreeningConfig(target_atoms=16, max_production_ps=20)
+    config = ScreeningConfig(pre_relax=False, target_atoms=16, max_production_ps=20)
     result = run_screening(crystal, calculator=object(), config=config, reference_sites=sites,
                            output_dir=tmp_path / "full_sites")
     prepared = read(result.output_dir / "prepared/structure.extxyz")
@@ -352,7 +352,7 @@ def test_reference_with_too_few_sites_fails_before_md(crystal, backend, tmp_path
     sites = crystal[[0, 1]]
     with pytest.raises(ValueError, match="at least as many"):
         run_screening(crystal, reference_sites=sites, calculator=object(),
-                      config=ScreeningConfig(target_atoms=8), output_dir=tmp_path / "few_sites")
+                      config=ScreeningConfig(pre_relax=False, target_atoms=8), output_dir=tmp_path / "few_sites")
     assert backend == []
 
 
@@ -360,7 +360,7 @@ def test_reference_cell_mismatch_is_rejected_before_md(crystal, backend, tmp_pat
     sites = crystal.copy()
     sites.set_cell([10, 10, 10])
     with pytest.raises(ValueError, match="input structure cell"):
-        run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8),
+        run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8),
                       reference_sites=sites, output_dir=tmp_path / "bad_sites")
     assert backend == []
 
@@ -369,6 +369,6 @@ def test_nonperiodic_reference_sites_are_rejected_before_md(crystal, backend, tm
     sites = crystal.copy()
     sites.pbc = False
     with pytest.raises(ValueError, match="3D PBC"):
-        run_screening(crystal, calculator=object(), config=ScreeningConfig(target_atoms=8),
+        run_screening(crystal, calculator=object(), config=ScreeningConfig(pre_relax=False, target_atoms=8),
                       reference_sites=sites, output_dir=tmp_path / "nonperiodic_sites")
     assert backend == []

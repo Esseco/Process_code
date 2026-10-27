@@ -24,6 +24,16 @@ main()
 
 ## `main`
 
+源文件：[examples/doping_contents.py](examples/doping_contents.py)，第 19 行。
+
+```python
+main()
+```
+
+原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
+
+## `main`
+
 源文件：[examples/dos_to_csv.py](examples/dos_to_csv.py)，第 10 行。
 
 ```python

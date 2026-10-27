@@ -46,3 +46,17 @@ def create_chgnet_calculator(
     from Process_MLIP.calculators import create_chgnet_calculator as factory
 
     return factory(model_path=model_path, device=device, model_name=model_name, model=model)
+
+
+def create_nep_calculator(
+    model_path: str | Path,
+    *,
+    backend: str = "cpu",
+    gpumd_command: str | Path | None = None,
+    directory: str | Path | None = None,
+):
+    """Delegate an explicit CPU/GPU NEP backend to Process_MLIP."""
+    from Process_MLIP.calculators import create_nep_calculator as factory
+
+    return factory(model_path, backend=backend, gpumd_command=gpumd_command,
+                   directory=directory)

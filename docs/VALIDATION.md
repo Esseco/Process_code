@@ -1,5 +1,17 @@
 # 验证与已知问题
 
+2026-10-27：新增 `Process_MLIP/benchmark`，说明见 [Benchmark README](../Process_MLIP/benchmark/README.md)。
+保留原模型加载/MLIPRelaxer/run_md 接口，加入独立弛豫与 MD 效率统计、标准组成 Ehull、
+DFT ID 匹配误差、YAML、模型注册、按阶段恢复、内容哈希、结果与图表。按用户修正不实现固定骨架脱嵌路径。
+py1 执行 `python -B -m unittest Process_MLIP.benchmark.tests.test_benchmark Process_MLIP.tests.test_calculators Process_MLIP.tests.test_md Process_MLIP.tests.test_relax.RelaxTests Process_MLIP.tests.test_relax.SharedOptimizerTests -q`，
+新增 21 项及已有针对性 29 项共 50 项通过，含真实合成 EMT 弛豫/NVT/凸包、解析归一化、
+错误参考、缺端元、失败重跑、分环境汇总、断点跳过、输入/checkpoint 变化和 CUDA 接口替身。
+旧完整 MLIP 套件 153 项中 9 项失败、1 项跳过：示例任务目录扫描错误纳入既存 __pycache__，
+以及预弛豫测试与当前 LBFGS/全晶胞默认不符；未导入新 benchmark 的独立进程也复现两项代表失败。
+未修改相关旧行为或清理原缓存。新测试临时目录自动清理；未安装依赖、加载真实 MLIP 权重、运行 GPU 或验证材料科学精度。
+显存仅为同进程 PyTorch allocator allocated/reserved 峰值；失败 MD 的精确积分耗时不由旧接口提供，明确输出 null。
+静态索引更新为 16 项目、643 符号，不代表全部项目运行验证。
+
 2026-10-22：新增 Process_Vasp.gen_ESGS_by_content（structures/structure.py，经 input.py 导出）。输入满占据参考结构（Structure 或 POSCAR/CIF 路径）、某元素含量的整数 list、每个含量返回的数量，返回 `{f"{n}_{full}": [Structure]}`；每个含量取 gen_ESGS_structure 的 pymatgen Ewald 静电能最低序列表，索引 0 能量最低，结构保留氧化态（POSCAR 输出符号不受影响）。满含量与 0 含量绕过 EwaldMinimizer——空搜索会触发 `ewald.py` 的 IndexError；候选经 StructureMatcher 去重后不足时，nstr 从 `max(4*count, 8)` 逐次翻倍到 max_candidates；氧化态未提供时用 BVAnalyzer 从参考结构猜测并打印，猜测失败则要求显式传入。py1（pymatgen 2025.10.7）：合成 Li27Co27O54（3×3×1 R-3m LiCoO2）传入 [25, 23, 22]、count=3，105.8 s 返回各 3 个结构，POSCAR 正常写出；Li12Co12O24 边界用例（满含量/0 含量/重复含量/越界/非整数/缺失元素）由 tests/test_doping_contents.py 8 项 pytest 覆盖，tests 全量 65 项通过，索引 16 项目 608 符号。未验证真实材料、大超胞性能与氧化态变价的科学正确性：静电能排序完全由传入或猜测的氧化态表决定，脱嵌体系的电荷中性需调用者自行保证。
 
 2026-10-22：新增 Process_Struct.get_supercell_matrices，使用 icet 枚举固定倍数的不等价扩胞，再用 ASE Minkowski reduction 返回逐项对应的短基矢矩阵；方向为晶格 a/b/c 的非空子集，未选方向保持不变。py1（icet 3.2 / ASE 3.25.0）运行 `python -B -m unittest discover -s tests -p test_supercell_matrices.py -v`，4 项测试通过，覆盖七种方向子集、立方/三斜晶胞已知计数、行列式、整数幺模等价、ASE/pymatgen 实际扩胞、输入不变性、重复调用和异常。立方单原子晶胞 8 倍 ab 枚举返回两组各 7 个矩阵。未验证真实材料、大倍数性能或磁对称性；不承诺全局最接近立方体。测试仅用内存合成结构，无临时数据文件。
@@ -160,3 +172,16 @@ Process_Struct/examples/percolation_sites.py 在已有 ccnb 环境对 NaFeF3 单
 
 - Added min_msd_A2=1.0 (Å²). Per species/segment, endpoint total MSD below the threshold skips only automatic projected fits; original 3D D/conductivity remain, low_msd/status and endpoint total are recorded. Equality continues screening, 0 disables the gate, manual projected fits remain possible. This empirical gate does not identify thermal vibration. Independent/batch and MD/MSD examples expose the parameter; batch CSV includes the flag and threshold. Static API catalog and signature snapshot updated.
 - py1 full regression: 129 tests OK, 1 existing MTK skip (23.704 s). Targeted final transport/independent/batch checks: 25 tests OK, including strict boundary, selected fit-window endpoint, threshold override/disable, manual override, JSON safety for NumPy scalars, invalid values and MD preflight before model loading. New test outputs used TemporaryDirectory and were cleaned; earlier dated residuals left unchanged. No local model environment changes or production trajectory/GPU validation.
+
+### 2026-10-24 Process_MLIP NEP 双后端基础接入
+
+- 新增显式 CPU/GPU NEP calculator、NEP 结构弛豫、标准 GPUMD extended XYZ 转换/校验/划分、训练任务生成、foundation 微调架构保护和原生 GPUMD MD 输入/失败报告。
+- py1 仅运行懒加载、格式、单位、确定性、输出保护和替身 subprocess 测试；未安装 Calorine/GPUMD、未加载真实 NEP 权重、未执行 `nep` 训练或 GPU MD。
+- 修复 Windows 临时目录下 `vasp_to_xyz` 的跨目录 rename 失败，改为验证完成后复制到目标文件；现有 MACE 数据字段保持不变。
+
+### 2026-10-24 NEP 审查修正与定向复核
+
+- `python -m unittest Process_MLIP.tests.test_nep Process_MLIP.tests.test_nep_data Process_MLIP.tests.test_nep_training Process_MLIP.tests.test_nep_md Process_MLIP.tests.test_training_data Process_MLIP.tests.test_calculators.PublicAPITests.test_public_signatures_and_legacy_module_exports -q`：25 项通过。
+- `Process_MD` NEP 适配与原有 calculator/import 测试：10 项通过；`compileall` 与无模型导入检查通过。
+- 新增复核覆盖：微调实际调用 `nep`、foundation 元素/架构锁定、训练/GPUMD manifest/report、重复运行保护、符号链接/重解析点拒绝、标准 stress→virial、非周期结构拒绝和 pending 临时文件清理。
+- 当前 py1 未安装 Calorine/GPUMD/NEP 可执行文件；未执行真实 CPU/GPU 推理、训练、微调或长时间 GPUMD MD。Process_MLIP 全量旧测试仍受环境已有的 ASE `nose_hoover_chain` 与 `pymatgen.analysis.diffusion` 缺失影响，未修改这些无关依赖。

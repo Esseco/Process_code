@@ -44,6 +44,17 @@
         ]
       },
       {
+        "file": "Process_Vasp/examples/doping_contents.py",
+        "name": "main",
+        "line": 19,
+        "signature": "main()",
+        "doc": "",
+        "imports": [
+          "Process_Vasp",
+          "pathlib"
+        ]
+      },
+      {
         "file": "Process_Vasp/examples/dos_to_csv.py",
         "name": "main",
         "line": 10,
@@ -1406,7 +1417,7 @@
       {
         "file": "Process_Struct/Chemical_Capacity_Constraints/redox_capacity.py",
         "name": "estimate_redox_capacity",
-        "line": 199,
+        "line": 210,
         "signature": "estimate_redox_capacity(formula: str, *, environment: str='auto', mobile_ions: Mapping[str, float] | None=None, active_elements: Iterable[str] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH, max_solutions: int=10000)",
         "doc": "Estimate charge-neutral valences and a heuristic electron/capacity budget.\n\nPass the full composition at the intended initial SOC (normally the\nalkali-containing, discharged composition). Alkali ions are assigned their\nfixed formal charges for neutrality and their extractable charge inventory\ncaps the reported capacity. If no mobile ion from mobile_ions is present,\nno mobile-ion cap is applied.\n\nThe default Q_redox includes transition-metal/cation oxidation only.\nOptional anion scenarios are reported separately and added only when\nexplicitly selected.",
         "imports": [
@@ -1422,7 +1433,7 @@
       {
         "file": "Process_Struct/Chemical_Capacity_Constraints/redox_capacity.py",
         "name": "batch_estimate_redox_capacity",
-        "line": 406,
+        "line": 417,
         "signature": "batch_estimate_redox_capacity(formulas: Iterable[str], *, environment: str='auto', capacity_cutoff_mAh_g: float=100.0, mobile_ions: Mapping[str, float] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH)",
         "doc": "Apply the estimator to many formulas and return flat, CSV-friendly rows.",
         "imports": [
@@ -1438,7 +1449,7 @@
       {
         "file": "Process_Struct/Chemical_Capacity_Constraints/redox_capacity.py",
         "name": "screen_substitutions",
-        "line": 476,
+        "line": 487,
         "signature": "screen_substitutions(formula: str, replaced_element: str, candidate_elements: Sequence[str] | None=None, *, environment: str='auto', capacity_cutoff_mAh_g: float=100.0, q_cutoff_e_per_formula: float | None=None, mobile_ions: Mapping[str, float] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH)",
         "doc": "Screen same-stoichiometry elemental substitutions by charge/capacity only.\n\nThis does not create or relax structures and does not predict synthesis,\nphase stability, percolation, ion transport, or electronic conductivity.",
         "imports": [
@@ -1454,7 +1465,7 @@
       {
         "file": "Process_Struct/Chemical_Capacity_Constraints/redox_capacity.py",
         "name": "main",
-        "line": 593,
+        "line": 604,
         "signature": "main()",
         "doc": "",
         "imports": [
@@ -3017,11 +3028,11 @@
   },
   {
     "project": "Process_MLIP",
-    "purpose": "基于 ASE calculator 的结构弛豫与四模型 NVT/NPT 分子动力学",
+    "purpose": "基于 ASE calculator 的多模型/NEP 弛豫、训练与 MD，独立 Speed/Ehull Benchmark",
     "kind": "工具包",
     "inputs": "ASE Atoms / 结构文件、calculator 或模型预设及 MD 阶段参数",
     "outputs": "弛豫/MD 最终结构、能量、轨迹、CSV 日志、MSD CSV 与 JSON 报告",
-    "dependencies": "ASE；模型 calculator 的依赖由调用者提供",
+    "dependencies": "ASE；MACE/SevenNet/CHGNet/ORB/Calorine/GPUMD 依环境按需提供",
     "caution": "模型和设备显式传入；不能将优化器结束自动等同于达到收敛阈值。",
     "preferred": [
       "MLIPRelaxer",
@@ -3029,15 +3040,397 @@
       "run_mlip_md",
       "run_md",
       "create_mlip_calculator",
+      "create_nep_calculator",
+      "relax_structure_nep",
+      "vasp_to_nep_xyz",
+      "validate_nep_dataset",
+      "split_nep_dataset",
+      "prepare_nep_training",
+      "train_nep",
+      "fine_tune_nep",
+      "run_nep_md",
       "export_msd",
       "fit_msd",
-      "export_traj_frames"
+      "export_traj_frames",
+      "vasp_to_xyz"
     ],
     "symbols": [
       {
+        "file": "Process_MLIP/benchmark/__main__.py",
+        "name": "main",
+        "line": 8,
+        "signature": "main(argv=None)",
+        "doc": "CLI; validate never loads models, runs MD, or creates output files.",
+        "imports": [
+          "argparse",
+          "json"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/config.py",
+        "name": "load_config",
+        "line": 35,
+        "signature": "load_config(path)",
+        "doc": "Read YAML, resolve paths relative to it, validate all benchmark parameters.",
+        "imports": [
+          "copy",
+          "numpy",
+          "pathlib",
+          "re",
+          "yaml"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/ehull.py",
+        "name": "validate_endmembers",
+        "line": 10,
+        "signature": "validate_endmembers(compositions)",
+        "doc": "Require elemental terminal phases; never invent/reference-download competitors.",
+        "imports": [
+          "collections",
+          "csv",
+          "numpy",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/ehull.py",
+        "name": "compute_hull",
+        "line": 20,
+        "signature": "compute_hull(records, tolerance=1e-06)",
+        "doc": "Return PhaseDiagram and per-ID eV/atom values from relaxed whole-cell eV.",
+        "imports": [
+          "collections",
+          "csv",
+          "numpy",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/ehull.py",
+        "name": "read_reference",
+        "line": 47,
+        "signature": "read_reference(path)",
+        "doc": "Strict ID,ehull_eV_per_atom CSV; references are already-normalized Ehull.",
+        "imports": [
+          "collections",
+          "csv",
+          "numpy",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/ehull.py",
+        "name": "compare_reference",
+        "line": 69,
+        "signature": "compare_reference(rows, reference, tolerance=1e-06)",
+        "doc": "Match IDs exactly, report coverage, errors and stable-set confusion counts.",
+        "imports": [
+          "collections",
+          "csv",
+          "numpy",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/examples/make_demo.py",
+        "name": "make_demo",
+        "line": 10,
+        "signature": "make_demo(directory, quick=False)",
+        "doc": "Create synthetic structures and YAML; EMT is only an end-to-end demonstration.",
+        "imports": [
+          "argparse",
+          "ase",
+          "pathlib",
+          "yaml"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "Measurement",
+        "line": 13,
+        "signature": "Measurement",
+        "doc": "Synchronized wall time and same-process torch allocator peak in MiB.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "Measurement.__init__",
+        "line": 16,
+        "signature": "Measurement.__init__(self, device)",
+        "doc": "",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "Measurement.synchronize",
+        "line": 26,
+        "signature": "Measurement.synchronize(self)",
+        "doc": "",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "warmup",
+        "line": 49,
+        "signature": "warmup(atoms, calculator, device)",
+        "doc": "One uncached energy/force/stress probe per structure, outside both timers.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "relax",
+        "line": 62,
+        "signature": "relax(atoms, calculator, directory, parameters, device)",
+        "doc": "Full-cell LBFGS; count uncached ASE force requests, save final structure.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/operations.py",
+        "name": "molecular_dynamics",
+        "line": 92,
+        "signature": "molecular_dynamics(atoms, calculator, directory, parameters, device, seed)",
+        "doc": "Reuse NHC NVT; return the existing integrator-only timer, not outer wall time.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "time",
+          "torch"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/plotting.py",
+        "name": "speed_plots",
+        "line": 9,
+        "signature": "speed_plots(rows, root, stage)",
+        "doc": "Separate curves per stage; same atom count replicates remain separate points.",
+        "imports": [
+          "matplotlib",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/plotting.py",
+        "name": "phase_plot",
+        "line": 37,
+        "signature": "phase_plot(diagram, root, rows)",
+        "doc": "Plot <=4-component hulls; always provide an ID/Ehull plot for any dimension.",
+        "imports": [
+          "matplotlib",
+          "pathlib",
+          "pymatgen"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/registry.py",
+        "name": "register_model",
+        "line": 8,
+        "signature": "register_model(name, factory)",
+        "doc": "Register factory(model_config_dict) -> ASE calculator; reject replacement.",
+        "imports": [
+          "ase"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/registry.py",
+        "name": "create_calculator",
+        "line": 36,
+        "signature": "create_calculator(config)",
+        "doc": "Build one configured calculator without silent model/backend fallback.",
+        "imports": [
+          "ase"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/runner.py",
+        "name": "run_benchmark",
+        "line": 164,
+        "signature": "run_benchmark(config_path, mode, model_ids=None)",
+        "doc": "Run speed or ehull; resume completed stages, retry failed stages, reject input drift.",
+        "imports": [
+          "ase",
+          "collections",
+          "contextlib",
+          "gc",
+          "json",
+          "logging",
+          "numpy",
+          "pathlib",
+          "sys"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "write_json",
+        "line": 18,
+        "signature": "write_json(path, value)",
+        "doc": "Atomically replace one owned JSON report, rejecting NaN/Infinity.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "write_csv",
+        "line": 34,
+        "signature": "write_csv(path, rows)",
+        "doc": "Write union-of-columns CSV, retaining explicit error records.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "file_hash",
+        "line": 47,
+        "signature": "file_hash(path)",
+        "doc": "Stream SHA256 without loading large checkpoints into memory.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "identity",
+        "line": 56,
+        "signature": "identity(config)",
+        "doc": "Bind outputs to input bytes, checkpoints, configuration and core implementation.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "output_lock",
+        "line": 74,
+        "signature": "output_lock(root)",
+        "doc": "Prevent concurrent writers; stale locks require explicit user inspection/removal.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "environment",
+        "line": 90,
+        "signature": "environment()",
+        "doc": "Record environment and GPU inventory without requiring torch on CPU.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
         "file": "Process_MLIP/calculators.py",
         "name": "create_mace_calculator",
-        "line": 20,
+        "line": 22,
         "signature": "create_mace_calculator(model_path, *, device='cuda', head=None, default_dtype='float64', enable_cueq=False, enable_symmetrix=False, symmetrix_use_kokkos=False, symmetrix_species=None)",
         "doc": "Load a local MACE checkpoint. MH-1 filenames default to omat_pbe.\n\nOnly load trusted checkpoints: MACE deserializes Python model objects.\nPass head explicitly for renamed multihead weights or other DFT tasks.",
         "imports": [
@@ -3061,7 +3454,7 @@
       {
         "file": "Process_MLIP/calculators.py",
         "name": "create_sevennet_calculator",
-        "line": 97,
+        "line": 99,
         "signature": "create_sevennet_calculator(model='7net-omni', *, device='cpu', modal='mpa', enable_flash=False)",
         "doc": "Load SevenNet-Omni by official name or trusted local checkpoint.\n\nNamed models may download weights through SevenNet on first use. Local\npaths must exist. modal selects the DFT task (mpa, omat24, etc.); do not\ncombine energies from different tasks. No dtype conversion is applied.",
         "imports": [
@@ -3085,7 +3478,7 @@
       {
         "file": "Process_MLIP/calculators.py",
         "name": "create_chgnet_calculator",
-        "line": 130,
+        "line": 132,
         "signature": "create_chgnet_calculator(model_path=None, *, device='cuda', model_name='0.3.0', model=None)",
         "doc": "Load CHGNet pretrained version, trusted local checkpoint, or loaded model.\n\nThe official calculator converts stress from GPa to ASE eV/Å³. Only one\nof model_path and model may be supplied; no dependencies are installed.",
         "imports": [
@@ -3109,7 +3502,7 @@
       {
         "file": "Process_MLIP/calculators.py",
         "name": "create_orb_calculator",
-        "line": 149,
+        "line": 151,
         "signature": "create_orb_calculator(model_path=None, *, device='cuda', model_name='orb-v3-conservative-inf-omat', precision='float32-highest', compile=False)",
         "doc": "Load an ORB pretrained architecture, optionally with local weights.\n\nSupports the official model+adapter API and the older model-only API.\nmodel_path must match model_name's architecture. No fallback model is used.",
         "imports": [
@@ -3133,7 +3526,7 @@
       {
         "file": "Process_MLIP/calculators.py",
         "name": "create_mlip_calculator",
-        "line": 175,
+        "line": 177,
         "signature": "create_mlip_calculator(model='mace-mh1')",
         "doc": "Build exactly one calculator from a preset name or model_config dict.",
         "imports": [
@@ -3494,7 +3887,7 @@
         "name": "run_mlip_md",
         "line": 15,
         "signature": "run_mlip_md(structure, model='mace-mh1', output_dir='md_results', stages=None, *, pre_relax=None, **md_parameters)",
-        "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=False（仅原子，True 为原子+晶胞）。\n  optimizer=\"FIRE\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=200（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。\ntdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"FIRE\", \"steps\": 200}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
+        "doc": "预弛豫与 MD 共用模型；输出总报告、分阶段轨迹和最终结构。\n\nstructure: 结构路径 / ASE Atoms / pymatgen Structure；model: 预设名或配置字典。\nstages=None: 单阶段；列表: 顺序衔接，参数优先级为阶段 > 公共 > 默认。\n衔接保留位置、晶胞和动量，控温/控压内部状态重置；非精确断点续跑。\n\npre_relax=None/False: 不弛豫；True/字典: 开启，字典默认值如下：\n  enabled=True；relax_cell=True（原子与晶胞一起弛豫，False 仅弛豫原子）。\n  optimizer=\"LBFGS\"（BFGS / FIRE / LBFGS，须大写）。\n  fmax=0.05 eV/Å；steps=1000（非负整数）；require_convergence=True（未收敛停止）。\n  maxstep=0.05 Å；exp_cell_factor=None（FrechetCellFilter 按原子数缩放）。\nMD 默认：NVT、300 K、1000 步；步长 NVT=2 fs、NPT=1 fs，可显式覆盖。\ntdamp_fs=100，NPT pdamp_fs=1000；timestep_fs=None 按各阶段系综选择。\nNPT 晶胞：isotropic（默认）/ full；tchain/pchain=3，tloop/ploop=1。\ntrajectory_interval/log_interval=10（步）；seed=42；overwrite=False。\nmeasure_steps_per_second=True 可记录吞吐，排除加载、弛豫与后处理。\n\n参考：pre_relax={\"relax_cell\": True, \"optimizer\": \"LBFGS\", \"steps\": 1000}，\n配合 temperature_K=600, steps=5000, trajectory_interval=1, log_interval=1。\n返回 final_atoms、stage_results、pre_relax_result、steps_per_second 和报告路径；\nelapsed_time_fs 为模拟时长。其余 MD 参数见 run_md。",
         "imports": [
           "collections",
           "copy",
@@ -3541,9 +3934,9 @@
       {
         "file": "Process_MLIP/model_config.py",
         "name": "model_config",
-        "line": 23,
+        "line": 25,
         "signature": "model_config(preset='mace-mh1', **overrides)",
-        "doc": "Return an independent dict of model defaults with explicit overrides.\n\nPresets: mace-mh1, sevennet-omni, chgnet, orb-v3. Default device is cuda;\naccelerators default off. model_path overrides pretrained weights. This\nfunction does not check local files, import models, or download anything.",
+        "doc": "Return an independent dict of model defaults with explicit overrides.\n\nPresets: mace-mh1, sevennet-omni, chgnet, orb-v3 and nep. Default device\nis cuda for the original model loaders; NEP uses an explicit cpu/gpu\nbackend. Accelerators default off. model_path overrides pretrained weights. This\nfunction does not check local files, import models, or download anything.",
         "imports": [
           "collections",
           "copy",
@@ -3568,12 +3961,154 @@
         ]
       },
       {
+        "file": "Process_MLIP/nep.py",
+        "name": "create_nep_calculator",
+        "line": 6,
+        "signature": "create_nep_calculator(model_path, *, backend='cpu', gpumd_command=None, directory=None)",
+        "doc": "Load a NEP4 model through Calorine's explicit CPU/GPU backend.\n\n``backend='cpu'`` constructs ``CPUNEP``. ``backend='gpu'`` constructs\n``GPUNEP`` and optionally forwards a GPUMD command and persistent working\ndirectory. Optional dependencies are imported only when this function is\ncalled; no fallback between CPU and GPU is attempted.",
+        "imports": [
+          "calorine",
+          "pathlib",
+          "shutil"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_data.py",
+        "name": "vasp_to_nep_xyz",
+        "line": 109,
+        "signature": "vasp_to_nep_xyz(inputs, output_file='train.xyz', *, index=':', energy_type='free_energy', include_virial=True, overwrite=False)",
+        "doc": "Convert labelled VASP results to GPUMD NEP extended XYZ.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "shutil",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_data.py",
+        "name": "validate_nep_dataset",
+        "line": 149,
+        "signature": "validate_nep_dataset(path, *, expected_species=None, require_forces=True, require_virial=False)",
+        "doc": "Validate a GPUMD NEP extended XYZ dataset and return a summary.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "shutil",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_data.py",
+        "name": "split_nep_dataset",
+        "line": 193,
+        "signature": "split_nep_dataset(input_file, output_dir, *, train_fraction=0.9, seed=42, overwrite=False)",
+        "doc": "Deterministically split a NEP dataset into train.xyz and test.xyz.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "shutil",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_md.py",
+        "name": "run_nep_md",
+        "line": 105,
+        "signature": "run_nep_md(structure, model_path, output_dir, *, parameters, executable='gpumd', overwrite=False, env=None, timeout=None)",
+        "doc": "Run a native GPUMD task with an explicit NEP model and run parameters.\n\nThe task directory contains ``model.xyz``, ``nep.txt``, ``run.in``,\ncaptured stdout/stderr, and ``report.json``. GPUMD output files such as\n``thermo.out`` and ``dump.xyz`` are preserved for later analysis.",
+        "imports": [
+          "ase",
+          "collections",
+          "json",
+          "numpy",
+          "os",
+          "pathlib",
+          "shutil",
+          "stat",
+          "subprocess"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_relax.py",
+        "name": "relax_structure_nep",
+        "line": 6,
+        "signature": "relax_structure_nep(structure, model_path, *, output_path=None, backend='cpu', gpumd_command=None, directory=None, fmax=0.05, steps=150, relax_cell=True)",
+        "doc": "Relax one structure with a Calorine NEP calculator.",
+        "imports": []
+      },
+      {
+        "file": "Process_MLIP/nep_training.py",
+        "name": "prepare_nep_training",
+        "line": 129,
+        "signature": "prepare_nep_training(output_dir, train_xyz, test_xyz, *, species, parameters=None, overwrite=False, mode='train')",
+        "doc": "Create a self-contained GPUMD NEP training/fine-tuning directory.",
+        "imports": [
+          "collections",
+          "json",
+          "os",
+          "pathlib",
+          "shutil",
+          "stat",
+          "subprocess"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_training.py",
+        "name": "fine_tune_nep",
+        "line": 166,
+        "signature": "fine_tune_nep(output_dir, foundation_model, foundation_restart, *, species, train_xyz=None, test_xyz=None, parameters=None, executable='nep', env=None, timeout=None, overwrite=False)",
+        "doc": "Prepare and run a NEP fine-tuning task from a foundation model/restart.",
+        "imports": [
+          "collections",
+          "json",
+          "os",
+          "pathlib",
+          "shutil",
+          "stat",
+          "subprocess"
+        ]
+      },
+      {
+        "file": "Process_MLIP/nep_training.py",
+        "name": "train_nep",
+        "line": 231,
+        "signature": "train_nep(output_dir, *, executable='nep', env=None, timeout=None, overwrite=False)",
+        "doc": "Run the external ``nep`` executable in a prepared task directory.",
+        "imports": [
+          "collections",
+          "json",
+          "os",
+          "pathlib",
+          "shutil",
+          "stat",
+          "subprocess"
+        ]
+      },
+      {
         "file": "Process_MLIP/sevennet_relax.py",
         "name": "relax_structure_sevennet",
         "line": 6,
         "signature": "relax_structure_sevennet(structure, model='7net-omni', *, output_path=None, device='cpu', modal='mpa', fmax=0.05, steps=150, relax_cell=True)",
         "doc": "Return energy (eV), forces (eV/Å), convergence and selected modal.\n\nInputs are a structure path, ASE Atoms or pymatgen Structure. Atoms are\ncopied. Only output_path is written (VASP format, overwrites if present).\nNo random sampling, trajectory or log. Named models may download weights;\nsupply a trusted local checkpoint for offline repeatable calculations.",
         "imports": []
+      },
+      {
+        "file": "Process_MLIP/training_data.py",
+        "name": "vasp_to_xyz",
+        "line": 12,
+        "signature": "vasp_to_xyz(inputs, output_file='mace_train.xyz', *, index=':', energy_type='free_energy', include_stress=True, overwrite=False)",
+        "doc": "Export VASP results to MACE extxyz; return the number of written frames.\n\ninputs: OUTCAR/vasprun.xml path, calculation directory, or a list of these.\nDirectories prefer vasprun.xml over OUTCAR; .gz versions are supported.\nindex: ASE frame selector, e.g. \":\" (all), -1 (last), or \"::10\".\nREF_energy is the whole-cell energy in eV. Default \"free_energy\" uses\nVASP's force-consistent free energy; \"energy\" selects ASE's extrapolated\nzero-smearing energy. Never mix energy conventions within a dataset.\nREF_forces are raw DFT forces in eV/Angstrom, without applying constraints.\nREF_stress is ASE tensile-positive stress in eV/Angstrom^3 (3x3), including\nASE's VASP sign/unit conversion. Set include_stress=False if unavailable.\n\nCoordinates, cell, species and PBC are retained; constraints/calculators\nare removed. Missing/non-finite labels fail without changing an existing\noutput. The output is replaced only after every selected frame succeeds.\nNo DFT/model calculation, random sampling or convergence filtering occurs;\nthe caller must select electronically converged, consistent DFT results.\nUses the existing ASE/NumPy stack (py1); no MACE training dependency.",
+        "imports": [
+          "ase",
+          "numpy",
+          "pathlib",
+          "shutil",
+          "tempfile"
+        ]
       },
       {
         "file": "Process_MLIP/trajectory.py",

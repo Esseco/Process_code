@@ -13,3 +13,7 @@
 MACE/SevenNet 的模型包装分别保留在 mace_relax.py / sevennet_relax.py，
 单结构结果适配集中在 _relaxation.py，ASE 优化由 MLIPRelaxer 统一执行。
 Process_AL_MC/relax.py 仍兼容导出同一 MACE 函数；MC 类的委员会弛豫保持独立。
+
+## NEP/GPUMD 接入边界
+
+NEP calculator、数据转换、训练/微调和原生 GPUMD MD 均归 `Process_MLIP`。`Process_MD` 只委托 NEP calculator；不复制 `nep.in`、GPUMD 轨迹或训练算法。CPU/GPU 后端必须显式选择，长时间 GPU MD 与 ASE `run_md` 的轨迹/报告语义分开。

@@ -88,3 +88,5 @@ py1 中 ASE 3.25.0、CHGNet 0.4.0、pymatgen-analysis-diffusion 2024.7.15 可导
 - [ASE 超胞工具](https://docs.ase-lib.org/_modules/ase/build/supercells.html)
 - [pymatgen-diffusion 实现](https://materialsvirtuallab.github.io/pymatgen-analysis-diffusion/_modules/pymatgen/analysis/diffusion/analyzer.html)
 - [CHGNet API](https://chgnet.lbl.gov/api)
+
+| `create_nep_calculator` | Process_MLIP.calculators.create_nep_calculator | 延迟调用；显式 CPU/GPU 后端，不自动回退 |

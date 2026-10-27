@@ -295,3 +295,18 @@ result = run_mlip_md(
   JSON 已固定元素与 head，运行时不能再选；此加载分支无需导入 Torch/MACE。
 - 当前开发机没有安装 Symmetrix；测试使用 ASE EMT 替代验证传参与工作流，实际
   OMat 推理、Kokkos/GPU 和性能提升需要在已安装 Symmetrix 的超算上验证。
+
+## NEP CPU/GPU 与原生 GPUMD MD
+
+NEP 通过 `model_config("nep", model_path=..., backend="cpu"|"gpu")` 接入统一 `run_mlip_md`。CPU 后端为 Calorine `CPUNEP`，GPU 后端为 `GPUNEP`；缺失依赖或 GPUMD 可执行文件直接报错。长时间 GPU 运行使用 `run_nep_md()` 的原生 GPUMD 输出，保留 `thermo.out`、`dump.xyz` 等文件，不冒充 ASE `md.traj`。
+
+```python
+from Process_MLIP import run_nep_md
+report = run_nep_md(
+    "initial.cif", "/weights/nep.txt", "nep_gpu_run",
+    parameters={"velocity": 800, "dump_thermo": 100,
+                "dump_xyz": [100, "movie.xyz"],
+                "ensemble": ["nvt_lan", 800, 800, 100], "run": 50000},
+    executable="gpumd",
+)
+```

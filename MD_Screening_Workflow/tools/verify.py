@@ -55,6 +55,7 @@ def check_package(root: Path, environment: dict) -> None:
         "assert Path(m.__file__).resolve().is_relative_to(Path(sys.argv[1])); "
         "assert version('md-screening-workflow') == '0.1.0'; "
         "assert m.ScreeningConfig().precheck_ps == 5; "
+        "assert callable(m.run_md); assert m.screening_preset().target_atoms is None; "
         "assert 'torch' not in sys.modules; assert 'Process_MLIP' not in sys.modules"
     )
     run(["-c", code, str(installed)], root, installed_environment)

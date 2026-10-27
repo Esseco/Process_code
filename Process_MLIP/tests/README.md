@@ -19,6 +19,7 @@ python -m unittest Process_MLIP.tests.test_relax
 | test_md_workflow.py | 多阶段参数优先级、动量衔接、预检查与失败报告 |
 | test_msd.py | pymatgen 多起点与手工位移对比较、归一化、周期展开、漂移、分段、短尾帧及缺依赖 |
 | test_transport.py | pymatgen 默认加权、拟合区间、单位/电荷/斜率下限、末端 MSD 自动/手动 1D/2D、阈值与三维兼容、输出保护 |
+| test_training_data.py | ASE VASP XML 读取、MACE 标签、自由能/零展宽能、原始力、应力单位/符号、缺失标签与输出保护 |
 | test_trajectory.py | 帧选择、文件格式、原子顺序、晶胞/动量及覆盖保护 |
 | test_examples.py | MD/MSD/导率示例、独立与批处理降维输出、八模型批任务、六组温度/时长扫描 |
 
@@ -29,3 +30,5 @@ MSD 测试使用真实 pymatgen-analysis-diffusion（py1 已装），移除旧 A
 测试使用本地临时目录，结束后清理自己的输出；无需权重，不下载、不训练、不提交超算。
 py1 缺少完整 MTKNPT 时仅跳过该项实测，仍验证参数传递与缺失实现报错。
 真实模型精度、GPU/加速后端和长期 MD 收敛仍需在对应运行环境验证。
+
+NEP 测试只验证懒加载、CPU/GPU 分派、标准 extended XYZ 单位/字段、确定性划分、微调架构保护和 GPUMD 输入/失败报告；不下载模型、不调用真实 `nep`/`gpumd`。

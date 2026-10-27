@@ -38,7 +38,7 @@ def test_defaults_and_five_ps_precheck_boundary():
     {"model_label": {}},
     {"stop_criteria": {}}, {"hop_distance_A": 0}, {"model_path": 123},
     {"device": ""}, {"default_dtype": "half"}, {"uncertainty_on_stop": "yes"},
-    {"uncertainty_samples": 2},
+    {"uncertainty_samples": 2}, {"compress_trajectory": "yes"},
     {"jump_analysis": "yes"}, {"jump_min_residence_ps": 0},
     {"jump_site_radius_A": -1}, {"jump_site_inner_fraction": 0},
     {"jump_site_inner_fraction": 1.01}, {"framework_criteria": {}},

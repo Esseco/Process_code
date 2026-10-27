@@ -94,3 +94,7 @@ steps=0 仅求值，不保证收敛。达到步数上限后应读取 optimizer_c
 
 这些结果仅验证软件对接，不是不同模型精度的对比。
 未验证 CUDA、其他 head/modal、大型体系或用户目标材料的精度。
+
+## NEP/GPUMD
+
+NEP 后端使用 Calorine 的 `CPUNEP` 或 `GPUNEP`，模型文件为 GPUMD `nep.txt`。本地 CPU 可以走 `run_mlip_md` 的 ASE 路径；超算 GPU 的长 MD 应走 `run_nep_md` 原生 GPUMD 路径。当前仓库没有提交 NEP 权重、`nep.restart` 或 GPUMD 可执行文件，真实 CPU/GPU 数值和训练收敛需要在对应专用环境验证。

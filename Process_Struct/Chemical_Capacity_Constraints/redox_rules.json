@@ -29,6 +29,26 @@
       "N": 5
     },
     "by_environment": {
+      "layered_oxide": {
+        "Ga": 3,
+        "Ge": 4,
+        "Nd": 3,
+        "Cd": 2,
+        "Pb": 2,
+        "O": -2,
+        "F": -1,
+        "Cl": -1,
+        "Br": -1,
+        "I": -1,
+        "S": -2,
+        "Se": -2,
+        "Te": -2,
+        "P": 5,
+        "Si": 4,
+        "B": 3,
+        "C": 4,
+        "N": 3
+      },
       "oxide": {
         "O": -2,
         "F": -1,
@@ -114,6 +134,144 @@
     }
   },
   "environments": {
+    "layered_oxide": {
+      "description": "Layered oxide cathode prior. Use for Li/Na/K layered transition-metal oxides; ranges are user-configured formal redox endpoints.",
+      "redox_cation_states": {
+        "Ti": [
+          4
+        ],
+        "V": [
+          3,
+          4,
+          5
+        ],
+        "Cr": [
+          3,
+          4
+        ],
+        "Mn": [
+          3,
+          4
+        ],
+        "Fe": [
+          3,
+          4
+        ],
+        "Co": [
+          3,
+          4
+        ],
+        "Ni": [
+          2,
+          3,
+          4
+        ],
+        "Cu": [
+          2,
+          3
+        ],
+        "Nb": [
+          4,
+          5
+        ],
+        "Mo": [
+          4,
+          5,
+          6
+        ],
+        "W": [
+          5,
+          6
+        ],
+        "Ru": [
+          3,
+          4
+        ],
+        "Ir": [
+          3,
+          4,
+          5
+        ],
+        "Ce": [
+          3,
+          4
+        ],
+        "Sn": [
+          2,
+          4
+        ],
+        "Sb": [
+          3,
+          5
+        ],
+        "Bi": [
+          3,
+          5
+        ],
+        "Ta": [
+          5
+        ],
+        "Re": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "Rh": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Pd": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Ag": [
+          1,
+          2,
+          3
+        ],
+        "Os": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "Pt": [
+          2,
+          3,
+          4
+        ],
+        "Au": [
+          1,
+          2,
+          3
+        ],
+        "Pr": [
+          3,
+          4
+        ],
+        "Sm": [
+          2,
+          3
+        ],
+        "Eu": [
+          2,
+          3
+        ],
+        "Tb": [
+          3,
+          4
+        ],
+        "Yb": [
+          2,
+          3
+        ]
+      }
+    },
     "oxide": {
       "description": "Cathode-framework screening ranges. Extremely oxidized states that mainly describe discrete oxoanions or molecular compounds are excluded from the generic cation-redox window; see default_excluded_states.",
       "redox_cation_states": {

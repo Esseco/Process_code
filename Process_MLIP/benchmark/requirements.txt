@@ -1,0 +1,8 @@
+# Base benchmark only. Use existing dedicated environments for individual MLIPs.
+ase>=3.25
+numpy>=1.26
+scipy>=1.11
+pymatgen>=2025.1
+matplotlib>=3.8
+PyYAML>=6
+monty>=2024.1

@@ -14,11 +14,13 @@ from process_md import (MDResult, MDRunner, describe_alkali_state, describe_cell
 from process_md.structure import estimate_hop_distance
 
 from .analysis import analyze_check
+from .archiving import archive_md_output
 from .config import ScreeningConfig
 from .calculators import create_default_calculator, mace_model_path
 from .review import CheckReport, Decision
 from .stopping import TransportStopper
 from .stability import assess_framework
+from .reporting import initialize_outputs, record_progress, write_summary
 
 
 @dataclass
@@ -116,11 +118,20 @@ def run_screening(
         default_model="mace-omat" if calculator is None else None,
         review_mode="coarse_transport" if automatic_review else ("record_only" if reviewer is None else "caller_supplied"),
         stage="preparing", structure=None,
+        reference_source=str(Path(reference_sites).resolve()) if isinstance(reference_sites, (str, Path)) else "ASE Atoms",
     )
     summaries = []
+    previous_progress = None
+    initialize_outputs(root, metadata)
 
     def persist() -> None:
+        nonlocal previous_progress
         save_json({**metadata, "result": result}, root / "run.json", overwrite=True)
+        write_summary(root, metadata, result)
+        progress = (metadata["stage"], result.status, len(result.check_reports))
+        if progress != previous_progress:
+            record_progress(root, metadata, result)
+            previous_progress = progress
 
     persist()
     try:
@@ -228,6 +239,9 @@ def run_screening(
             if elapsed < initial or (elapsed - initial) % config.steps(config.check_interval_ps):
                 return False
             metadata["stage"] = "analyzing"
+            metadata["elapsed_time_ps"] = elapsed * config.timestep_fs / 1000
+            metadata["phase"] = "precheck" if elapsed == initial else "production"
+            persist()
             report = analyze_check(event, config, len(result.check_reports), reference_sites=sites,
                                    stop_on_instability=automatic_review)
             unstable = assess_framework(report, config.framework_criteria)
@@ -277,7 +291,23 @@ def run_screening(
         if result.status == "running":
             result.status = "budget_exhausted"
         metadata["stage"] = "finished"
-        persist()
+        persist()  # Finish all analysis and final structure exports before archiving.
+        if config.compress_trajectory:
+            metadata["stage"] = "archiving"
+            persist()
+            source = result.md.trajectory
+            try:
+                metadata["trajectory_archive"] = archive_md_output(result.md)
+                metadata["stage"] = "finished"
+                persist()  # All manifests must point to the verified archive first.
+                Path(source).unlink()
+            except Exception as exc:
+                metadata["trajectory_archive"] = dict(
+                    status="failed", error=f"{type(exc).__name__}: {exc}",
+                    source_retained=Path(source).is_file(),
+                )
+                metadata["stage"] = "finished"
+                persist()
         return result
     except (Exception, KeyboardInterrupt) as exc:
         result.status = "failed"

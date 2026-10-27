@@ -24,7 +24,7 @@ def calculator():
 
 def test_real_nvt_keeps_state_and_checks_at_requested_times(crystal, tmp_path):
     require_backend()
-    config = ScreeningConfig(target_atoms=8, temperature_K=100, precheck_ps=0.002,
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, temperature_K=100, precheck_ps=0.002,
                              check_interval_ps=0.004, max_production_ps=0.012, trajectory_interval=1)
     screened = run_screening(crystal, calculator=calculator(), config=config, output_dir=tmp_path / "workflow", reference_sites=crystal)
     plain = MDRunner(calculator()).run(crystal, temperature_K=100, duration_ps=0.014,
@@ -45,7 +45,7 @@ def test_real_nvt_keeps_state_and_checks_at_requested_times(crystal, tmp_path):
 
 def test_real_nvt_stops_after_precheck_for_external_review(crystal, tmp_path):
     require_backend()
-    config = ScreeningConfig(target_atoms=8, temperature_K=100, precheck_ps=0.002,
+    config = ScreeningConfig(pre_relax=False, target_atoms=8, temperature_K=100, precheck_ps=0.002,
                              check_interval_ps=0.004, max_production_ps=0.012, trajectory_interval=1)
     result = run_screening(crystal, calculator=calculator(), config=config, output_dir=tmp_path / "stop",
                            reviewer=lambda report: Decision("review_model", "Example external review request"), reference_sites=crystal)

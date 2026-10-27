@@ -1,0 +1,40 @@
+# Copy/edit, then run from the Py-Code repository root.
+# Every local path is relative to this YAML file, not the shell directory.
+output_dir: ./results
+seed: 42
+models:
+  - id: mace_omat
+    type: mace
+    device: cuda:0
+    parameters:
+      model_path: ../../../MLIP_model/mace-mh-1.model
+      head: omat_pbe
+      default_dtype: float32
+  # Existing adapters: sevennet, orb, chgnet, nep (CPU).
+  # GRACE, MatterSim, NequIP require register_model; no silent substitute.
+  # - id: sevennet_mpa
+  #   type: sevennet
+  #   device: cuda:0
+  #   parameters: {model_name: 7net-omni, modal: mpa}
+  # - id: chgnet
+  #   type: chgnet
+  #   device: cuda:0
+  #   parameters: {model_name: 0.3.0}
+  # - id: orb_omat
+  #   type: orb
+  #   device: cuda:0
+  #   parameters: {model_name: orb-v3-conservative-inf-omat}
+  # - id: nep
+  #   type: nep
+  #   device: cpu
+  #   parameters: {model_path: ./nep.txt, backend: cpu}
+structures:
+  - {id: phase_A, path: ./structures/phase_A.cif}
+  - {id: phase_B, path: ./structures/phase_B.cif}
+  - {id: compound, path: ./structures/compound.cif}
+relax: {fmax: 0.1, steps: 2000, maxstep: 0.2}
+md: {temperature_K: 800, timestep_fs: 2, steps: 1000, tdamp_fs: 100,
+     trajectory_interval: 10, log_interval: 10}
+ehull:
+  reference_csv: null
+  tolerance_eV_per_atom: 0.000001

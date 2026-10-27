@@ -126,7 +126,7 @@ def _versions(calculator):
     packages = ["ase", "numpy"]
     module = type(calculator).__module__.split(".")[0]
     package = {"mace": "mace-torch", "sevenn": "sevenn", "chgnet": "chgnet",
-               "orb_models": "orb-models"}.get(module)
+               "orb_models": "orb-models", "calorine": "calorine"}.get(module)
     if package:
         packages += [package, "torch"]
     result = {"python": platform.python_version()}

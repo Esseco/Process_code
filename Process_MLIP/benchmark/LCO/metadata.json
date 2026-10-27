@@ -1,0 +1,71 @@
+{
+  "source": "E:/0-Crystal_structure/Layered_oxide/O3-LiCoO2.cif",
+  "oxidation_states": {
+    "Li": 1,
+    "Co": 3.5,
+    "O": -2
+  },
+  "method": "pymatgen OrderDisorderedStructureTransformation algo=2 best-first, first result",
+  "structures": [
+    {
+      "file": "LCO_84.vasp",
+      "atoms": 84,
+      "composition": {
+        "Li": 12.0,
+        "Co": 24.0,
+        "O": 48.0
+      },
+      "supercell_factors": [
+        4,
+        2,
+        1
+      ],
+      "ewald_eV": -2962.5042258574067
+    },
+    {
+      "file": "LCO_189.vasp",
+      "atoms": 189,
+      "composition": {
+        "Li": 27.0,
+        "Co": 54.0,
+        "O": 108.0
+      },
+      "supercell_factors": [
+        6,
+        3,
+        1
+      ],
+      "ewald_eV": -6662.766803135639
+    },
+    {
+      "file": "LCO_378.vasp",
+      "atoms": 378,
+      "composition": {
+        "Li": 54.0,
+        "Co": 108.0,
+        "O": 216.0
+      },
+      "supercell_factors": [
+        6,
+        6,
+        1
+      ],
+      "ewald_eV": -13322.847342829034
+    },
+    {
+      "file": "LCO_756.vasp",
+      "atoms": 756,
+      "composition": {
+        "Li": 108.0,
+        "Co": 216.0,
+        "O": 432.0
+      },
+      "supercell_factors": [
+        6,
+        6,
+        2
+      ],
+      "ewald_eV": -26647.845867283108
+    }
+  ]
+}

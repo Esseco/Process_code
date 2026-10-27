@@ -3,6 +3,7 @@
 默认 `py1`。先读 README.md，再读 `md_screening/config.py`、`review.py`、`workflow.py`；方案/验证记录在 docs/。
 
 - 本仓库负责 workflow。通用结构、积分、unwrap、MSD、拟合和骨架分析调用 Process_MD，后者复用 Process_MLIP/ASE/pymatgen。不要复制算法或通过机器路径修改 sys.path。
+- run_md/screening_preset 使用调用者提供的超胞，target_atoms=None，不自动扩胞；满位点参考须与超胞匹配。旧 ScreeningConfig 默认 200 保持兼容。
 - 默认前 5 ps 预检查、之后每 10 ps 累计生产检查、生产预算 200 ps；积分步长2 fs、每20 fs保存一帧。全程保持同一积分器；使用整数步调度，边界对齐保存帧。
 - 默认MACE-OMat、CUDA，本地model_path或PROCESS_MD_MACE_MODEL；保留注入calculator，不下载/替换权重。Symmetrix通过enable_symmetrix和symmetrix_use_kokkos显式开启，CuEq与Symmetrix互斥。py1默认开发测试。真实MACE/GEMDAT/kinisi使用本仓库.venv，两个项目editable安装；只读借用py-mace模型栈，不升级py1/py-mace。先看environment/README.md及tools/check_runtime.py。
 - 用户确认默认粗筛：生产>=10ps、MSD>3d²、R²>0.95，d为满位点参考中最近同种移动位点间距代理（ASE含PBC），支持手动覆盖。通过一次即heuristic_ready；不加alpha、D变化率/连续检查/CI宽度的隐藏门槛。
@@ -17,3 +18,5 @@
 - 不自动安装/下载/更换模型，保留模型 head/dtype/能量基准。导入库不能加载 torch 或旧库。
 - 运行 `python tools/verify.py`；涉及打包/导入时加 `--package`。测试用最小合成数据、短 LJ 和 TemporaryDirectory，结束后核对清理。不要跑真实长 MD 验证普通代码。
 - 例程输出默认归 runs/；交付说明实际验证及未验证项，不自动推送或发布。
+
+- 直接入口默认 compress_trajectory=True，旧 ScreeningConfig 默认 False。仅在连续 MD、分析、末结构导出成功后 gzip level 6 流式归档主轨迹，解压 SHA-256/大小校验并同步所有结果路径后删除原文件；失败保留原轨迹并记警告，不更改计算状态。归档后先解压再单独分析；不要在中途检查压缩活动轨迹。

@@ -108,7 +108,7 @@ Infer a broad anion family; pass environment explicitly when ambiguous.
 
 ## `estimate_redox_capacity`
 
-源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 199 行。
+源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 210 行。
 
 ```python
 estimate_redox_capacity(formula: str, *, environment: str='auto', mobile_ions: Mapping[str, float] | None=None, active_elements: Iterable[str] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH, max_solutions: int=10000)
@@ -128,7 +128,7 @@ explicitly selected.
 
 ## `batch_estimate_redox_capacity`
 
-源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 406 行。
+源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 417 行。
 
 ```python
 batch_estimate_redox_capacity(formulas: Iterable[str], *, environment: str='auto', capacity_cutoff_mAh_g: float=100.0, mobile_ions: Mapping[str, float] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH)
@@ -138,7 +138,7 @@ Apply the estimator to many formulas and return flat, CSV-friendly rows.
 
 ## `screen_substitutions`
 
-源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 476 行。
+源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 487 行。
 
 ```python
 screen_substitutions(formula: str, replaced_element: str, candidate_elements: Sequence[str] | None=None, *, environment: str='auto', capacity_cutoff_mAh_g: float=100.0, q_cutoff_e_per_formula: float | None=None, mobile_ions: Mapping[str, float] | None=None, anion_redox_scenario: str='none', anion_groups: Mapping[str, float] | None=None, rules_path: str | Path=RULES_PATH)
@@ -151,7 +151,7 @@ phase stability, percolation, ion transport, or electronic conductivity.
 
 ## `main`
 
-源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 593 行。
+源文件：[Chemical_Capacity_Constraints/redox_capacity.py](Chemical_Capacity_Constraints/redox_capacity.py)，第 604 行。
 
 ```python
 main()
