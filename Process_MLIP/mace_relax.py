@@ -27,9 +27,13 @@ def relax_structure_mace(
     No trajectory or per-step files are written. If ``output_path`` is given,
     only the final structure is written there.
     """
-    from .calculators import create_mace_calculator
+    from .calculators import create_mace_calculator, _symmetrix_species_from_atoms
+    from ._md_support import _copy_structure
 
     _validate_relax_settings(fmax, steps)
+    if enable_symmetrix and symmetrix_species is None and Path(model_path).suffix.lower() != ".json":
+        structure = _copy_structure(structure)
+        symmetrix_species = _symmetrix_species_from_atoms(model_path, True, None, [structure])
     calculator = create_mace_calculator(model_path, device=device, head=head,
                                          default_dtype=default_dtype,
                                          enable_cueq=enable_cueq,

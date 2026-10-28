@@ -5,6 +5,7 @@ import io
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace, ModuleType
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -20,7 +21,7 @@ from Process_MLIP.benchmark.ehull import compute_hull, compare_reference, read_r
 from Process_MLIP.benchmark.examples.make_demo import make_demo
 from Process_MLIP.benchmark.operations import Measurement, molecular_dynamics
 from Process_MLIP.benchmark.registry import create_calculator, register_model
-from Process_MLIP.benchmark.runner import run_benchmark
+from Process_MLIP.benchmark.runner import run_benchmark, _with_structure_species
 from Process_MLIP.benchmark.storage import output_lock, source_hash
 
 
@@ -81,6 +82,37 @@ class HullTests(unittest.TestCase):
 
 
 class ConfigTests(unittest.TestCase):
+    def test_symmetrix_uses_input_species_unless_explicit_or_preconverted(self):
+        structures = {"copper": bulk("Cu"), "gold": bulk("Au")}
+        model = dict(type="mace", parameters=dict(model_path="omat.model", enable_symmetrix=True))
+        selected = _with_structure_species(model, structures)
+        self.assertEqual(selected["parameters"]["symmetrix_species"], ["Au", "Cu"])
+        self.assertNotIn("symmetrix_species", model["parameters"])
+        explicit = dict(model, parameters=dict(model["parameters"], symmetrix_species=["Cu"]))
+        self.assertIs(_with_structure_species(explicit, structures), explicit)
+        converted = dict(model, parameters=dict(model["parameters"], model_path="omat.json"))
+        self.assertIs(_with_structure_species(converted, structures), converted)
+        ordinary = dict(model, parameters=dict(model["parameters"], enable_symmetrix=False))
+        self.assertIs(_with_structure_species(ordinary, structures), ordinary)
+
+    def test_single_structure_relax_infers_symmetrix_species(self):
+        from Process_MLIP.mace_relax import relax_structure_mace
+        with patch("Process_MLIP.calculators.create_mace_calculator", return_value=EMT()) as loader, \
+             patch("Process_MLIP.mace_relax._relax_structure", return_value={}):
+            relax_structure_mace(bulk("Cu"), "omat.model", enable_symmetrix=True)
+        self.assertEqual(loader.call_args.kwargs["symmetrix_species"], ["Cu"])
+
+    def test_md_workflow_infers_symmetrix_species(self):
+        from Process_MLIP.md_workflow import run_mlip_md
+        with TemporaryDirectory() as directory, \
+             patch("Process_MLIP.md_workflow.create_mlip_calculator", return_value=EMT()) as loader:
+            run_mlip_md(bulk("Cu", cubic=True),
+                        model=dict(type="mace", model_path="omat.model", device="cpu",
+                                   enable_symmetrix=True),
+                        output_dir=Path(directory) / "md", steps=1,
+                        trajectory_interval=1, log_interval=1)
+        self.assertEqual(loader.call_args.args[0]["symmetrix_species"], ["Cu"])
+
     def test_fp32_defaults_and_explicit_override(self):
         with demo() as (path, _):
             config = yaml.safe_load(path.read_text())
@@ -181,6 +213,41 @@ class ConfigTests(unittest.TestCase):
                 pass
         self.assertIsNone(meter.result["peak_gpu_allocated_MiB"])
         self.assertEqual(meter.result["gpu_memory_scope"], "unavailable_external_gpu_subprocess")
+
+    def test_grace_tensorflow_timing_and_memory_without_torch(self):
+        calls = []
+        experimental = SimpleNamespace(
+            set_synchronous_execution=lambda enabled: calls.append(("sync_mode", enabled)),
+            get_synchronous_execution=lambda: True,
+            reset_memory_stats=lambda device: calls.append(("reset", device)),
+            get_memory_info=lambda device: {"peak": 7 * 1024**2})
+        tf = SimpleNamespace(config=SimpleNamespace(experimental=experimental,
+                             get_visible_devices=lambda kind: ["gpu0"]))
+        with patch.dict("sys.modules", {"tensorflow": tf, "torch": None}):
+            with Measurement("cuda", backend="tensorflow") as meter:
+                calls.append("run")
+        self.assertEqual(calls, [("sync_mode", True), ("reset", "GPU:0"), "run"])
+        self.assertEqual(meter.result["peak_gpu_allocated_MiB"], 7)
+        self.assertIsNone(meter.result["peak_gpu_reserved_MiB"])
+        self.assertEqual(meter.result["gpu_memory_scope"], "tensorflow_allocator_includes_resident_model")
+
+    def test_grace_factory_marks_only_grace_as_tensorflow(self):
+        tf = SimpleNamespace(config=SimpleNamespace(get_visible_devices=lambda kind: ["gpu0"]))
+        module = ModuleType("tensorpotential.calculator")
+        module.TPCalculator = lambda path, **kwargs: EMT()
+        with TemporaryDirectory() as directory:
+            (Path(directory) / "saved_model.pb").write_bytes(b"model")
+            with patch.dict("sys.modules", {"tensorflow": tf, "tensorpotential.calculator": module}):
+                calculator = create_calculator(dict(type="grace", device="cuda", parameters={"model_path": directory}))
+        self.assertEqual(calculator.benchmark_backend, "tensorflow")
+        self.assertFalse(hasattr(EMT(), "benchmark_backend"))
+
+    def test_grace_md_sync_uses_tensorflow_only(self):
+        from Process_MLIP.md import _synchronize_for_timing
+        tf = SimpleNamespace(config=SimpleNamespace(experimental=SimpleNamespace(
+            get_synchronous_execution=lambda: True)))
+        with patch.dict("sys.modules", {"tensorflow": tf, "torch": None}):
+            _synchronize_for_timing(EMT(), {"device": "cuda", "benchmark_backend": "tensorflow"})
 
     def test_validate_cli_does_not_load_model_or_write_results(self):
         from Process_MLIP.benchmark.__main__ import main

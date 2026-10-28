@@ -4,7 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import re
 
-from .calculators import create_mlip_calculator
+from .calculators import create_mlip_calculator, _symmetrix_species_from_atoms
 from .md import run_md
 from ._md_support import (_check_outputs, _copy_structure, _get_dynamics_class,
                           _validate_atoms, _validate_options, _write_json)
@@ -53,6 +53,9 @@ def run_mlip_md(structure, model="mace-mh1", output_dir="md_results", stages=Non
             summary_path.exists() and not common["overwrite"]):
         raise FileExistsError(summary_path)
     atoms = _copy_structure(structure)
+    if config["type"] == "mace":
+        config["symmetrix_species"] = _symmetrix_species_from_atoms(
+            config["model_path"], config["enable_symmetrix"], config["symmetrix_species"], [atoms])
     prepared = []
     offset = common["time_offset_fs"]
     for index, stage in enumerate(stages):

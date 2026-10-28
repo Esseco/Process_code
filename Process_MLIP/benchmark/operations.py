@@ -13,18 +13,30 @@ from ..md import run_md
 class Measurement:
     """Synchronized wall time and same-process torch allocator peak in MiB."""
 
-    def __init__(self, device, external_gpu=False):
+    def __init__(self, device, external_gpu=False, backend="torch"):
         self.device = device
         self.external_gpu = external_gpu
+        self.backend = backend
         self.torch = None
+        self.tensorflow = None
         self.result = {}
-        if device.startswith("cuda") and not external_gpu:
+        if backend not in ("torch", "tensorflow"):
+            raise ValueError(f"Unknown measurement backend: {backend}")
+        if device.startswith("cuda") and backend == "tensorflow":
+            import tensorflow as tf
+            if device not in ("cuda", "cuda:0") or len(tf.config.get_visible_devices("GPU")) != 1:
+                raise RuntimeError("GRACE requires exactly one visible GPU and device cuda or cuda:0")
+            tf.config.experimental.set_synchronous_execution(True)
+            self.tensorflow = tf
+        elif device.startswith("cuda") and not external_gpu:
             import torch
             if not torch.cuda.is_available():
                 raise RuntimeError(f"CUDA requested but unavailable: {device}")
             self.torch = torch
 
     def synchronize(self):
+        if self.tensorflow is not None and not self.tensorflow.config.experimental.get_synchronous_execution():
+            raise RuntimeError("TensorFlow synchronous execution was disabled during timing")
         if self.torch is not None:
             self.torch.cuda.synchronize(self.device)
 
@@ -32,6 +44,8 @@ class Measurement:
         self.synchronize()
         if self.torch is not None:
             self.torch.cuda.reset_peak_memory_stats(self.device)
+        if self.tensorflow is not None:
+            self.tensorflow.config.experimental.reset_memory_stats("GPU:0")
         self.start = perf_counter()
         return self
 
@@ -46,6 +60,10 @@ class Measurement:
                 peak_gpu_allocated_MiB=self.torch.cuda.max_memory_allocated(self.device) / 1024**2,
                 peak_gpu_reserved_MiB=self.torch.cuda.max_memory_reserved(self.device) / 1024**2,
                 gpu_memory_scope="torch_allocator_current_process_includes_resident_model")
+        if self.tensorflow is not None:
+            info = self.tensorflow.config.experimental.get_memory_info("GPU:0")
+            self.result.update(peak_gpu_allocated_MiB=info["peak"] / 1024**2,
+                               gpu_memory_scope="tensorflow_allocator_includes_resident_model")
 
 
 def warmup(atoms, calculator, device):
@@ -53,7 +71,8 @@ def warmup(atoms, calculator, device):
     calculator.reset()
     probe = atoms.copy()
     probe.calc = calculator
-    with Measurement(device, getattr(calculator, "benchmark_external_gpu", False)) as meter:
+    with Measurement(device, getattr(calculator, "benchmark_external_gpu", False),
+                     getattr(calculator, "benchmark_backend", "torch")) as meter:
         values = (probe.get_potential_energy(), probe.get_forces(), probe.get_stress())
         if any(not np.all(np.isfinite(value)) for value in values):
             raise RuntimeError("Warmup returned non-finite energy/forces/stress")
@@ -68,7 +87,8 @@ def relax(atoms, calculator, directory, parameters, device):
     calculator.reset()
     logged = LoggingCalculator(calculator)
     relaxed = atoms.copy()
-    meter = Measurement(device, getattr(calculator, "benchmark_external_gpu", False))
+    meter = Measurement(device, getattr(calculator, "benchmark_external_gpu", False),
+                        getattr(calculator, "benchmark_backend", "torch"))
     try:
         with meter:
             result = MLIPRelaxer(relaxed, logged, optimizer="LBFGS", relax_cell=True,
@@ -95,12 +115,14 @@ def molecular_dynamics(atoms, calculator, directory, parameters, device, seed):
     """Reuse NHC NVT; return the existing integrator-only timer, not outer wall time."""
     calculator.reset()
     external_gpu = getattr(calculator, "benchmark_external_gpu", False)
-    meter = Measurement(device, external_gpu)
+    backend = getattr(calculator, "benchmark_backend", "torch")
+    meter = Measurement(device, external_gpu, backend)
     try:
         with meter:
             result = run_md(atoms, calculator, directory, ensemble="nvt", seed=seed,
                             initialize_velocities=True, measure_steps_per_second=True,
-                            overwrite=True, model_metadata={"device": device, "external_gpu": external_gpu}, **parameters)
+                            overwrite=True, model_metadata={"device": device, "external_gpu": external_gpu,
+                                                            "benchmark_backend": backend}, **parameters)
     except Exception as exc:
         details = dict(meter.result)
         details["stage_wall_seconds"] = details.pop("elapsed_seconds", None)

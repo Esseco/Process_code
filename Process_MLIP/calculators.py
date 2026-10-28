@@ -19,6 +19,13 @@ def _e3nn_import_context():
     return safe_globals([slice]) if safe_globals else nullcontext()
 
 
+def _symmetrix_species_from_atoms(model_path, enabled, species, structures):
+    """Infer conversion species when structures are available to the caller."""
+    if not enabled or species is not None or not model_path or Path(model_path).suffix.lower() == ".json":
+        return species
+    return sorted({symbol for atoms in structures for symbol in atoms.get_chemical_symbols()})
+
+
 def create_mace_calculator(model_path, *, device="cuda", head=None,
                            default_dtype="float64", enable_cueq=False,
                            enable_symmetrix=False, symmetrix_use_kokkos=False,

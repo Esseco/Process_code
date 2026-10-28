@@ -284,7 +284,9 @@ result = run_mlip_md(
   float32/float64 均由官方接口处理。`device` 不会改变 Kokkos 的编译目标；必须和超算的
   构建匹配。当前封装仅接受 cpu/cuda，不接受 cuda:序号；GPU 可见性由运行环境设置。
 - `.model` 输入会调用官方 `extract_mace_data`，并生成临时 JSON，初始化后清理；
-  `symmetrix_species=None` 转换所有训练元素，可能非常耗时，建议列出体系实际元素。
+  `run_mlip_md` 和 `relax_structure_mace` 在 `symmetrix_species=None` 时根据输入结构自动选择元素；
+  benchmark 则选取本次结构的元素并集。直接调用 `create_mace_calculator` 时没有结构信息，
+  因而 `symmetrix_species=None` 仍会转换所有训练元素，建议显式指定元素。
   转换不计入现有 MD steps/s。转换器可能用样条近似，正式生产前应对比标准 MACE 的
   能量、力和应力，并检查所需精度。
 - 官方转换器对模型层数、球谐阶数和相互作用模块有兼容性限制，错误会直接传播；

@@ -58,7 +58,22 @@ def _read_structures(config):
     return structures
 
 
+def _with_structure_species(model, structures):
+    """Limit Symmetrix MACE conversion to the elements actually requested."""
+    from ..calculators import _symmetrix_species_from_atoms
+    params = model["parameters"]
+    path = params.get("model_path")
+    if model["type"] != "mace":
+        return model
+    species = _symmetrix_species_from_atoms(path, params.get("enable_symmetrix"),
+                                            params.get("symmetrix_species"), structures.values())
+    if species is params.get("symmetrix_species"):
+        return model
+    return dict(model, parameters=dict(params, symmetrix_species=species))
+
+
 def _model_stages(config, model, structures, root, mode, logger):
+    model = _with_structure_species(model, structures)
     stages = ("relax", "md") if mode == "speed" else ("relax",)
     model_root = root / mode / model["id"]
     model_root.mkdir(parents=True, exist_ok=True)
@@ -72,7 +87,8 @@ def _model_stages(config, model, structures, root, mode, logger):
     runtime = environment()
     try:
         external_gpu = model["type"] == "nep" and model["parameters"].get("backend", "cpu") == "gpu"
-        with Measurement(model["device"], external_gpu) as meter:
+        backend = "tensorflow" if model["type"] == "grace" else "torch"
+        with Measurement(model["device"], external_gpu, backend) as meter:
             calculator = create_calculator(model)
         write_json(model_root / "load.json", dict(status="completed", model=model,
                    measurement=meter.result, environment=runtime))

@@ -18,6 +18,11 @@ from ._md_support import (
 
 
 def _synchronize_for_timing(calculator, metadata):
+    if isinstance(metadata, dict) and metadata.get("benchmark_backend") == "tensorflow":
+        import tensorflow as tf
+        if not tf.config.experimental.get_synchronous_execution():
+            raise RuntimeError("TensorFlow synchronous execution was disabled during timing")
+        return
     if isinstance(metadata, dict) and metadata.get("external_gpu", False):
         # GPUNEP waits for each GPUMD subprocess to exit before returning.
         return

@@ -87,14 +87,14 @@ Synchronized wall time and same-process torch allocator peak in MiB.
 源文件：[benchmark/operations.py](benchmark/operations.py)，第 16 行。
 
 ```python
-Measurement.__init__(self, device, external_gpu=False)
+Measurement.__init__(self, device, external_gpu=False, backend='torch')
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
 ## `Measurement.synchronize`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 27 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 37 行。
 
 ```python
 Measurement.synchronize(self)
@@ -104,7 +104,7 @@ Measurement.synchronize(self)
 
 ## `warmup`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 51 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 69 行。
 
 ```python
 warmup(atoms, calculator, device)
@@ -114,7 +114,7 @@ One uncached energy/force/stress probe per structure, outside both timers.
 
 ## `relax`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 64 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 83 行。
 
 ```python
 relax(atoms, calculator, directory, parameters, device)
@@ -124,7 +124,7 @@ Full-cell LBFGS; count uncached ASE force requests, save final structure.
 
 ## `molecular_dynamics`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 94 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 114 行。
 
 ```python
 molecular_dynamics(atoms, calculator, directory, parameters, device, seed)
@@ -164,7 +164,7 @@ Register factory(model_config_dict) -> ASE calculator; reject replacement.
 
 ## `create_calculator`
 
-源文件：[benchmark/registry.py](benchmark/registry.py)，第 76 行。
+源文件：[benchmark/registry.py](benchmark/registry.py)，第 78 行。
 
 ```python
 create_calculator(config)
@@ -174,7 +174,7 @@ Build one configured calculator without silent model/backend fallback.
 
 ## `run_benchmark`
 
-源文件：[benchmark/runner.py](benchmark/runner.py)，第 165 行。
+源文件：[benchmark/runner.py](benchmark/runner.py)，第 181 行。
 
 ```python
 run_benchmark(config_path, mode, model_ids=None)
@@ -254,7 +254,7 @@ Record environment and GPU inventory without requiring torch on CPU.
 
 ## `create_mace_calculator`
 
-源文件：[calculators.py](calculators.py)，第 22 行。
+源文件：[calculators.py](calculators.py)，第 29 行。
 
 ```python
 create_mace_calculator(model_path, *, device='cuda', head=None, default_dtype='float64', enable_cueq=False, enable_symmetrix=False, symmetrix_use_kokkos=False, symmetrix_species=None)
@@ -267,7 +267,7 @@ Pass head explicitly for renamed multihead weights or other DFT tasks.
 
 ## `create_sevennet_calculator`
 
-源文件：[calculators.py](calculators.py)，第 99 行。
+源文件：[calculators.py](calculators.py)，第 106 行。
 
 ```python
 create_sevennet_calculator(model='7net-omni', *, device='cpu', modal='mpa', enable_flash=False)
@@ -281,7 +281,7 @@ combine energies from different tasks. No dtype conversion is applied.
 
 ## `create_chgnet_calculator`
 
-源文件：[calculators.py](calculators.py)，第 132 行。
+源文件：[calculators.py](calculators.py)，第 139 行。
 
 ```python
 create_chgnet_calculator(model_path=None, *, device='cuda', model_name='0.3.0', model=None)
@@ -294,7 +294,7 @@ of model_path and model may be supplied; no dependencies are installed.
 
 ## `create_orb_calculator`
 
-源文件：[calculators.py](calculators.py)，第 151 行。
+源文件：[calculators.py](calculators.py)，第 158 行。
 
 ```python
 create_orb_calculator(model_path=None, *, device='cuda', model_name='orb-v3-conservative-inf-omat', precision='float32-highest', compile=False)
@@ -307,7 +307,7 @@ model_path must match model_name's architecture. No fallback model is used.
 
 ## `create_mlip_calculator`
 
-源文件：[calculators.py](calculators.py)，第 177 行。
+源文件：[calculators.py](calculators.py)，第 184 行。
 
 ```python
 create_mlip_calculator(model='mace-mh1')
@@ -571,7 +571,7 @@ only the final structure is written there.
 
 ## `run_md`
 
-源文件：[md.py](md.py)，第 32 行。
+源文件：[md.py](md.py)，第 37 行。
 
 ```python
 run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1, segment_steps=None, on_segment=None)

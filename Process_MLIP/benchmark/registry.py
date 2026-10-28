@@ -61,7 +61,9 @@ def _grace(config):
         raise ValueError("GRACE CPU execution requires CUDA_VISIBLE_DEVICES=-1 before starting Python")
     if config["device"].startswith("cuda") and len(visible) != 1:
         raise ValueError("GRACE CUDA execution requires exactly one TensorFlow-visible GPU")
-    return TPCalculator(str(path), **options)
+    calculator = TPCalculator(str(path), **options)
+    calculator.benchmark_backend = "tensorflow"
+    return calculator
 
 
 def _nequip(config):
