@@ -49,7 +49,7 @@ class NepBackendTests(unittest.TestCase):
             create_nep_calculator("model.txt", backend="gpu",
                                   gpumd_command="gpumd-custom", directory="run")
             calculators.GPUNEP.assert_called_once_with(
-                "model.txt", command=str(Path("gpumd-custom").resolve()))
+                "model.txt", command=str(Path("gpumd-custom").resolve()), gpu_identifier_index=None)
             gpu.set_directory.assert_called_once_with("run")
 
     def test_invalid_backend_and_missing_model_fail_before_loading(self):

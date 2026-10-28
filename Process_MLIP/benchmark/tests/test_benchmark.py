@@ -164,6 +164,22 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "compile"):
             create_calculator(dict(type="nequip", device="cuda", parameters={"model_path": "model.nequip.zip"}))
 
+    def test_nep_gpu_dispatch_and_device_validation(self):
+        with patch("Process_MLIP.calculators.create_mlip_calculator", return_value=EMT()):
+            model = dict(type="nep", device="cuda", parameters={"model_path": "model.txt", "backend": "gpu"})
+            calculator = create_calculator(model)
+            self.assertTrue(calculator.benchmark_external_gpu)
+            for device in ("cpu", "cuda:1"):
+                with self.assertRaises(ValueError):
+                    create_calculator(dict(model, device=device))
+
+    def test_external_gpu_does_not_report_parent_memory(self):
+        with patch.dict("sys.modules", torch=None):
+            with Measurement("cuda", external_gpu=True) as meter:
+                pass
+        self.assertIsNone(meter.result["peak_gpu_allocated_MiB"])
+        self.assertEqual(meter.result["gpu_memory_scope"], "unavailable_external_gpu_subprocess")
+
     def test_validate_cli_does_not_load_model_or_write_results(self):
         from Process_MLIP.benchmark.__main__ import main
         with demo() as (path, root):

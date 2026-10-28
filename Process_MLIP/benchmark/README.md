@@ -68,14 +68,27 @@ Symmetrix 使用 FP32 需要 Kokkos；不支持时明确报错，不自动切换
 | sevennet | 复用现有工厂 | model_path 或 model_name、modal、enable_flash |
 | orb | 复用现有工厂 | model_name、可选 model_path、precision、compile |
 | chgnet | 复用现有工厂 | model_name 或 model_path |
-| nep | 复用现有 CPU 工厂 | model_path、backend: cpu |
+| nep | Calorine CPU / GPUMD GPU | model_path、backend: cpu 或 gpu；GPU 需要 Calorine 和 gpumd |
 | emt | ASE 演示/测试 | 仅 CPU，不用于评判 MLIP 科学精度 |
-| grace / mattersim / nequip | 待实现 | 清楚报错，不以其他模型替代 |
+| grace / mattersim / nequip | 初步 Adapter，需各自环境和 GPU 验证 | GRACE SavedModel 目录；MatterSim checkpoint；NequIP 需编译后的 ASE 模型 |
 
 模型可能按其官方库的命名预训练接口下载权重；建议正式复现采用本地 checkpoint。
 参数沿用原 `model_config` 约定，不自动把不同 head/modal 的能量混用。
 各 calculator 必须提供 ASE 标准 energy、forces、stress，含 free_energy 的需求由现有弛豫器/模型接口决定。
-NEP 的外部 GPUMD GPU 后端不能用当前进程 torch 的计时/显存接口衡量，因此本版明确拒绝该组合。
+NEP 的 GPU 后端由 GPUNEP 同步启动 GPUMD 子进程，ASE 弛豫与 MD 计时包含每次启动和文件交换开销；
+它不等同于 GPUMD 原生持续运行 MD 的速度。子进程显存无法由父进程 torch 统计，记录为 null。
+使用调度器分配的单卡时保留 CUDA_VISIBLE_DEVICES，暂不支持指定 cuda:1 等本地索引。
+
+```yaml
+models:
+  - id: nep89_gpu
+    type: nep
+    device: cuda
+    parameters:
+      model_path: /absolute/path/to/nep89.txt
+      backend: gpu
+      gpumd_command: /absolute/path/to/gpumd
+```
 
 ## Speed：弛豫与 MD 分开比较
 

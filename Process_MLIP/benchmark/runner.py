@@ -72,7 +72,8 @@ def _model_stages(config, model, structures, root, mode, logger):
     load_error = None
     runtime = environment()
     try:
-        with Measurement(model["device"]) as meter:
+        external_gpu = model["type"] == "nep" and model["parameters"].get("backend", "cpu") == "gpu"
+        with Measurement(model["device"], external_gpu) as meter:
             calculator = create_calculator(model)
         write_json(model_root / "load.json", dict(status="completed", model=model,
                    measurement=meter.result, environment=runtime))

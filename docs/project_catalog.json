@@ -3167,7 +3167,7 @@
         "file": "Process_MLIP/benchmark/operations.py",
         "name": "Measurement.__init__",
         "line": 16,
-        "signature": "Measurement.__init__(self, device)",
+        "signature": "Measurement.__init__(self, device, external_gpu=False)",
         "doc": "",
         "imports": [
           "ase",
@@ -3180,7 +3180,7 @@
       {
         "file": "Process_MLIP/benchmark/operations.py",
         "name": "Measurement.synchronize",
-        "line": 26,
+        "line": 27,
         "signature": "Measurement.synchronize(self)",
         "doc": "",
         "imports": [
@@ -3194,7 +3194,7 @@
       {
         "file": "Process_MLIP/benchmark/operations.py",
         "name": "warmup",
-        "line": 49,
+        "line": 51,
         "signature": "warmup(atoms, calculator, device)",
         "doc": "One uncached energy/force/stress probe per structure, outside both timers.",
         "imports": [
@@ -3208,7 +3208,7 @@
       {
         "file": "Process_MLIP/benchmark/operations.py",
         "name": "relax",
-        "line": 62,
+        "line": 64,
         "signature": "relax(atoms, calculator, directory, parameters, device)",
         "doc": "Full-cell LBFGS; count uncached ASE force requests, save final structure.",
         "imports": [
@@ -3222,7 +3222,7 @@
       {
         "file": "Process_MLIP/benchmark/operations.py",
         "name": "molecular_dynamics",
-        "line": 92,
+        "line": 94,
         "signature": "molecular_dynamics(atoms, calculator, directory, parameters, device, seed)",
         "doc": "Reuse NHC NVT; return the existing integrator-only timer, not outer wall time.",
         "imports": [
@@ -3260,27 +3260,37 @@
       {
         "file": "Process_MLIP/benchmark/registry.py",
         "name": "register_model",
-        "line": 8,
+        "line": 9,
         "signature": "register_model(name, factory)",
         "doc": "Register factory(model_config_dict) -> ASE calculator; reject replacement.",
         "imports": [
-          "ase"
+          "ase",
+          "mattersim",
+          "nequip",
+          "pathlib",
+          "tensorflow",
+          "tensorpotential"
         ]
       },
       {
         "file": "Process_MLIP/benchmark/registry.py",
         "name": "create_calculator",
-        "line": 36,
+        "line": 76,
         "signature": "create_calculator(config)",
         "doc": "Build one configured calculator without silent model/backend fallback.",
         "imports": [
-          "ase"
+          "ase",
+          "mattersim",
+          "nequip",
+          "pathlib",
+          "tensorflow",
+          "tensorpotential"
         ]
       },
       {
         "file": "Process_MLIP/benchmark/runner.py",
         "name": "run_benchmark",
-        "line": 164,
+        "line": 165,
         "signature": "run_benchmark(config_path, mode, model_ids=None)",
         "doc": "Run speed or ehull; resume completed stages, retry failed stages, reject input drift.",
         "imports": [
@@ -3363,8 +3373,30 @@
       },
       {
         "file": "Process_MLIP/benchmark/storage.py",
-        "name": "identity",
+        "name": "source_hash",
         "line": 56,
+        "signature": "source_hash(path)",
+        "doc": "Hash model files or a SavedModel directory, including relative filenames.",
+        "imports": [
+          "contextlib",
+          "csv",
+          "datetime",
+          "hashlib",
+          "importlib",
+          "json",
+          "monty",
+          "os",
+          "pathlib",
+          "platform",
+          "subprocess",
+          "sys",
+          "tempfile"
+        ]
+      },
+      {
+        "file": "Process_MLIP/benchmark/storage.py",
+        "name": "identity",
+        "line": 78,
         "signature": "identity(config)",
         "doc": "Bind outputs to input bytes, checkpoints, configuration and core implementation.",
         "imports": [
@@ -3386,7 +3418,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "output_lock",
-        "line": 74,
+        "line": 96,
         "signature": "output_lock(root)",
         "doc": "Prevent concurrent writers; stale locks require explicit user inspection/removal.",
         "imports": [
@@ -3408,7 +3440,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "environment",
-        "line": 90,
+        "line": 112,
         "signature": "environment()",
         "doc": "Record environment and GPU inventory without requiring torch on CPU.",
         "imports": [
@@ -3868,7 +3900,7 @@
       {
         "file": "Process_MLIP/md.py",
         "name": "run_md",
-        "line": 29,
+        "line": 32,
         "signature": "run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1, segment_steps=None, on_segment=None)",
         "doc": "Run one NHC NVT or MTK NPT stage with an ASE calculator.\n\nPositions/cell use Å; energies eV, temperature K, time/damping fs, pressure\nbar (positive compression). Input atoms are copied. initialize_velocities\nNone initializes only when momenta are absent; False preserves velocities;\nTrue samples Maxwell-Boltzmann momenta using seed. COM removal/rotation\noptions apply only to initialization. Constraints are not supported.\nnpt_cell_mode selects isotropic volume scaling or full flexible-cell MTK.\ntchain/tloop control the thermostat; pchain/ploop apply only to NPT.\nChain lengths and integration substeps must be positive integers.\n\nsegment_steps optionally advances the SAME integrator in blocks. It must\nbe a positive multiple of trajectory_interval and log_interval; total\nsteps must align with trajectory_interval as well. After\neach block, on_segment(event) sees flushed output and completed steps,\ntime_fs, paths, temperature_K and saved-frame interval. Return True to\nrequest a normal early stop; False/None continues. No decision rules are\nbuilt in. This is in-process continuity, not cross-process checkpointing.\ntimestep_fs=None selects 2 fs for NVT or 1 fs for NPT; explicit values override.\n\nWrites md.traj, md.csv, final.traj (with momenta), report.json. Existing\nowned files require overwrite=True; unrelated files are never removed.\nNo exact thermostat/barostat restart is provided. Returns final_atoms,\noutput paths, final thermodynamic state and actual completed step count.\nmeasure_steps_per_second times dyn.run (including observers/output), with\nCUDA synchronization. Loading, pre-relaxation, property probes and final\nexport are excluded. steps_per_second is None when off or steps is zero.",
         "imports": [

@@ -87,14 +87,14 @@ Synchronized wall time and same-process torch allocator peak in MiB.
 源文件：[benchmark/operations.py](benchmark/operations.py)，第 16 行。
 
 ```python
-Measurement.__init__(self, device)
+Measurement.__init__(self, device, external_gpu=False)
 ```
 
 原源码尚未说明输入/返回含义；执行前阅读实现，勿根据函数名猜测。
 
 ## `Measurement.synchronize`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 26 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 27 行。
 
 ```python
 Measurement.synchronize(self)
@@ -104,7 +104,7 @@ Measurement.synchronize(self)
 
 ## `warmup`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 49 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 51 行。
 
 ```python
 warmup(atoms, calculator, device)
@@ -114,7 +114,7 @@ One uncached energy/force/stress probe per structure, outside both timers.
 
 ## `relax`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 62 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 64 行。
 
 ```python
 relax(atoms, calculator, directory, parameters, device)
@@ -124,7 +124,7 @@ Full-cell LBFGS; count uncached ASE force requests, save final structure.
 
 ## `molecular_dynamics`
 
-源文件：[benchmark/operations.py](benchmark/operations.py)，第 92 行。
+源文件：[benchmark/operations.py](benchmark/operations.py)，第 94 行。
 
 ```python
 molecular_dynamics(atoms, calculator, directory, parameters, device, seed)
@@ -154,7 +154,7 @@ Plot <=4-component hulls; always provide an ID/Ehull plot for any dimension.
 
 ## `register_model`
 
-源文件：[benchmark/registry.py](benchmark/registry.py)，第 8 行。
+源文件：[benchmark/registry.py](benchmark/registry.py)，第 9 行。
 
 ```python
 register_model(name, factory)
@@ -164,7 +164,7 @@ Register factory(model_config_dict) -> ASE calculator; reject replacement.
 
 ## `create_calculator`
 
-源文件：[benchmark/registry.py](benchmark/registry.py)，第 36 行。
+源文件：[benchmark/registry.py](benchmark/registry.py)，第 76 行。
 
 ```python
 create_calculator(config)
@@ -174,7 +174,7 @@ Build one configured calculator without silent model/backend fallback.
 
 ## `run_benchmark`
 
-源文件：[benchmark/runner.py](benchmark/runner.py)，第 164 行。
+源文件：[benchmark/runner.py](benchmark/runner.py)，第 165 行。
 
 ```python
 run_benchmark(config_path, mode, model_ids=None)
@@ -212,9 +212,19 @@ file_hash(path)
 
 Stream SHA256 without loading large checkpoints into memory.
 
-## `identity`
+## `source_hash`
 
 源文件：[benchmark/storage.py](benchmark/storage.py)，第 56 行。
+
+```python
+source_hash(path)
+```
+
+Hash model files or a SavedModel directory, including relative filenames.
+
+## `identity`
+
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 78 行。
 
 ```python
 identity(config)
@@ -224,7 +234,7 @@ Bind outputs to input bytes, checkpoints, configuration and core implementation.
 
 ## `output_lock`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 74 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 96 行。
 
 ```python
 output_lock(root)
@@ -234,7 +244,7 @@ Prevent concurrent writers; stale locks require explicit user inspection/removal
 
 ## `environment`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 90 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 112 行。
 
 ```python
 environment()
@@ -561,7 +571,7 @@ only the final structure is written there.
 
 ## `run_md`
 
-源文件：[md.py](md.py)，第 29 行。
+源文件：[md.py](md.py)，第 32 行。
 
 ```python
 run_md(structure, calculator, output_dir, *, ensemble='nvt', temperature_K=300.0, steps=1000, timestep_fs=None, tdamp_fs=100.0, pressure_bar=1.0, pdamp_fs=1000.0, initialize_velocities=None, seed=42, remove_com=True, zero_rotation=False, trajectory_interval=10, log_interval=10, overwrite=False, time_offset_fs=0.0, model_metadata=None, measure_steps_per_second=False, npt_cell_mode='isotropic', tchain=3, pchain=3, tloop=1, ploop=1, segment_steps=None, on_segment=None)

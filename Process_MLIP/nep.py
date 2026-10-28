@@ -37,7 +37,11 @@ def create_nep_calculator(model_path, *, backend="cpu", gpumd_command=None,
                 command = shutil.which(str(gpumd_command))
             if command is None:
                 raise FileNotFoundError(f"GPUMD executable not found: {gpumd_command}")
-        kwargs = {} if command is None else {"command": command}
+        # Keep the scheduler's CUDA_VISIBLE_DEVICES instead of replacing it
+        # with GPUNEP's default physical GPU index 0.
+        kwargs = {"gpu_identifier_index": None}
+        if command is not None:
+            kwargs["command"] = command
         from calorine.calculators import GPUNEP
         calculator = GPUNEP(str(model), **kwargs)
     if directory is not None:

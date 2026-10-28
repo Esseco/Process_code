@@ -18,6 +18,9 @@ from ._md_support import (
 
 
 def _synchronize_for_timing(calculator, metadata):
+    if isinstance(metadata, dict) and metadata.get("external_gpu", False):
+        # GPUNEP waits for each GPUMD subprocess to exit before returning.
+        return
     device = getattr(calculator, "device", None)
     if device is None and isinstance(metadata, dict):
         device = metadata.get("device")

@@ -20,11 +20,17 @@ def _existing(config):
     from ..model_config import model_config
     options = dict(config["parameters"])
     if config["type"] == "nep":
-        if config["device"] != "cpu" or options.get("backend", "cpu") != "cpu":
-            raise NotImplementedError("GPU NEP uses an external process; CUDA timing/memory adapter required")
+        backend = options.get("backend", "cpu")
+        if (backend == "cpu") != (config["device"] == "cpu"):
+            raise ValueError("NEP backend and benchmark device must both select CPU or GPU")
+        if backend == "gpu" and config["device"] not in ("cuda", "cuda:0"):
+            raise ValueError("GPUNEP uses GPU 0; select a single GPU with CUDA_VISIBLE_DEVICES")
     else:
         options["device"] = config["device"]
-    return create_mlip_calculator(model_config(config["type"], **options))
+    calculator = create_mlip_calculator(model_config(config["type"], **options))
+    if config["type"] == "nep" and options.get("backend", "cpu") == "gpu":
+        calculator.benchmark_external_gpu = True
+    return calculator
 
 
 def _emt(config):

@@ -13,11 +13,12 @@ from ..md import run_md
 class Measurement:
     """Synchronized wall time and same-process torch allocator peak in MiB."""
 
-    def __init__(self, device):
+    def __init__(self, device, external_gpu=False):
         self.device = device
+        self.external_gpu = external_gpu
         self.torch = None
         self.result = {}
-        if device.startswith("cuda"):
+        if device.startswith("cuda") and not external_gpu:
             import torch
             if not torch.cuda.is_available():
                 raise RuntimeError(f"CUDA requested but unavailable: {device}")
@@ -38,7 +39,8 @@ class Measurement:
         self.synchronize()
         self.result.update(elapsed_seconds=perf_counter() - self.start,
                            peak_gpu_allocated_MiB=None, peak_gpu_reserved_MiB=None,
-                           gpu_memory_scope="not_applicable_cpu")
+                           gpu_memory_scope=("unavailable_external_gpu_subprocess" if self.external_gpu
+                                             else "not_applicable_cpu"))
         if self.torch is not None:
             self.result.update(
                 peak_gpu_allocated_MiB=self.torch.cuda.max_memory_allocated(self.device) / 1024**2,
@@ -51,7 +53,7 @@ def warmup(atoms, calculator, device):
     calculator.reset()
     probe = atoms.copy()
     probe.calc = calculator
-    with Measurement(device) as meter:
+    with Measurement(device, getattr(calculator, "benchmark_external_gpu", False)) as meter:
         values = (probe.get_potential_energy(), probe.get_forces(), probe.get_stress())
         if any(not np.all(np.isfinite(value)) for value in values):
             raise RuntimeError("Warmup returned non-finite energy/forces/stress")
@@ -66,7 +68,7 @@ def relax(atoms, calculator, directory, parameters, device):
     calculator.reset()
     logged = LoggingCalculator(calculator)
     relaxed = atoms.copy()
-    meter = Measurement(device)
+    meter = Measurement(device, getattr(calculator, "benchmark_external_gpu", False))
     try:
         with meter:
             result = MLIPRelaxer(relaxed, logged, optimizer="LBFGS", relax_cell=True,
@@ -92,12 +94,13 @@ def relax(atoms, calculator, directory, parameters, device):
 def molecular_dynamics(atoms, calculator, directory, parameters, device, seed):
     """Reuse NHC NVT; return the existing integrator-only timer, not outer wall time."""
     calculator.reset()
-    meter = Measurement(device)
+    external_gpu = getattr(calculator, "benchmark_external_gpu", False)
+    meter = Measurement(device, external_gpu)
     try:
         with meter:
             result = run_md(atoms, calculator, directory, ensemble="nvt", seed=seed,
                             initialize_velocities=True, measure_steps_per_second=True,
-                            overwrite=True, model_metadata={"device": device}, **parameters)
+                            overwrite=True, model_metadata={"device": device, "external_gpu": external_gpu}, **parameters)
     except Exception as exc:
         details = dict(meter.result)
         details["stage_wall_seconds"] = details.pop("elapsed_seconds", None)
