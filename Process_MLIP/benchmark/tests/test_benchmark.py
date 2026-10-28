@@ -2,6 +2,8 @@
 from contextlib import contextmanager
 import json
 import io
+import subprocess
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -190,6 +192,22 @@ class ConfigTests(unittest.TestCase):
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_speed_runs_without_hull_dependencies(self):
+        code = '''
+import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
+sys.modules["monty"] = None
+sys.modules["pymatgen"] = None
+from Process_MLIP.benchmark.examples.make_demo import make_demo
+from Process_MLIP.benchmark.runner import run_benchmark
+with TemporaryDirectory() as directory:
+    config = make_demo(Path(directory) / "demo", quick=True)
+    result = run_benchmark(config, "speed")
+    assert result["status"] == "completed" and result["failed"] == 0
+'''
+        subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
+
     def test_real_speed_and_resume(self):
         with demo() as (path, root):
             result = run_benchmark(path, "speed")

@@ -11,7 +11,6 @@ from ase.io import read
 import numpy as np
 
 from .config import load_config
-from .ehull import compare_reference, compute_hull, read_reference, validate_endmembers
 from .operations import Measurement, molecular_dynamics, relax, warmup
 from .registry import create_calculator
 from .storage import environment, file_hash, identity, output_lock, write_csv, write_json
@@ -139,6 +138,7 @@ def _model_stages(config, model, structures, root, mode, logger):
 
 
 def _hull_outputs(config, model_id, rows, root, reference):
+    from .ehull import compare_reference, compute_hull
     directory = root / "ehull" / model_id
     # Retire stale success before retry; never leave a prior hull beside current failure.
     owned = ("ehull.csv", "ehull.json", "metrics.json", "phase_diagram.json", "phase_diagram.png", "ehull_by_id.png")
@@ -172,6 +172,7 @@ def run_benchmark(config_path, mode, model_ids=None):
     structures = _read_structures(config)
     reference = None
     if mode == "ehull":
+        from .ehull import read_reference, validate_endmembers
         validate_endmembers([Counter(a.get_chemical_symbols()) for a in structures.values()])
         reference = read_reference(config["ehull"]["reference_csv"])
         if reference is not None and not structures.keys() & reference.keys():

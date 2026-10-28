@@ -184,7 +184,7 @@ Run speed or ehull; resume completed stages, retry failed stages, reject input d
 
 ## `write_json`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 18 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 15 行。
 
 ```python
 write_json(path, value)
@@ -194,7 +194,7 @@ Atomically replace one owned JSON report, rejecting NaN/Infinity.
 
 ## `write_csv`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 34 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 37 行。
 
 ```python
 write_csv(path, rows)
@@ -204,7 +204,7 @@ Write union-of-columns CSV, retaining explicit error records.
 
 ## `file_hash`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 47 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 50 行。
 
 ```python
 file_hash(path)
@@ -214,7 +214,7 @@ Stream SHA256 without loading large checkpoints into memory.
 
 ## `source_hash`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 56 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 59 行。
 
 ```python
 source_hash(path)
@@ -224,7 +224,7 @@ Hash model files or a SavedModel directory, including relative filenames.
 
 ## `identity`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 78 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 81 行。
 
 ```python
 identity(config)
@@ -234,7 +234,7 @@ Bind outputs to input bytes, checkpoints, configuration and core implementation.
 
 ## `output_lock`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 96 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 99 行。
 
 ```python
 output_lock(root)
@@ -244,7 +244,7 @@ Prevent concurrent writers; stale locks require explicit user inspection/removal
 
 ## `environment`
 
-源文件：[benchmark/storage.py](benchmark/storage.py)，第 112 行。
+源文件：[benchmark/storage.py](benchmark/storage.py)，第 115 行。
 
 ```python
 environment()

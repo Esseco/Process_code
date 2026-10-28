@@ -9,6 +9,7 @@
 默认使用已有 `py1` 验证基础功能。运行真实模型时切换到该模型已有专用环境；
 不要把所有模型依赖装到 py1。不执行自动安装或静默切换模型。
 基础依赖见 `requirements.txt`；真实模型依赖按原项目 [模型兼容说明](../MODEL_COMPATIBILITY.md)。
+仅运行 Speed 时不需要安装 monty 或 pymatgen；Ehull 功能仍需要这些依赖。
 
 在 `E:\Py-Code` 仓库根目录执行：
 

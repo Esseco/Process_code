@@ -3308,7 +3308,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "write_json",
-        "line": 18,
+        "line": 15,
         "signature": "write_json(path, value)",
         "doc": "Atomically replace one owned JSON report, rejecting NaN/Infinity.",
         "imports": [
@@ -3330,7 +3330,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "write_csv",
-        "line": 34,
+        "line": 37,
         "signature": "write_csv(path, rows)",
         "doc": "Write union-of-columns CSV, retaining explicit error records.",
         "imports": [
@@ -3352,7 +3352,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "file_hash",
-        "line": 47,
+        "line": 50,
         "signature": "file_hash(path)",
         "doc": "Stream SHA256 without loading large checkpoints into memory.",
         "imports": [
@@ -3374,7 +3374,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "source_hash",
-        "line": 56,
+        "line": 59,
         "signature": "source_hash(path)",
         "doc": "Hash model files or a SavedModel directory, including relative filenames.",
         "imports": [
@@ -3396,7 +3396,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "identity",
-        "line": 78,
+        "line": 81,
         "signature": "identity(config)",
         "doc": "Bind outputs to input bytes, checkpoints, configuration and core implementation.",
         "imports": [
@@ -3418,7 +3418,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "output_lock",
-        "line": 96,
+        "line": 99,
         "signature": "output_lock(root)",
         "doc": "Prevent concurrent writers; stale locks require explicit user inspection/removal.",
         "imports": [
@@ -3440,7 +3440,7 @@
       {
         "file": "Process_MLIP/benchmark/storage.py",
         "name": "environment",
-        "line": 112,
+        "line": 115,
         "signature": "environment()",
         "doc": "Record environment and GPU inventory without requiring torch on CPU.",
         "imports": [

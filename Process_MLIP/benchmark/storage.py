@@ -12,9 +12,6 @@ import subprocess
 import sys
 from tempfile import NamedTemporaryFile
 
-from monty.json import MontyEncoder
-
-
 def write_json(path, value):
     """Atomically replace one owned JSON report, rejecting NaN/Infinity."""
     path = Path(path)
@@ -24,7 +21,13 @@ def write_json(path, value):
         with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
                                 suffix=".tmp", delete=False) as handle:
             temporary = Path(handle.name)
-            json.dump(value, handle, ensure_ascii=False, indent=2, allow_nan=False, cls=MontyEncoder)
+            try:
+                from monty.json import MontyEncoder
+            except ImportError:
+                # Speed reports contain ordinary JSON data; Ehull needs Monty.
+                json.dump(value, handle, ensure_ascii=False, indent=2, allow_nan=False)
+            else:
+                json.dump(value, handle, ensure_ascii=False, indent=2, allow_nan=False, cls=MontyEncoder)
         temporary.replace(path)
     finally:
         if temporary is not None:
