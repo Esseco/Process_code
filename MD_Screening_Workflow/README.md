@@ -133,6 +133,31 @@ python -m pip install -e ".[test]"
 
 权重使用本地路径，不下载，不回退到其他模型。官方模型名称见 [MACE foundation models](https://mace-docs.readthedocs.io/en/latest/guide/foundation_models.html)。
 
+### 多模型接口
+
+`ScreeningConfig.model_type` 可选 `mace`、`sevennet`、`orb`、`nep`、`grace` 和 `nequip`。
+除默认 MACE 外都必须提供 `model_path`；路径由 workflow 校验后交给 `Process_MD`，再由其委托
+`Process_MLIP`。加速选项也写入同一配置，例如：
+
+```python
+ScreeningConfig(
+    model_type="sevennet", model_path="/path/checkpoint_7net_nano_6.0.pth",
+    device="cuda", modal="mpa", enable_flash=True,
+)
+ScreeningConfig(
+    model_type="nep", model_path="/path/nep89.txt",
+    device="cuda", backend="gpu", gpumd_command="/path/gpumd",
+)
+ScreeningConfig(
+    model_type="nequip", model_path="/path/compiled.nequip.pth",
+    device="cuda", enable_openequivariance=True,
+)
+```
+
+ORB 使用 `model_name="orb-v3-direct-inf-omat"`、`precision` 和 `compile_model`；GRACE
+要求 `model_path` 是包含 `saved_model.pb` 的 SavedModel 目录。所有模型仍共用同一个预弛豫、
+连续 NVT、检查和 MSD 分析流程。
+
 ## Python API
 
 ```python

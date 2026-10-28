@@ -25,6 +25,9 @@ def test_defaults_and_five_ps_precheck_boundary():
     assert config.jump_site_inner_fraction == 0.8
     assert config.stop_criteria.no_jump_stop_ps == 10
     assert config.framework_criteria.min_msd_A2 == 1
+    assert config.model_type == "mace"
+    assert config.modal == "mpa"
+    assert config.compile_model is True
 
 
 @pytest.mark.parametrize("values", [
@@ -46,6 +49,10 @@ def test_defaults_and_five_ps_precheck_boundary():
     {"framework_rdf_repeat": [2, 2, 2]},
     {"enable_symmetrix": "yes"}, {"enable_symmetrix": True}, {"symmetrix_use_kokkos": True},
     {"enable_cueq": True, "enable_symmetrix": True},
+    {"model_type": "unknown"}, {"model_type": 1}, {"modal": ""},
+    {"compile_model": "yes"}, {"enable_flash": "yes"},
+    {"enable_openequivariance": "yes"}, {"backend": "tpu"},
+    {"model_options": []},
     {"symmetrix_species": ("Li", "Bad")}, {"symmetrix_species": ["Li"]},
 ])
 def test_invalid_configs_fail_before_running(values):

@@ -2,11 +2,13 @@ from pathlib import Path
 import subprocess
 import sys
 from types import ModuleType
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from process_md import create_mace_calculator
+from process_md import (create_grace_calculator, create_mace_calculator,
+                        create_nequip_calculator, create_orb_calculator,
+                        create_sevennet_calculator)
 from process_md.md import create_mace_calculator as md_create_mace_calculator
 
 
@@ -65,3 +67,30 @@ def test_importing_mace_adapter_does_not_import_optional_backends():
          "('Process_MLIP', 'mace', 'torch', 'chgnet', 'symmetrix', 'cuequivariance'))"],
         check=True, capture_output=True, text=True,
     )
+
+
+@pytest.mark.parametrize(
+    ("name", "factory_name", "args", "kwargs"),
+    [
+        ("sevennet", "create_sevennet_calculator", ("7net.ckpt",), {"device": "cuda", "modal": "mpa", "enable_flash": True}),
+        ("orb", "create_orb_calculator", ("orb.ckpt",), {"device": "cuda", "model_name": "orb-v3-direct-inf-omat", "precision": "float32-highest", "compile": True}),
+        ("grace", "create_grace_calculator", ("grace",), {"device": "cuda"}),
+        ("nequip", "create_nequip_calculator", ("nequip.pth",), {"device": "cuda", "enable_openequivariance": True}),
+    ],
+)
+def test_optional_model_adapters_forward_to_process_mlip(name, factory_name, args, kwargs):
+    import process_md.md.calculators as adapters
+    expected = object()
+    adapter_name = ("create_sevennet_calculator" if name == "sevennet" else
+                    "create_orb_calculator" if name == "orb" else
+                    "create_grace_calculator" if name == "grace" else
+                    "create_nequip_calculator")
+    if name in {"sevennet", "orb"}:
+        with patch(f"Process_MLIP.calculators.{factory_name}", return_value=expected) as factory:
+            result = getattr(adapters, adapter_name)(*args, **kwargs)
+        factory.assert_called_once_with(*args, **kwargs)
+    else:
+        with patch("Process_MLIP.benchmark.registry.create_calculator", return_value=expected) as generic:
+            result = getattr(adapters, adapter_name)(*args, **kwargs)
+        generic.assert_called_once()
+    assert result is expected

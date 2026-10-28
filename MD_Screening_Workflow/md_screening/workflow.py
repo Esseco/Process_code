@@ -16,7 +16,7 @@ from process_md.structure import estimate_hop_distance
 from .analysis import analyze_check
 from .archiving import archive_md_output
 from .config import ScreeningConfig
-from .calculators import create_default_calculator, mace_model_path
+from .calculators import create_default_calculator, model_path_for_config
 from .review import CheckReport, Decision
 from .stopping import TransportStopper
 from .stability import assess_framework
@@ -115,7 +115,8 @@ def run_screening(
         created_at_utc=datetime.now(timezone.utc).isoformat(),
         input_source=str(Path(structure).resolve()) if isinstance(structure, (str, Path)) else "ASE Atoms",
         calculator_class=None if calculator is None else f"{type(calculator).__module__}.{type(calculator).__name__}",
-        default_model="mace-omat" if calculator is None else None,
+        default_model=(config.model_label or ("mace-omat" if config.model_type == "mace" else config.model_type))
+        if calculator is None else None,
         review_mode="coarse_transport" if automatic_review else ("record_only" if reviewer is None else "caller_supplied"),
         stage="preparing", structure=None,
         reference_source=str(Path(reference_sites).resolve()) if isinstance(reference_sites, (str, Path)) else "ASE Atoms",
@@ -183,7 +184,7 @@ def run_screening(
             from process_md import check_uncertainty_backend
             check_uncertainty_backend()
         if calculator is None:
-            metadata["model_path"] = str(mace_model_path(config))
+            metadata["model_path"] = str(model_path_for_config(config))
             metadata["stage"] = "loading_model"
             persist()
             calculator = create_default_calculator(config, atoms=atoms)

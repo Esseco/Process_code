@@ -8,7 +8,7 @@ from uuid import uuid4
 import numpy as np
 from process_md import prepare_structure
 
-from .calculators import mace_model_path
+from .calculators import model_path_for_config
 from .config import ScreeningConfig
 from .presets import screening_preset
 from .workflow import run_screening
@@ -50,11 +50,13 @@ def run_md(structure, *, reference_sites, output_dir=None, config=None,
         overrides["mobile_species"] = candidates.pop()
     selected = screening_preset(**overrides) if config is None else replace(config, **overrides)
     if calculator is None:
-        source = selected.model_path or os.environ.get("PROCESS_MD_MACE_MODEL")
-        if not source:
+        source = selected.model_path
+        if selected.model_type == "mace":
+            source = source or os.environ.get("PROCESS_MD_MACE_MODEL")
+        if selected.model_type == "mace" and not source:
             import Process_MLIP
             source = Path(Process_MLIP.__file__).resolve().parent.parent / "MLIP_model/mace/mace-omat-0-medium.model"
-        selected = replace(selected, model_path=mace_model_path(replace(selected, model_path=source)))
+        selected = replace(selected, model_path=model_path_for_config(replace(selected, model_path=source)))
     if output_dir is None:
         name = Path(structure).stem if isinstance(structure, (str, Path)) else atoms.get_chemical_formula()
         output_dir = Path.cwd() / "runs" / f"{name}_{datetime.now():%Y%m%d_%H%M%S_%f}_{uuid4().hex[:8]}"

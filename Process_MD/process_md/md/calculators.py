@@ -60,3 +60,43 @@ def create_nep_calculator(
 
     return factory(model_path, backend=backend, gpumd_command=gpumd_command,
                    directory=directory)
+
+
+def create_sevennet_calculator(model: str | Path, *, device: str = "cpu",
+                               modal: str = "mpa", enable_flash: bool = False):
+    """Delegate a local SevenNet checkpoint to Process_MLIP."""
+    from Process_MLIP.calculators import create_sevennet_calculator as factory
+
+    return factory(model, device=device, modal=modal, enable_flash=enable_flash)
+
+
+def create_orb_calculator(model_path: str | Path, *, device: str = "cuda",
+                          model_name: str = "orb-v3-conservative-inf-omat",
+                          precision: str = "float32-highest", compile: bool = True):
+    """Delegate an explicit local ORB checkpoint to Process_MLIP."""
+    from Process_MLIP.calculators import create_orb_calculator as factory
+
+    return factory(model_path, device=device, model_name=model_name,
+                   precision=precision, compile=compile)
+
+
+def _create_registry_calculator(kind: str, model_path: str | Path, *, device: str,
+                                **options):
+    from Process_MLIP.benchmark.registry import create_calculator
+
+    parameters = {"model_path": str(model_path), **options}
+    return create_calculator({"type": kind, "device": device, "parameters": parameters})
+
+
+def create_grace_calculator(model_path: str | Path, *, device: str = "cuda", **options):
+    """Delegate a local GRACE SavedModel directory to Process_MLIP."""
+    return _create_registry_calculator("grace", model_path, device=device, **options)
+
+
+def create_nequip_calculator(model_path: str | Path, *, device: str = "cuda",
+                             enable_openequivariance: bool = False, **options):
+    """Delegate a compiled local NequIP model to Process_MLIP."""
+    return _create_registry_calculator(
+        "nequip", model_path, device=device,
+        enable_openequivariance=enable_openequivariance, **options,
+    )

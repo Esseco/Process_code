@@ -31,6 +31,16 @@ class ScreeningConfig:
     configuration_id: str | None = None
     model_label: str | None = None
     model_path: str | Path | None = None
+    model_type: str = "mace"
+    model_name: str | None = None
+    modal: str = "mpa"
+    precision: str = "float32-highest"
+    compile_model: bool = True
+    enable_flash: bool = False
+    enable_openequivariance: bool = False
+    backend: str | None = None
+    gpumd_command: str | Path | None = None
+    model_options: dict = field(default_factory=dict)
     pre_relax: bool = True
     relax_cell: bool = True
     relax_optimizer: str = "LBFGS"
@@ -86,6 +96,24 @@ class ScreeningConfig:
                 raise ValueError(f"{name} must be a string or None")
         if self.model_path is not None and not isinstance(self.model_path, (str, Path)):
             raise ValueError("model_path must be a path or None")
+        if self.model_type not in ("mace", "sevennet", "orb", "nep", "grace", "nequip"):
+            raise ValueError("model_type must be mace, sevennet, orb, nep, grace or nequip")
+        if self.model_name is not None and not isinstance(self.model_name, str):
+            raise ValueError("model_name must be a string or None")
+        for name in ("modal", "precision"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{name} must be a nonempty string")
+        for name in ("compile_model", "enable_flash", "enable_openequivariance"):
+            if type(getattr(self, name)) is not bool:
+                raise ValueError(f"{name} must be bool")
+        if self.backend not in (None, "cpu", "gpu"):
+            raise ValueError("backend must be None, cpu or gpu")
+        if self.gpumd_command is not None and not isinstance(self.gpumd_command, (str, Path)):
+            raise ValueError("gpumd_command must be a path, string or None")
+        if (not isinstance(self.model_options, dict)
+                or any(not isinstance(key, str) for key in self.model_options)):
+            raise ValueError("model_options must be a dictionary with string keys")
         if any(type(value) is not bool for value in (self.pre_relax, self.relax_cell, self.require_relax_convergence)):
             raise ValueError("pre_relax, relax_cell and require_relax_convergence must be bool")
         if self.relax_optimizer not in ("FIRE", "BFGS", "LBFGS"):
