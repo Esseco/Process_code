@@ -50,7 +50,7 @@ def main() -> None:
             timestep_fs=2,
             trajectory_interval=10,
             seed=42,
-            jump_analysis=False,
+            jump_analysis=True,
         )
         result = run_screening(
             structure,
