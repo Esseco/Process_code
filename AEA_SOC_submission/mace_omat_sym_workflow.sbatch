@@ -10,7 +10,7 @@
 #SBATCH --output=/data/home/lichaoyue/26-7-AEA/MLIP_SOC_MD/jobs/mace_sym_workflow-%j.out
 #SBATCH --error=/data/home/lichaoyue/26-7-AEA/MLIP_SOC_MD/jobs/mace_sym_workflow-%j.err
 set -euo pipefail
-export PYTHONPATH=/data/home/lichaoyue/Process_code/MD_Screening_Workflow:/data/home/lichaoyue/Process_code/Process_MD:/data/home/lichaoyue/Process_code
+export PYTHONPATH=/data/home/lichaoyue/Process_code/MD_Screening_Workflow:/data/home/lichaoyue/Process_code/Process_MD:/data/home/lichaoyue/Process_code:/data/home/lichaoyue/.conda/envs/mace_cueq/lib/python3.11/site-packages
 export MLIP_MODEL_ID=mace_omat_sym
 export OMP_NUM_THREADS=2
 export MKL_NUM_THREADS=2
