@@ -27,7 +27,7 @@ def main() -> None:
     if model_id not in MODELS:
         raise ValueError(f"unknown MLIP_MODEL_ID={model_id!r}")
     model_options = MODELS[model_id]
-    results_root = ROOT / "results" / (model_id + "_retry")
+    results_root = ROOT / "results" / (model_id + "_retry2")
     results_root.mkdir(parents=True, exist_ok=True)
     summary = []
     for structure in sorted((ROOT / "structures").glob("*.vasp")):
