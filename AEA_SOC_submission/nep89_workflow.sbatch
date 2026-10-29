@@ -15,4 +15,4 @@ export MLIP_MODEL_ID=nep89
 export OMP_NUM_THREADS=2
 export MKL_NUM_THREADS=2
 module load gpumd/5.9.1-cuda129
-exec /data/home/lichaoyue/.venvs/nep-speed/bin/python -u /data/home/lichaoyue/26-7-AEA/MLIP_SOC_MD/run_soc_workflow.py
+exec /data/home/lichaoyue/.venvs/nep-speed/bin/python -u /data/home/lichaoyue/Process_code/AEA_SOC_submission/run_soc_workflow.py

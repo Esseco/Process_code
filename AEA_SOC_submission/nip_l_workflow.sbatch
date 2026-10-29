@@ -16,4 +16,4 @@ export OMP_NUM_THREADS=2
 export MKL_NUM_THREADS=2
 module load gcc/11.2.0
 module load cuda/12.8
-exec /data/home/lichaoyue/.conda/envs/nequip/bin/python -u /data/home/lichaoyue/26-7-AEA/MLIP_SOC_MD/run_soc_workflow.py
+exec /data/home/lichaoyue/.conda/envs/nequip/bin/python -u /data/home/lichaoyue/Process_code/AEA_SOC_submission/run_soc_workflow.py
