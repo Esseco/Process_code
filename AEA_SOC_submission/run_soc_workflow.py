@@ -38,6 +38,16 @@ def main() -> None:
         if missing:
             raise ValueError(f"unknown structure IDs: {sorted(missing)}")
         structures = [path for path in structures if path.stem in selected]
+    if not structures:
+        raise ValueError("No input structures found")
+    systems = {path.stem.split("_", 1)[0] for path in structures}
+    if systems - SOURCES.keys():
+        raise ValueError(f"Unknown systems: {sorted(systems - SOURCES.keys())}")
+    for path in [*(SOURCES[system] for system in systems), Path(model_options["model_path"])]:
+        if not path.exists():
+            raise FileNotFoundError(f"Required input does not exist: {path}")
+    from process_md import check_jump_backend
+    check_jump_backend()
     results_root = ROOT / "results" / result_name
     results_root.mkdir(parents=True, exist_ok=True)
     summary = []
