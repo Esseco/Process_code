@@ -12,8 +12,10 @@
 set -euo pipefail
 export PYTHONPATH=/data/home/lichaoyue/Process_code/MD_Screening_Workflow:/data/home/lichaoyue/Process_code/Process_MD:/data/home/lichaoyue/Process_code
 export MLIP_MODEL_ID=nip_l
-export OMP_NUM_THREADS=2
-export MKL_NUM_THREADS=2
+export TORCH_EXTENSIONS_DIR=/data/home/lichaoyue/26-7-AEA/MLIP_nequip_oeq_pathfix_20261028/torch_extensions
+export MAX_JOBS=6
+export OMP_NUM_THREADS=6
+export MKL_NUM_THREADS=6
 module load gcc/11.2.0
 module load cuda/12.8
 exec /data/home/lichaoyue/.conda/envs/nequip/bin/python -u /data/home/lichaoyue/Process_code/AEA_SOC_submission/run_soc_workflow.py
